@@ -1,0 +1,168 @@
+from antlr4.error.ErrorListener import ErrorListener as ANTLRErrorListener
+from antlr4 import InputStream, CommonTokenStream
+from antlr4.Token import CommonToken
+
+from byte.parser.ByteVisitor import ByteVisitor
+from byte.parser.ByteParser import ByteParser
+from byte.parser.ByteLexer import ByteLexer
+from byte import ast
+
+
+class ByteErrorListener(ANTLRErrorListener):
+    def __init__(self, file: ast.File):
+        self.file = file
+    
+    def syntaxError(self, _, offendingSymbol: CommonToken, line: int, column: int, _msg, _e):
+        pos = ast.Position(line, column)
+        pos.comptime_error(self.file, f'invalid syntax \'{offendingSymbol.text}\'')
+
+class ByteASTBuilder(ByteVisitor):
+    def __init__(self, file: ast.File):
+        self.file = file
+    
+    def pos(self, ctx):
+        return ast.Position(ctx.start.line, ctx.start.column)
+    
+    def build(self):
+        lexer = ByteLexer(InputStream(self.file.src))
+        parser = ByteParser(CommonTokenStream(lexer))
+        parser.removeErrorListeners()
+        parser.addErrorListener(ByteErrorListener(self.file))
+        return self.visitProgram(parser.program())
+    
+    def visitProgram(self, ctx):
+        return ast.Program(self.pos(ctx), [self.visit(stmt) for stmt in ctx.stmt()])
+    
+    def visitType(self, ctx):
+        return ast.Type(ctx.getText())
+    
+    def visitArgs(self, ctx):
+        return [self.visitArg(arg) for arg in ctx.arg()] if ctx is not None else []
+    
+    def visitArg(self, ctx):
+        value = self.visit(ctx.expr())
+        return ast.Arg(self.pos(ctx), value.type, value)
+    
+    def visitReturn(self, ctx):
+        expr = self.visit(ctx.expr())
+        return ast.Return(self.pos(ctx), expr.type, expr)
+    
+    def visitBreak(self, ctx):
+        return ast.Break(self.pos(ctx))
+    
+    def visitContinue(self, ctx):
+        return ast.Continue(self.pos(ctx))
+    
+    def visitBody(self, ctx):
+        return ast.Body(
+            self.pos(ctx), self.file.type_map.get('any'),
+            [self.visit(stmt) for stmt in ctx.bodyStmts()]
+        )
+    
+    def visitParams(self, ctx):
+        return [self.visitParam(param) for param in ctx.param()] if ctx is not None else []
+    
+    def visitParam(self, ctx):
+        return ast.Param(
+            self.pos(ctx), self.visitType(ctx.type_()), ctx.ID().getText(),
+            ctx.MUTABLE() is not None
+        )
+    
+    def visitFuncAssign(self, ctx):
+        flags = ast.FunctionFlags(static=ctx.STATIC() is not None)
+        return ast.Function(
+            self.pos(ctx), self.visitType(ctx.return_type) if ctx.return_type is not None else
+                self.file.type_map.get('nil'), ctx.ID().getText(),
+            self.visitParams(ctx.params()), self.visitBody(ctx.body()),
+            flags, self.visitType(ctx.extend_type) if ctx.extend_type is not None else None
+        )
+    
+    def visitVarAssign(self, ctx):
+        value = self.visit(ctx.expr())
+        return ast.Variable(
+            self.pos(ctx), value.type, ctx.ID().getText(), value,
+            ctx.MUTABLE() is not None, ctx.op.text if ctx.op is not None else None
+        )
+    
+    def visitIfStmt(self, ctx):
+        return ast.If(
+            self.pos(ctx), self.visit(ctx.expr()),
+            self.visitBody(ctx.body()), self.visitElseStmt(ctx.elseStmt()),
+            [self.visitElseifStmt(elseif) for elseif in ctx.elseifStmt()]
+        )
+    
+    def visitElseStmt(self, ctx):
+        return self.visitBody(ctx.body()) if ctx is not None else None
+    
+    def visitElseifStmt(self, ctx):
+        return ast.Elseif(self.pos(ctx), self.visit(ctx.expr()), self.visitBody(ctx.body()))
+    
+    def visitWhileStmt(self, ctx):
+        return ast.While(self.pos(ctx), self.visit(ctx.expr()), self.visitBody(ctx.body()))
+    
+    def visitUseStmt(self, ctx):
+        return ast.Use(self.pos(ctx), ctx.STRING().getText()[1:-1])
+    
+    def visitDeferStmt(self, ctx):
+        return ast.Defer(self.pos(ctx), self.visit(ctx.expr()))
+    
+    def visitInt(self, ctx):
+        return ast.Int(self.pos(ctx), self.file.type_map.get('int'), int(ctx.getText()))
+    
+    def visitFloat(self, ctx):
+        return ast.Float(self.pos(ctx), self.file.type_map.get('float'), float(ctx.getText()))
+    
+    def visitString(self, ctx):
+        return ast.String(self.pos(ctx), self.file.type_map.get('string'), ctx.getText()[1:-1])
+    
+    def visitBool(self, ctx):
+        return ast.Bool(self.pos(ctx), self.file.type_map.get('bool'), ctx.getText() == 'true')
+    
+    def visitId(self, ctx):
+        return ast.Id(self.pos(ctx), self.file.type_map.get('any'), ctx.getText())
+    
+    def visitCall(self, ctx):
+        return ast.Call(
+            self.pos(ctx), self.file.type_map.get('any'), ctx.ID().getText(), self.visitArgs(ctx.args())
+        )
+    
+    def visitParen(self, ctx):
+        expr = self.visit(ctx.expr())
+        return ast.Bracketed(self.pos(ctx), expr.type, expr)
+    
+    def visitAttr(self, ctx):
+        return ast.Attribute(
+            self.pos(ctx), self.file.type_map.get('any'), self.visit(ctx.expr()), ctx.ID().getText(),
+            self.visitArgs(ctx.args()) if ctx.LPAREN() is not None else None
+        )
+    
+    def visitTernary(self, ctx):
+        return ast.Ternary(
+            self.pos(ctx), self.file.type_map.get('any'), self.visit(ctx.expr(1)),
+            self.visit(ctx.expr(0)), self.visit(ctx.expr(2))
+        )
+    
+    def visitOperation(self, ctx):
+        pos = self.pos(ctx)
+        op = ctx.op.text
+        if isinstance(ctx.expr(), list):
+            left, right = self.visit(ctx.expr(0)), self.visit(ctx.expr(1))
+            return ast.Operation(pos, self.file.type_map.get('any'), op, left, right)
+        else:
+            value = self.visit(ctx.expr())
+            return ast.UnaryOperation(pos, self.file.type_map.get('any'), op, value)
+    
+    def visitAddition(self, ctx):
+        return self.visitOperation(ctx)
+    
+    def visitMultiplication(self, ctx):
+        return self.visitOperation(ctx)
+    
+    def visitRelational(self, ctx):
+        return self.visitOperation(ctx)
+    
+    def visitLogical(self, ctx):
+        return self.visitOperation(ctx)
+    
+    def visitUnary(self, ctx):
+        return self.visitOperation(ctx)

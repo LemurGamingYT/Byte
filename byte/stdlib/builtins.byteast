@@ -1,0 +1,10 @@
+fn string.destroy(string s) -> nil {
+free(string.ptr(s))
+}
+static fn string.new(pointer ptr, int length) -> string {
+pointer ptr_copy = malloc(+.int.int(length, 1))
+memcpy(ptr_copy, ptr, length)
+null_terminate(ptr_copy, length)
+string _0 = string_struct(ptr_copy, length)
+return _0
+}

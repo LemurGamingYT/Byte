@@ -1,0 +1,8 @@
+use "builtins"
+fn main() -> int {
+string _0 = string.new("Hello world", 11)
+string s = _0
+print_string(s)
+string.destroy(s)
+return 0
+}
