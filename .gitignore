@@ -1,0 +1,13 @@
+# compiler/python/internal files
+__pycache__/
+*.pyc
+*.interp
+*.tokens
+
+# compiler generated files
+*.byteast
+
+# codegen files
+*.o
+*.ll
+*.exe
