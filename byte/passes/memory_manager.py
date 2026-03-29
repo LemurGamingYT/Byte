@@ -1,5 +1,6 @@
 from contextlib import contextmanager
 from dataclasses import dataclass
+from logging import info
 from typing import cast
 
 from byte.passes import ByteCompilerPass
@@ -34,6 +35,7 @@ class MemoryManager(ByteCompilerPass):
         var = ast.Variable(node.pos, node.type, var_name, node)
         self.scope.data.prepend_nodes.append(var)
         self.scope.symbol_table.add(ast.Symbol(var_name, var.type, OwnedObject(node)))
+        info(f'extracted {node.__class__.__name__} with type {node.type} to temporary variable with name {var_name}')
         return var.to_id()
     
     def extract_node(self, node: ast.Node):
@@ -47,6 +49,8 @@ class MemoryManager(ByteCompilerPass):
         return self.extract(node)
     
     def reached_end_of_scope(self, pos: ast.Position):
+        info('reached end of scope, adding destroy calls')
+        
         nodes = []
         for symbol in self.scope.symbol_table.symbols.values():
             destroy_symbol = self.scope.symbol_table.tryget(f'{symbol.type}.destroy')
@@ -57,8 +61,10 @@ class MemoryManager(ByteCompilerPass):
             assert isinstance(destroy_func, ast.Function), f'Invalid destroy method for type {symbol.type}'
             
             if symbol.value.moved:
+                info(f'{symbol.name} was moved, skipping destroy call')
                 continue
             
+            info(f'{symbol.name} was not moved and needs to be freed, adding destroy call')
             nodes.append(ast.Call(pos, destroy_func.ret_type, destroy_func.name, [
                 ast.Id(pos, symbol.type, symbol.name).to_arg()
             ]))
@@ -69,6 +75,7 @@ class MemoryManager(ByteCompilerPass):
         return self.extract_node(super().visit(node))
     
     def visitBody(self, node: ast.Body):
+        has_returned = False
         nodes = []
         for stmt in node.nodes:
             stmt = self.visit(stmt)
@@ -78,17 +85,25 @@ class MemoryManager(ByteCompilerPass):
             
             if isinstance(stmt, ast.Return):
                 nodes.extend(self.reached_end_of_scope(node.pos))
+                has_returned = True
             
             nodes.append(stmt)
+        
+        if not has_returned:
+            nodes.extend(self.reached_end_of_scope(node.pos))
         
         return ast.Body(node.pos, node.type, nodes)
     
     def visitFunction(self, node: ast.Function):
+        info(f'managing memory of function body {node.name}')
+        
         body = node.body
         if body is not None:
             with self.file.child_scope():
+                info('adding function parameters')
                 for param in node.params:
                     self.scope.symbol_table.add(ast.Symbol(param.name, param.type, OwnedObject(param, True), param.is_mutable))
+                    info(f'added parameter {param.name}')
                 
                 body = cast(ast.Body, self.visit(body))
         
@@ -97,9 +112,12 @@ class MemoryManager(ByteCompilerPass):
     def visitVariable(self, node: ast.Variable):
         value = self.visit(node.value)
         if isinstance(value, ast.Id):
+            info(f'variable {node.name} has an identifier as a value, attempting to set ownership')
             symbol = self.scope.symbol_table.get(value.name)
             if isinstance(symbol.value, OwnedObject):
                 symbol.value.moved = True
+                info(f'{symbol.name} is now owned by {node.name}')
+                
                 self.scope.symbol_table.add(ast.Symbol(node.name, value.type, OwnedObject(value), node.is_mutable))
                 return ast.Variable(node.pos, value.type, node.name, value, node.is_mutable, node.op)
         
@@ -112,9 +130,12 @@ class MemoryManager(ByteCompilerPass):
         
         value = self.visit(node.value)
         if isinstance(value, ast.Id):
+            info(f'variable {node.name} has an identifier as a value, attempting to set ownership')
             symbol = self.scope.symbol_table.get(value.name)
             if isinstance(symbol.value, OwnedObject):
                 symbol.value.moved = True
+                info(f'{symbol.name} is now owned by {node.name}')
+                
                 self.scope.symbol_table.add(ast.Symbol(node.name, value.type, OwnedObject(value), assign_symbol.is_mutable))
                 return ast.Assignment(node.pos, value.type, node.name, value, node.op)
         
@@ -127,5 +148,6 @@ class MemoryManager(ByteCompilerPass):
             symbol = self.scope.symbol_table.get(value.name)
             if isinstance(symbol.value, OwnedObject):
                 symbol.value.moved = True
+                info(f'returned an owned object instance {symbol.name}, ownership is now on the callsite')
         
         return ast.Return(node.pos, cast(ast.Type, value.type), value)

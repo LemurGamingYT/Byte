@@ -3,6 +3,7 @@ from contextlib import contextmanager
 from abc import ABC, abstractmethod
 from sys import exit as sys_exit
 from typing import Union, Any
+from logging import error
 from pathlib import Path
 
 from colorama import Fore, Style
@@ -20,6 +21,7 @@ class Position:
         print(file.src.splitlines()[self.line - 1])
         print(' ' * self.column + '^')
         print(f'{Style.BRIGHT}{Fore.RED}error: {message}{Style.RESET_ALL}')
+        error(message)
         sys_exit(1)
 
 @dataclass
@@ -87,7 +89,6 @@ class ScopePassData:
     codegen_while_test_block: ir.Block | None = None
     end_of_scope_nodes: list['Node'] = field(default_factory=list)
     prepend_nodes: list['Node'] = field(default_factory=list)
-    append_nodes: list['Node'] = field(default_factory=list)
     
     def clone(self):
         return ScopePassData(self.codegen_while_merge_block, self.codegen_while_test_block)

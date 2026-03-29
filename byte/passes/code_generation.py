@@ -1,4 +1,5 @@
 from typing import cast, Any
+from logging import info
 
 from llvmlite import ir, binding
 
@@ -19,6 +20,7 @@ class CodeGeneration(ByteCompilerPass):
         self.string_type = self.module.declare_identified_type('string', ir.PointerType(ir.IntType(8)), ir.IntType(32))
         
         self.define_c_registry()
+        info('successfully created builder and module')
     
     def define_c_registry(self):
         self.module.registry.add_function('printf', ir.FunctionType(ir.VoidType(), [ir.PointerType(ir.IntType(8))], True))
@@ -31,6 +33,8 @@ class CodeGeneration(ByteCompilerPass):
         self.module.registry.add_function('snprintf', ir.FunctionType(ir.IntType(32), [
             ir.PointerType(ir.IntType(8)), ir.IntType(32), ir.PointerType(ir.IntType(8))
         ], True))
+        
+        info('successfully registered external C functions')
     
     def visitProgram(self, node: ast.Program):
         for stmt in node.nodes:
@@ -57,32 +61,41 @@ class CodeGeneration(ByteCompilerPass):
         return self.visit(node.value)
     
     def visitFunction(self, node: ast.Function):
+        info(f'generating IR for function {node.name}')
+        
         param_types = [self.visit(param.type) for param in node.params]
         ret_type = self.visit(node.ret_type)
         func = ir.Function(self.module, ir.FunctionType(ret_type, param_types), node.name)
         for arg, param in zip(func.args, node.params):
             arg.name = f'param.{param.name}'
         
+        info(f'created IR function {node.name}')
         self.scope.symbol_table.add(ast.Symbol(func.name, self.file.type_map.get('function'), func))
         if node.body is not None:
+            info(f'generating body for IR function {node.name}')
             with self.file.child_scope():
                 old_builder = self.builder
                 if len(node.params) > 0:
+                    info('creating parameter allocation block')
                     param_allocation = func.append_basic_block('param_allocation')
                     self.builder.position_at_end(param_allocation)
                     for i, param in enumerate(node.params):
+                        info(f'allocating {param.name}')
                         ptr = self.builder.allocate_value(func.args[i], f'{param.name}.addr')
                         self.scope.symbol_table.add(ast.Symbol(param.name, param.type, ptr, param.is_mutable))
                 
+                info('creating main entry block')
                 entry_block = func.append_basic_block('entry')
                 if len(node.params) > 0:
                     self.builder.branch(entry_block)
+                    info('branching parameter allocation to entry block')
                 
                 self.builder.position_at_end(entry_block)
                 self.visit(node.body)
                 
                 if not cast(ir.Block, self.builder.block).is_terminated:
                     self.builder.ret_void()
+                    info('block is not terminated, returning void as a fallback')
                 
                 self.builder = old_builder
         
@@ -206,16 +219,20 @@ class CodeGeneration(ByteCompilerPass):
             
             extern_func = ir.Function(self.module, func.function_type, func.name)
             extern_func.linkage = 'external'
+            
+            info(f'found external function {func.name}')
         
         self.scope.symbol_table.merge(file.scope.symbol_table)
         self.file.type_map.merge(file.type_map)
         self.file.dependencies.append(obj_file)
+        info(f'new dependency object file {obj_file}')
         return node
     
     def visitVariable(self, node: ast.Variable):
         value = self.visit(node.value)
         ptr = self.builder.allocate_value(value, f'{node.name}.addr')
         self.scope.symbol_table.add(ast.Symbol(node.name, node.type, ptr, node.is_mutable))
+        info(f'allocated variable {node.name}')
         return ptr
     
     def visitAssignment(self, node: ast.Assignment):
@@ -243,6 +260,7 @@ class CodeGeneration(ByteCompilerPass):
         return self.builder.load(ptr, node.name)
     
     def internal_call(self, name: str, args: list[Any]):
+        info(f'calling intrinsic function {name} with {len(args)} arguments')
         match name:
             case '+.int.int':
                 return self.builder.add(args[0], args[1], '+.int.int')
@@ -386,6 +404,7 @@ class CodeGeneration(ByteCompilerPass):
         if isinstance(func, ast.Function) and func.body is None:
             return self.internal_call(node.callee, args)
         
+        info(f'calling function {node.callee}')
         return self.builder.call(func, args, node.callee)
     
     def visitTernary(self, node: ast.Ternary):

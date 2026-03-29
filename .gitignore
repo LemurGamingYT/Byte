@@ -5,6 +5,7 @@ __pycache__/
 *.tokens
 
 # compiler generated files
+debug.log
 *.byteast
 
 # codegen files

@@ -1,3 +1,4 @@
+from logging import info
 from typing import cast
 
 from byte.passes import ByteCompilerPass
@@ -162,9 +163,13 @@ class TypeChecker(ByteCompilerPass):
             symbol = self.scope.symbol_table.get(func.name)
             base = cast(ast.Function, symbol.value)
             base.overloads.append(func)
+            info(f'adding new overload to {base.name}')
             
             params_mangling = '.'.join(str(param.type) for param in params)
-            func.name = f'{func.name}.{params_mangling}'
+            mangled_name = f'{func.name}.{params_mangling}'
+            info(f'mangled overload function name \'{func.name}\' to \'{mangled_name}\'')
+            
+            func.name = mangled_name
         else:
             self.scope.symbol_table.add(ast.Symbol(func.name, self.file.type_map.get('function'), func))
         
@@ -241,6 +246,7 @@ class TypeChecker(ByteCompilerPass):
         self.scope.symbol_table.merge(file.scope.symbol_table)
         self.file.type_map.merge(file.type_map)
         
+        info(f'used library {node.path} at {stdlib_path}')
         return node
     
     def visitId(self, node: ast.Id):
@@ -270,10 +276,16 @@ class TypeChecker(ByteCompilerPass):
         
         args = [cast(ast.Arg, self.visit(arg)) for arg in node.args]
         func = cast(ast.Function, symbol.value)
+        arg_types = [str(arg.type) for arg in args]
         for overload in [func] + func.overloads:
+            param_types = [str(param.type) for param in overload.params]
+            info(f'checking call types for {overload.name} - arg_types = {arg_types}, param_types = {param_types}')
             if not self.check_args(args, overload.params):
                 continue
             
+            info(f'calling overload {overload.name}')
+            
+            # TODO: check for multiple matching overloads
             return ast.Call(node.pos, overload.ret_type, overload.name, args)
         
         node.pos.comptime_error(self.file, 'no matching overloads')
