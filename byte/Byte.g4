@@ -6,7 +6,7 @@ type: ID;
 
 stmt
     : varAssign | funcAssign
-    | whileStmt | ifStmt | useStmt | deferStmt
+    | whileStmt | ifStmt | useStmt// | deferStmt
     | expr
     ;
 

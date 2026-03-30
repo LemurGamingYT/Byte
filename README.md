@@ -8,10 +8,9 @@ A simple compiled programming language
 - `while` loop
 - `break` and `continue`
 - `if else elseif` statements
-- `defer` statement
 - type extension
 - ternary
-- int, float and bool operations
+- int, float, string and bool operations
 - simple memory management
 - comments (defined using `//` and `/* */`)
 - operator overloading
