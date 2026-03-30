@@ -92,6 +92,11 @@ class TypeChecker(ByteCompilerPass):
         self.declare_empty_function('string.ptr', pointer_type, [
             ast.Param(ast.Position(), string_type, 's')
         ], ast.FunctionFlags(property=True))
+        
+        self.declare_empty_function('gep', pointer_type, [
+            ast.Param(ast.Position(), pointer_type, 'ptr'),
+            ast.Param(ast.Position(), int_type, 'offset')
+        ])
     
     def declare_op_function(self, op: str, ret_type: ast.Type, a_type: ast.Type, b_type: ast.Type | None = None):
         if b_type is None:

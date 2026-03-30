@@ -26,8 +26,14 @@ whileStmt: WHILE expr body;
 useStmt: USE STRING;
 deferStmt: DEFER expr;
 
+func_name
+    : extend_type=type DOT ID
+    | ID
+    | op=(ADD | SUB | MUL | DIV | MOD | EEQ | NEQ | GT | LT | GTE | LTE | AND | OR | NOT)
+    ;
+
 funcAssign
-    : STATIC? FUNC (extend_type=type DOT)? ID LPAREN params? RPAREN (RETURNS return_type=type)? body
+    : STATIC? FUNC func_name LPAREN params? RPAREN (RETURNS return_type=type)? body
     ;
 varAssign
     : ID op=(ADD | SUB | MUL | DIV | MOD)? ASSIGN expr

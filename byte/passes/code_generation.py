@@ -396,6 +396,8 @@ class CodeGeneration(ByteCompilerPass):
                 ptr = self.builder.select(args[0], true_ptr, false_ptr, 'b_ptr')
                 length = self.builder.select(args[0], llint(4), llint(5))
                 return self.builder.struct(self.string_type, [ptr, length], 'bool.to_string')
+            case 'gep':
+                return self.builder.gep(args[0], [args[1]], True, 'gep')
     
     def visitCall(self, node: ast.Call):
         symbol = self.scope.symbol_table.get(node.callee)
