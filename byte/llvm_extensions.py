@@ -14,24 +14,27 @@ class Registry:
         self.functions = {}
         self.globals = {}
     
-    def add_function(self, name: str, func_type: ir.FunctionType):
-        self.functions[name] = func_type
+    def add_function(self, name: str, func_type: ir.FunctionType, display_name: str | None = None):
+        self.functions[display_name or name] = (name, func_type)
     
-    def add_global(self, name: str, type: ir.Type):
-        self.globals[name] = type
+    def add_global(self, name: str, type: ir.Type, display_name: str | None = None):
+        self.globals[display_name or name] = (name, type)
     
     def get(self, name: str):
-        if name in self.module.globals:
-            return self.module.get_global(name)
-        
         if name in self.functions:
-            func_type = self.functions[name]
-            func = ir.Function(self.module, func_type, name)
+            llvm_name, func_type = self.functions[name]
+            if llvm_name in self.module.globals:
+                return self.module.get_global(llvm_name)
+            
+            func = ir.Function(self.module, func_type, llvm_name)
             func.linkage = 'external'
             return func
         elif name in self.globals:
-            type = self.globals[name]
-            return ir.GlobalVariable(self.module, type, name)
+            llvm_name, type = self.globals[name]
+            if llvm_name in self.module.globals:
+                return self.module.get_global(llvm_name)
+            
+            return ir.GlobalVariable(self.module, type, llvm_name)
         
         raise NotImplementedError(name)
 

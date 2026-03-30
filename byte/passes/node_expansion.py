@@ -44,6 +44,6 @@ class NodeExpansion(ByteCompilerPass):
         func = cast(ast.Function, symbol.value)
         args = [cast(ast.Arg, self.visit(arg)) for arg in node.args or []]
         if not func.flags.static:
-            args.append(value.to_arg())
+            args.insert(0, value.to_arg())
         
         return ast.Call(node.pos, node.type, callee, args)

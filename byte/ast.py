@@ -121,9 +121,11 @@ class File:
         
         self.type_map.add('int')
         self.type_map.add('float')
-        self.type_map.add('string')
         self.type_map.add('bool')
         self.type_map.add('nil')
+        
+        self.type_map.add('string')
+        self.type_map.add('Math')
         
         self.type_map.add('any')
         self.type_map.add('pointer')

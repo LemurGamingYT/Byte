@@ -26,21 +26,38 @@ class CodeGeneration(ByteCompilerPass):
         self.module.registry.add_function('printf', ir.FunctionType(ir.VoidType(), [ir.PointerType(ir.IntType(8))], True))
         self.module.registry.add_function('malloc', ir.FunctionType(ir.PointerType(ir.IntType(8)), [ir.IntType(32)]))
         self.module.registry.add_function('free', ir.FunctionType(ir.VoidType(), [ir.PointerType(ir.IntType(8))]))
-        self.module.registry.add_function('memcpy', ir.FunctionType(ir.VoidType(), [
+        self.module.registry.add_function('llvm.memcpy.p0.p0.i32', ir.FunctionType(ir.VoidType(), [
             ir.PointerType(ir.IntType(8)), ir.PointerType(ir.IntType(8)), ir.IntType(32)
-        ]))
+        ]), 'memcpy')
         
         self.module.registry.add_function('memcmp', ir.FunctionType(ir.IntType(1), [
             ir.PointerType(ir.IntType(8)), ir.PointerType(ir.IntType(8)), ir.IntType(32)
         ]))
         
-        self.module.registry.add_function('snprintf', ir.FunctionType(ir.IntType(32), [
-            ir.PointerType(ir.IntType(8)), ir.IntType(32), ir.PointerType(ir.IntType(8))
-        ], True))
-        
         self.module.registry.add_function('asprintf', ir.FunctionType(ir.IntType(32), [
             ir.PointerType(ir.PointerType(ir.IntType(8))), ir.PointerType(ir.IntType(8))
         ], True))
+        
+        self.module.registry.add_function('llvm.sqrt.f32', ir.FunctionType(ir.FloatType(), [ir.FloatType()]), 'sqrt')
+        self.module.registry.add_function('llvm.pow.f32', ir.FunctionType(ir.FloatType(), [ir.FloatType(), ir.FloatType()]), 'pow')
+        self.module.registry.add_function('llvm.fabs.f32', ir.FunctionType(ir.FloatType(), [ir.FloatType()]), 'fabs')
+        self.module.registry.add_function('llvm.floor.f32', ir.FunctionType(ir.FloatType(), [ir.FloatType()]), 'floor')
+        self.module.registry.add_function('llvm.ceil.f32', ir.FunctionType(ir.FloatType(), [ir.FloatType()]), 'ceil')
+        self.module.registry.add_function('llvm.maxnum.f32', ir.FunctionType(ir.FloatType(), [
+            ir.FloatType(), ir.FloatType()
+        ]), 'maxnum')
+        
+        self.module.registry.add_function('llvm.minnum.f32', ir.FunctionType(ir.FloatType(), [
+            ir.FloatType(), ir.FloatType()
+        ]), 'minnum')
+        
+        self.module.registry.add_function('llvm.smax.i32', ir.FunctionType(ir.IntType(32), [
+            ir.IntType(32), ir.IntType(32)
+        ]), 'smax')
+        
+        self.module.registry.add_function('llvm.smin.i32', ir.FunctionType(ir.IntType(32), [
+            ir.IntType(32), ir.IntType(32)
+        ]), 'smin')
         
         info('successfully registered external C functions')
     
@@ -386,12 +403,42 @@ class CodeGeneration(ByteCompilerPass):
             case 'memcmp':
                 memcmp = self.module.registry.get('memcmp')
                 return self.builder.icmp_signed('==', self.builder.call(memcmp, args, 'memcmp_call'), llint(0), 'memcmp')
+            case 'Math.sqrt':
+                sqrt = self.module.registry.get('sqrt')
+                return self.builder.call(sqrt, args, 'Math.sqrt')
+            case 'Math.pow':
+                pow = self.module.registry.get('pow')
+                return self.builder.call(pow, args, 'Math.pow')
+            case 'Math.abs':
+                fabs = self.module.registry.get('fabs')
+                return self.builder.call(fabs, args, 'Math.fabs')
+            case 'Math.floor':
+                floor = self.module.registry.get('floor')
+                return self.builder.cast(self.builder.call(floor, args, 'floor_call'), ir.IntType(32), 'Math.floor')
+            case 'Math.ceil':
+                ceil = self.module.registry.get('ceil')
+                return self.builder.cast(self.builder.call(ceil, args, 'ceil_call'), ir.IntType(32), 'Math.ceil')
+            case 'Math.min':
+                minnum = self.module.registry.get('minnum')
+                return self.builder.call(minnum, args, 'Math.min')
+            case 'Math.max':
+                maxnum = self.module.registry.get('maxnum')
+                return self.builder.call(maxnum, args, 'Math.max')
+            case 'Math.imin':
+                smin = self.module.registry.get('smin')
+                return self.builder.call(smin, args, 'Math.imin')
+            case 'Math.imax':
+                smax = self.module.registry.get('smax')
+                return self.builder.call(smax, args, 'Math.imax')
     
     def visitCall(self, node: ast.Call):
         symbol = self.scope.symbol_table.get(node.callee)
         func = cast(ast.Function | ir.Function, symbol.value)
         args = [self.visit(arg) for arg in node.args]
-        if isinstance(func, ast.Function) and func.body is None:
+        if isinstance(func, ast.Function):
+            if func.body is not None:
+                raise NotImplementedError
+            
             return self.internal_call(node.callee, args)
         
         info(f'calling function {node.callee}')

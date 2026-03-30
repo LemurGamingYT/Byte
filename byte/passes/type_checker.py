@@ -22,6 +22,7 @@ class TypeChecker(ByteCompilerPass):
         bool_type = self.file.type_map.get('bool')
         string_type = self.file.type_map.get('string')
         pointer_type = self.file.type_map.get('pointer')
+        Math_type = self.file.type_map.get('Math')
         
         self.declare_op_function('+', int_type, int_type, int_type)
         self.declare_op_function('-', int_type, int_type, int_type)
@@ -75,34 +76,54 @@ class TypeChecker(ByteCompilerPass):
             ast.Param(ast.Position(), pointer_type, 'ptr'), ast.Param(ast.Position(), int_type, 'length')
         ])
         
-        self.declare_empty_function('int.to_string', string_type, [
-            ast.Param(ast.Position(), int_type, 'i')
-        ], ast.FunctionFlags(method=True))
-        
-        self.declare_empty_function('float.to_string', string_type, [
-            ast.Param(ast.Position(), float_type, 'f')
-        ], ast.FunctionFlags(method=True))
-        
-        self.declare_empty_function('string.to_string', string_type, [
-            ast.Param(ast.Position(), string_type, 's')
-        ], ast.FunctionFlags(method=True))
-        
-        self.declare_empty_function('bool.to_string', string_type, [
-            ast.Param(ast.Position(), bool_type, 'b')
-        ], ast.FunctionFlags(method=True))
-        
-        self.declare_empty_function('string.ptr', pointer_type, [
-            ast.Param(ast.Position(), string_type, 's')
-        ], ast.FunctionFlags(property=True))
-        
         self.declare_empty_function('gep', pointer_type, [
             ast.Param(ast.Position(), pointer_type, 'ptr'),
             ast.Param(ast.Position(), int_type, 'offset')
         ])
         
-        self.declare_empty_function('string.length', int_type, [
-            ast.Param(ast.Position(), string_type, 's')
-        ], ast.FunctionFlags(property=True))
+        self.declare_attribute_function(int_type, 'to_string', string_type)
+        self.declare_attribute_function(float_type, 'to_string', string_type)
+        self.declare_attribute_function(string_type, 'to_string', string_type)
+        self.declare_attribute_function(bool_type, 'to_string', string_type)
+        
+        self.declare_attribute_function(string_type, 'ptr', pointer_type, is_method=False)
+        self.declare_attribute_function(string_type, 'length', int_type, is_method=False)
+        
+        self.declare_attribute_function(Math_type, 'sqrt', float_type, [
+            ast.Param(ast.Position(), float_type, 'x')
+        ], is_static=True)
+        
+        self.declare_attribute_function(Math_type, 'pow', float_type, [
+            ast.Param(ast.Position(), float_type, 'base'), ast.Param(ast.Position(), float_type, 'exponent')
+        ], is_static=True)
+        
+        self.declare_attribute_function(Math_type, 'abs', float_type, [
+            ast.Param(ast.Position(), float_type, 'x')
+        ], is_static=True)
+        
+        self.declare_attribute_function(Math_type, 'floor', int_type, [
+            ast.Param(ast.Position(), float_type, 'x')
+        ], is_static=True)
+        
+        self.declare_attribute_function(Math_type, 'ceil', int_type, [
+            ast.Param(ast.Position(), float_type, 'x')
+        ], is_static=True)
+        
+        self.declare_attribute_function(Math_type, 'min', float_type, [
+            ast.Param(ast.Position(), float_type, 'a'), ast.Param(ast.Position(), float_type, 'b')
+        ], is_static=True)
+        
+        self.declare_attribute_function(Math_type, 'max', float_type, [
+            ast.Param(ast.Position(), float_type, 'a'), ast.Param(ast.Position(), float_type, 'b')
+        ], is_static=True)
+        
+        self.declare_attribute_function(Math_type, 'imin', int_type, [
+            ast.Param(ast.Position(), int_type, 'a'), ast.Param(ast.Position(), int_type, 'b')
+        ], is_static=True)
+        
+        self.declare_attribute_function(Math_type, 'imax', int_type, [
+            ast.Param(ast.Position(), int_type, 'a'), ast.Param(ast.Position(), int_type, 'b')
+        ], is_static=True)
     
     def declare_op_function(self, op: str, ret_type: ast.Type, a_type: ast.Type, b_type: ast.Type | None = None):
         if b_type is None:
@@ -113,6 +134,18 @@ class TypeChecker(ByteCompilerPass):
             params = [ast.Param(ast.Position(), a_type, 'a'), ast.Param(ast.Position(), b_type, 'b')]
         
         self.declare_empty_function(name, ret_type, params)
+    
+    def declare_attribute_function(self, object_type: ast.Type, attr_name: str,
+        ret_type: ast.Type | None = None, params: list[ast.Param] | None = None,
+        is_static: bool = False, is_method: bool = True):
+        if params is None:
+            params = []
+        
+        if not is_static:
+            params.insert(0, ast.Param(ast.Position(), object_type, 'self'))
+        
+        flags = ast.FunctionFlags(static=is_static, property=not is_method, method=is_method)
+        self.declare_empty_function(f'{object_type}.{attr_name}', ret_type, params, flags)
     
     def declare_empty_function(self, name: str, ret_type: ast.Type | None = None, params: list[ast.Param] | None = None,
         flags: ast.FunctionFlags | None = None):
@@ -125,7 +158,7 @@ class TypeChecker(ByteCompilerPass):
         if ret_type is None:
             ret_type = self.file.type_map.get('nil')
         
-        func = ast.Function(ast.Position(), ret_type, name, params)
+        func = ast.Function(ast.Position(), ret_type, name, params, flags=flags)
         self.scope.symbol_table.add(ast.Symbol(func.name, self.file.type_map.get('function'), func))
     
     def visitType(self, node: ast.Type):
