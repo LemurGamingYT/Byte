@@ -13,7 +13,9 @@ from byte.ast_builder import ByteASTBuilder
 from byte import ast
 
 
-TESTS_DIR = Path(__file__).parent / 'tests'
+BYTE_DIR = Path(__file__).parent
+TESTS_DIR = BYTE_DIR / 'tests'
+CRUNTIME_DIR = BYTE_DIR / 'cruntime'
 VERSION = '0.0.1'
 PASS_CLASSES = [Preprocessor, TypeChecker, MemoryManager, NodeExpansion]
 
@@ -51,6 +53,12 @@ def compile_to_obj(file: ast.File):
 def compile_to_exe(file: ast.File):
     obj_file = compile_to_obj(file)
     obj_files = [obj_file] + [dependency for dependency in file.dependencies if dependency.suffix == '.o']
+    for cfile in CRUNTIME_DIR.glob('*.c'):
+        c_obj = cfile.with_suffix('.o')
+        run(f'clang -c {cfile} -o {c_obj}')
+        
+        obj_files.append(c_obj)
+    
     exe_file = file.path.with_suffix('.exe')
     obj_files_str = ' '.join(map(str, obj_files))
     link_cmd = f'clang {obj_files_str} -o {exe_file}'
@@ -87,6 +95,11 @@ class ArgParser:
         
         return None
     
+    def find_first_file(self, path: Path, name: str):
+        for file in path.iterdir():
+            if file.stem == name:
+                return file
+    
     def version(self):
         print(f'Byte v{VERSION}')
     
@@ -97,15 +110,24 @@ class ArgParser:
             print('No test name')
             sys_exit(1)
         
-        test = TESTS_DIR / f'{test_name}.py'
-        if not test.is_file():
+        test = self.find_first_file(TESTS_DIR, test_name)
+        if test is None:
             print('Usage: byte test <test-name>')
             print('Unknown test name')
             sys_exit(1)
         
-        module = import_module(f'byte.tests.{test_name}')
-        method = getattr(module, f'test_{test_name}')
-        method()
+        match test.suffix:
+            case '.py':
+                module = import_module(f'byte.tests.{test_name}')
+                method = getattr(module, f'test_{test_name}')
+                method()
+            case '.c':
+                exe_file = test.with_suffix('.exe')
+                run(f'clang {test.absolute().as_posix()} -o {exe_file.absolute().as_posix()}')
+                run(f'{exe_file}')
+                exe_file.unlink()
+            case _:
+                raise NotImplementedError(f'test suffix {test.suffix}')
     
     def build(self, file_path: str | None = None):
         if file_path is None:

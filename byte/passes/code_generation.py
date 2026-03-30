@@ -38,6 +38,10 @@ class CodeGeneration(ByteCompilerPass):
             ir.PointerType(ir.IntType(8)), ir.IntType(32), ir.PointerType(ir.IntType(8))
         ], True))
         
+        self.module.registry.add_function('asprintf', ir.FunctionType(ir.IntType(32), [
+            ir.PointerType(ir.PointerType(ir.IntType(8))), ir.PointerType(ir.IntType(8))
+        ], True))
+        
         info('successfully registered external C functions')
     
     def visitProgram(self, node: ast.Program):
@@ -333,10 +337,11 @@ class CodeGeneration(ByteCompilerPass):
                 self.builder.call(printf, [ptr, f_double])
             case 'print_string':
                 printf = self.module.registry.get('printf')
-                fmt = self.module.try_get_global('string_fmt', lambda: self.module.global_string('%s\n', 'string_fmt'))
+                fmt = self.module.try_get_global('string_fmt', lambda: self.module.global_string('%.*s\n', 'string_fmt'))
                 ptr = self.builder.first_elem(fmt, 'string_fmt_ptr')
                 s_ptr = self.builder.extract_value(args[0], 0, 's_ptr')
-                self.builder.call(printf, [ptr, s_ptr])
+                s_length = self.builder.extract_value(args[0], 1, 's_length')
+                self.builder.call(printf, [ptr, s_length, s_ptr])
             case 'print_bool':
                 printf = self.module.registry.get('printf')
                 fmt = self.module.try_get_global('string_fmt', lambda: self.module.global_string('%s\n', 'string_fmt'))
@@ -365,29 +370,26 @@ class CodeGeneration(ByteCompilerPass):
             case 'string.ptr':
                 return self.builder.extract_value(args[0], 0, 'string.ptr')
             case 'int.to_string':
-                snprintf = self.module.registry.get('snprintf')
-                
-                BUF_SIZE = 16
-                int_buf = self.module.global_buffer(ir.IntType(8), BUF_SIZE, f'int_buf{self.module.get_unique_name()}')
-                int_buf_ptr = self.builder.first_elem(int_buf, 'int_buf_ptr')
+                asprintf = self.module.registry.get('asprintf')
                 
                 int_fmt = self.module.try_get_global('int_fmt', lambda: self.module.global_string('%d', 'int_fmt'))
                 int_fmt_ptr = self.builder.first_elem(int_fmt, 'int_fmt_ptr')
                 
-                written = self.builder.call(snprintf, [int_buf_ptr, llint(BUF_SIZE), int_fmt_ptr, args[0]], 'written')
+                int_buf = self.builder.alloca(ir.PointerType(ir.IntType(8)), name='int_buf')
+                written = self.builder.call(asprintf, [int_buf, int_fmt_ptr, args[0]], 'written')
+                int_buf_ptr = self.builder.load(int_buf, 'int_buf_ptr')
                 return self.builder.struct(self.string_type, [int_buf_ptr, written], 'int.to_string')
             case 'float.to_string':
-                snprintf = self.module.registry.get('snprintf')
-                
-                BUF_SIZE = 64
-                float_buf = self.module.global_buffer(ir.IntType(8), BUF_SIZE, f'float_buf{self.module.get_unique_name()}')
-                float_buf_ptr = self.builder.first_elem(float_buf, 'float_buf_ptr')
+                asprintf = self.module.registry.get('asprintf')
                 
                 float_fmt = self.module.try_get_global('float_fmt', lambda: self.module.global_string('%f', 'float_fmt'))
                 float_fmt_ptr = self.builder.first_elem(float_fmt, 'float_fmt_ptr')
                 
                 f_double = self.builder.fpext(args[0], ir.DoubleType(), 'f_double')
-                written = self.builder.call(snprintf, [float_buf_ptr, llint(BUF_SIZE), float_fmt_ptr, f_double], 'written')
+                
+                float_buf = self.builder.alloca(ir.PointerType(ir.IntType(8)), name='float_buf')
+                written = self.builder.call(asprintf, [float_buf, float_fmt_ptr, f_double], 'written')
+                float_buf_ptr = self.builder.load(float_buf, 'float_buf_ptr')
                 return self.builder.struct(self.string_type, [float_buf_ptr, written], 'float.to_string')
             case 'string.to_string':
                 return args[0]
