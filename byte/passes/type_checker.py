@@ -164,6 +164,12 @@ class TypeChecker(ByteCompilerPass):
         value = self.visit(node.value)
         return ast.Return(node.pos, value.type, value)
     
+    def have_same_types(self, list1: list[ast.Type], list2: list[ast.Type]):
+        if len(list1) != len(list2):
+            return False
+        
+        return all(type1 == type2 for type1, type2 in zip(list1, list2))
+    
     def visitFunction(self, node: ast.Function):
         params = [cast(ast.Param, self.visit(param)) for param in node.params]
         ret_type = cast(ast.Type, self.visit(node.ret_type))
@@ -192,7 +198,12 @@ class TypeChecker(ByteCompilerPass):
             base.overloads.append(func)
             info(f'adding new overload to {base.name}')
             
-            params_mangling = '.'.join(str(param.type) for param in params)
+            base_param_types = [param.type for param in base.params]
+            param_types = [param.type for param in params]
+            if self.have_same_types(base_param_types, param_types):
+                node.pos.comptime_error(self.file, f'an overload of {func.name} has the same types as this overload')
+            
+            params_mangling = '.'.join(map(str, param_types))
             mangled_name = f'{func.name}.{params_mangling}'
             info(f'mangled overload function name \'{func.name}\' to \'{mangled_name}\'')
             

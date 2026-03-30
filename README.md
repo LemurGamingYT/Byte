@@ -14,3 +14,4 @@ A simple compiled programming language
 - int, float and bool operations
 - simple memory management
 - comments (defined using `//` and `/* */`)
+- operator overloading
