@@ -65,6 +65,11 @@ class TypeChecker(ByteCompilerPass):
             ast.Param(ast.Position(), int_type, 'length')
         ])
         
+        self.declare_empty_function('memcmp', bool_type, [
+            ast.Param(ast.Position(), pointer_type, 'a'), ast.Param(ast.Position(), pointer_type, 'b'),
+            ast.Param(ast.Position(), int_type, 'size')
+        ])
+        
         self.declare_empty_function('string_struct', string_type, [
             ast.Param(ast.Position(), pointer_type, 'ptr'), ast.Param(ast.Position(), int_type, 'length')
         ])
@@ -97,6 +102,10 @@ class TypeChecker(ByteCompilerPass):
             ast.Param(ast.Position(), pointer_type, 'ptr'),
             ast.Param(ast.Position(), int_type, 'offset')
         ])
+        
+        self.declare_empty_function('string.length', int_type, [
+            ast.Param(ast.Position(), string_type, 's')
+        ], ast.FunctionFlags(property=True))
     
     def declare_op_function(self, op: str, ret_type: ast.Type, a_type: ast.Type, b_type: ast.Type | None = None):
         if b_type is None:
@@ -160,6 +169,19 @@ class TypeChecker(ByteCompilerPass):
         ret_type = cast(ast.Type, self.visit(node.ret_type))
         extend_type = cast(ast.Type, self.visit(node.extend_type)) if node.extend_type is not None else None
         name = node.name
+        if name in ('+', '-', '*', '/', '%', '==', '!=', '>', '<', '>=', '<=', '&&', '||'):
+            if len(params) != 2:
+                node.pos.comptime_error(self.file, f'operator overload of \'{name}\' must have two parameters')
+            
+            a, b = params
+            name = f'{name}.{a.type}.{b.type}'
+        elif name == '!':
+            if len(params) != 1:
+                node.pos.comptime_error(self.file, f'operator overload of \'{name}\' must have one parameter')
+            
+            a = params[0]
+            name = f'{name}.{a.type}'
+        
         if extend_type is not None:
             name = f'{extend_type}.{name}'
         

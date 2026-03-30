@@ -8,6 +8,13 @@ from byte.parser.ByteLexer import ByteLexer
 from byte import ast
 
 
+class FuncName:
+    def __init__(self, identifier: str | None = None, extend_type: ast.Type | None = None, op: str | None = None) -> None:
+        self.identifier = identifier
+        self.extend_type = extend_type
+        self.op = op
+
+
 class ByteErrorListener(ANTLRErrorListener):
     def __init__(self, file: ast.File):
         self.file = file
@@ -68,13 +75,22 @@ class ByteASTBuilder(ByteVisitor):
             ctx.MUTABLE() is not None
         )
     
+    def visitFuncName(self, ctx):
+        if ctx.ID() is not None:
+            return FuncName(ctx.ID().getText(), self.visitType(ctx.extend_type) if ctx.extend_type is not None else None)
+        elif ctx.op is not None:
+            return FuncName(op=ctx.op.text)
+        
+        raise NotImplementedError
+    
     def visitFuncAssign(self, ctx):
         flags = ast.FunctionFlags(static=ctx.STATIC() is not None)
+        func_name = self.visitFuncName(ctx.funcName())
         return ast.Function(
             self.pos(ctx), self.visitType(ctx.return_type) if ctx.return_type is not None else
-                self.file.type_map.get('nil'), ctx.ID().getText(),
+                self.file.type_map.get('nil'), func_name.identifier or func_name.op,
             self.visitParams(ctx.params()), self.visitBody(ctx.body()),
-            flags, self.visitType(ctx.extend_type) if ctx.extend_type is not None else None
+            flags, func_name.extend_type
         )
     
     def visitVarAssign(self, ctx):

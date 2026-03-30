@@ -30,6 +30,10 @@ class CodeGeneration(ByteCompilerPass):
             ir.PointerType(ir.IntType(8)), ir.PointerType(ir.IntType(8)), ir.IntType(32)
         ]))
         
+        self.module.registry.add_function('memcmp', ir.FunctionType(ir.IntType(1), [
+            ir.PointerType(ir.IntType(8)), ir.PointerType(ir.IntType(8)), ir.IntType(32)
+        ]))
+        
         self.module.registry.add_function('snprintf', ir.FunctionType(ir.IntType(32), [
             ir.PointerType(ir.IntType(8)), ir.IntType(32), ir.PointerType(ir.IntType(8))
         ], True))
@@ -398,6 +402,11 @@ class CodeGeneration(ByteCompilerPass):
                 return self.builder.struct(self.string_type, [ptr, length], 'bool.to_string')
             case 'gep':
                 return self.builder.gep(args[0], [args[1]], True, 'gep')
+            case 'string.length':
+                return self.builder.extract_value(args[0], 1, 'string.length')
+            case 'memcmp':
+                memcmp = self.module.registry.get('memcmp')
+                return self.builder.icmp_signed('==', self.builder.call(memcmp, args, 'memcmp_call'), llint(0), 'memcmp')
     
     def visitCall(self, node: ast.Call):
         symbol = self.scope.symbol_table.get(node.callee)

@@ -4,7 +4,33 @@ fn string.destroy(string s) {
 
 static fn string.new(pointer ptr, int length) -> string {
     ptr_copy = malloc(length + 1)
+    // TODO: check if ptr_copy is NULL
+    
     memcpy(ptr_copy, ptr, length)
     null_terminate(ptr_copy, length)
     return string_struct(ptr_copy, length)
+}
+
+fn +(string a, string b) -> string {
+    total_length = a.length + b.length
+    ptr = malloc(total_length + 1)
+    // TODO: check if ptr is NULL
+    
+    memcpy(ptr, a.ptr, a.length)
+    
+    ptr_offset = gep(ptr, a.length)
+    memcpy(ptr_offset, b.ptr, b.length)
+    
+    null_terminate(ptr, total_length)
+    return string_struct(ptr, total_length)
+}
+
+fn ==(string a, string b) -> bool {
+    if a.length != b.length { return false }
+    return memcmp(a.ptr, b.ptr, a.length)
+}
+
+fn !=(string a, string b) -> bool {
+    if a.length != b.length { return true }
+    return !memcmp(a.ptr, b.ptr, a.length)
 }
