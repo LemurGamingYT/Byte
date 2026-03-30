@@ -1,6 +1,7 @@
 from logging import info
 from typing import cast
 
+from byte.llvm_extensions import Registry
 from byte.passes import ByteCompilerPass
 from byte import ast
 
@@ -55,18 +56,6 @@ class TypeChecker(ByteCompilerPass):
         self.declare_op_function('!', bool_type, bool_type)
         
         self.declare_empty_function('print', params=[ast.Param(ast.Position(), string_type, 's')])
-        
-        self.declare_empty_function('malloc', pointer_type, [ast.Param(ast.Position(), int_type, 'length')])
-        self.declare_empty_function('free', params=[ast.Param(ast.Position(), pointer_type, 'ptr')])
-        self.declare_empty_function('memcpy', params=[
-            ast.Param(ast.Position(), pointer_type, 'dest'), ast.Param(ast.Position(), pointer_type, 'src'),
-            ast.Param(ast.Position(), int_type, 'length')
-        ])
-        
-        self.declare_empty_function('memcmp', bool_type, [
-            ast.Param(ast.Position(), pointer_type, 'a'), ast.Param(ast.Position(), pointer_type, 'b'),
-            ast.Param(ast.Position(), int_type, 'size')
-        ])
         
         self.declare_empty_function('string_struct', string_type, [
             ast.Param(ast.Position(), pointer_type, 'ptr'), ast.Param(ast.Position(), int_type, 'length')
@@ -124,6 +113,14 @@ class TypeChecker(ByteCompilerPass):
         self.declare_attribute_function(Math_type, 'imax', int_type, [
             ast.Param(ast.Position(), int_type, 'a'), ast.Param(ast.Position(), int_type, 'b')
         ], is_static=True)
+        
+        for definition in Registry.get_all_definitions():
+            name = definition.display_name or definition.llvm_name
+            param_types = [ast.Type.from_llvm(self.file, ir_type) for ir_type in definition.type.args]
+            params = [ast.Param(ast.Position(), type, str(i)) for i, type in enumerate(param_types)]
+            ret_type = ast.Type.from_llvm(self.file, definition.type.return_type)
+            self.declare_empty_function(name, ret_type, params)
+            info(f'declared C registry function {name}')
     
     def declare_op_function(self, op: str, ret_type: ast.Type, a_type: ast.Type, b_type: ast.Type | None = None):
         if b_type is None:

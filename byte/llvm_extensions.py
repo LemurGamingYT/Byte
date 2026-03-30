@@ -7,12 +7,51 @@ def llint(value: int, width: int = 32):
     """Returns an integer constant with the given width and value"""
     return ir.Constant(ir.IntType(width), value)
 
+# TODO: support external variable definitions as well as external functions
+class RegistryDefinition:
+    def __init__(self, llvm_name: str, type: ir.FunctionType, display_name: str | None = None):
+        self.llvm_name = llvm_name
+        self.type = type
+        self.display_name = display_name
+
 class Registry:
     def __init__(self, module: ir.Module) -> None:
         self.module = module
         
         self.functions = {}
         self.globals = {}
+        
+        for definition in self.get_all_definitions():
+            self.add_function(definition.llvm_name, definition.type, definition.display_name)
+    
+    @staticmethod
+    def get_all_definitions():
+        return [
+            RegistryDefinition('printf', ir.FunctionType(ir.VoidType(), [ir.PointerType(ir.IntType(8))], True)),
+            RegistryDefinition('malloc', ir.FunctionType(ir.PointerType(ir.IntType(8)), [ir.IntType(32)])),
+            RegistryDefinition('free', ir.FunctionType(ir.VoidType(), [ir.PointerType(ir.IntType(8))])),
+            RegistryDefinition('llvm.memcpy.p0.p0.i32', ir.FunctionType(ir.VoidType(), [
+                ir.PointerType(ir.IntType(8)), ir.PointerType(ir.IntType(8)), ir.IntType(32)
+            ]), 'memcpy'),
+            
+            RegistryDefinition('memcmp', ir.FunctionType(ir.IntType(1), [
+                ir.PointerType(ir.IntType(8)), ir.PointerType(ir.IntType(8)), ir.IntType(32)
+            ])),
+            
+            RegistryDefinition('asprintf', ir.FunctionType(ir.IntType(32), [
+                ir.PointerType(ir.PointerType(ir.IntType(8))), ir.PointerType(ir.IntType(8))
+            ], True)),
+            
+            RegistryDefinition('llvm.sqrt.f32', ir.FunctionType(ir.FloatType(), [ir.FloatType()]), 'sqrt'),
+            RegistryDefinition('llvm.pow.f32', ir.FunctionType(ir.FloatType(), [ir.FloatType(), ir.FloatType()]), 'pow'),
+            RegistryDefinition('llvm.fabs.f32', ir.FunctionType(ir.FloatType(), [ir.FloatType()]), 'fabs'),
+            RegistryDefinition('llvm.floor.f32', ir.FunctionType(ir.FloatType(), [ir.FloatType()]), 'floor'),
+            RegistryDefinition('llvm.ceil.f32', ir.FunctionType(ir.FloatType(), [ir.FloatType()]), 'ceil'),
+            RegistryDefinition('llvm.maxnum.f32', ir.FunctionType(ir.FloatType(), [ir.FloatType(), ir.FloatType()]), 'maxnum'),
+            RegistryDefinition('llvm.minnum.f32', ir.FunctionType(ir.FloatType(), [ir.FloatType(), ir.FloatType()]), 'minnum'),
+            RegistryDefinition('llvm.smax.i32', ir.FunctionType(ir.IntType(32), [ir.IntType(32), ir.IntType(32)]), 'smax'),
+            RegistryDefinition('llvm.smin.i32', ir.FunctionType(ir.IntType(32), [ir.IntType(32), ir.IntType(32)]), 'smin')
+        ]
     
     def add_function(self, name: str, func_type: ir.FunctionType, display_name: str | None = None):
         self.functions[display_name or name] = (name, func_type)

@@ -19,47 +19,7 @@ class CodeGeneration(ByteCompilerPass):
         
         self.string_type = self.module.declare_identified_type('string', ir.PointerType(ir.IntType(8)), ir.IntType(32))
         
-        self.define_c_registry()
         info('successfully created builder and module')
-    
-    def define_c_registry(self):
-        self.module.registry.add_function('printf', ir.FunctionType(ir.VoidType(), [ir.PointerType(ir.IntType(8))], True))
-        self.module.registry.add_function('malloc', ir.FunctionType(ir.PointerType(ir.IntType(8)), [ir.IntType(32)]))
-        self.module.registry.add_function('free', ir.FunctionType(ir.VoidType(), [ir.PointerType(ir.IntType(8))]))
-        self.module.registry.add_function('llvm.memcpy.p0.p0.i32', ir.FunctionType(ir.VoidType(), [
-            ir.PointerType(ir.IntType(8)), ir.PointerType(ir.IntType(8)), ir.IntType(32)
-        ]), 'memcpy')
-        
-        self.module.registry.add_function('memcmp', ir.FunctionType(ir.IntType(1), [
-            ir.PointerType(ir.IntType(8)), ir.PointerType(ir.IntType(8)), ir.IntType(32)
-        ]))
-        
-        self.module.registry.add_function('asprintf', ir.FunctionType(ir.IntType(32), [
-            ir.PointerType(ir.PointerType(ir.IntType(8))), ir.PointerType(ir.IntType(8))
-        ], True))
-        
-        self.module.registry.add_function('llvm.sqrt.f32', ir.FunctionType(ir.FloatType(), [ir.FloatType()]), 'sqrt')
-        self.module.registry.add_function('llvm.pow.f32', ir.FunctionType(ir.FloatType(), [ir.FloatType(), ir.FloatType()]), 'pow')
-        self.module.registry.add_function('llvm.fabs.f32', ir.FunctionType(ir.FloatType(), [ir.FloatType()]), 'fabs')
-        self.module.registry.add_function('llvm.floor.f32', ir.FunctionType(ir.FloatType(), [ir.FloatType()]), 'floor')
-        self.module.registry.add_function('llvm.ceil.f32', ir.FunctionType(ir.FloatType(), [ir.FloatType()]), 'ceil')
-        self.module.registry.add_function('llvm.maxnum.f32', ir.FunctionType(ir.FloatType(), [
-            ir.FloatType(), ir.FloatType()
-        ]), 'maxnum')
-        
-        self.module.registry.add_function('llvm.minnum.f32', ir.FunctionType(ir.FloatType(), [
-            ir.FloatType(), ir.FloatType()
-        ]), 'minnum')
-        
-        self.module.registry.add_function('llvm.smax.i32', ir.FunctionType(ir.IntType(32), [
-            ir.IntType(32), ir.IntType(32)
-        ]), 'smax')
-        
-        self.module.registry.add_function('llvm.smin.i32', ir.FunctionType(ir.IntType(32), [
-            ir.IntType(32), ir.IntType(32)
-        ]), 'smin')
-        
-        info('successfully registered external C functions')
     
     def visitProgram(self, node: ast.Program):
         for stmt in node.nodes:
@@ -436,6 +396,10 @@ class CodeGeneration(ByteCompilerPass):
         func = cast(ast.Function | ir.Function, symbol.value)
         args = [self.visit(arg) for arg in node.args]
         if isinstance(func, ast.Function):
+            if node.callee in self.module.registry.functions:
+                ir_func = self.module.registry.get(node.callee)
+                return self.builder.call(ir_func, args, node.callee)
+            
             if func.body is not None:
                 raise NotImplementedError
             

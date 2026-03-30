@@ -160,6 +160,24 @@ class Type(Node):
     pos: Position = field(default_factory=Position, init=False, compare=False)
     type: str #type: ignore
     
+    @staticmethod
+    def from_llvm(file: File, ir_type: ir.Type):
+        if isinstance(ir_type, ir.IntType):
+            if ir_type.width == 1:
+                return file.type_map.get('bool')
+            elif ir_type.width == 32:
+                return file.type_map.get('int')
+        elif isinstance(ir_type, ir.FloatType):
+            return file.type_map.get('float')
+        elif isinstance(ir_type, ir.VoidType):
+            return file.type_map.get('nil')
+        elif isinstance(ir_type, ir.IdentifiedStructType):
+            return file.type_map.get(ir_type.name)
+        elif isinstance(ir_type, ir.PointerType):
+            return file.type_map.get('pointer')
+        
+        raise NotImplementedError
+    
     def __str__(self) -> str:
         return self.type
 
