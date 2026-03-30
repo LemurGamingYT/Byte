@@ -324,36 +324,13 @@ class CodeGeneration(ByteCompilerPass):
                 return self.builder.or_(args[0], args[1], '||.bool.bool')
             case '!.bool':
                 return self.builder.not_(args[0], '!.bool')
-            case 'print_int':
-                printf = self.module.registry.get('printf')
-                fmt = self.module.try_get_global('int_fmt', lambda: self.module.global_string('%d\n', 'int_fmt'))
-                ptr = self.builder.first_elem(fmt, 'int_fmt_ptr')
-                self.builder.call(printf, [ptr, args[0]])
-            case 'print_float':
-                printf = self.module.registry.get('printf')
-                fmt = self.module.try_get_global('float_fmt', lambda: self.module.global_string('%f\n', 'float_fmt'))
-                ptr = self.builder.first_elem(fmt, 'float_fmt_ptr')
-                f_double = self.builder.fpext(args[0], ir.DoubleType(), 'f_double')
-                self.builder.call(printf, [ptr, f_double])
-            case 'print_string':
+            case 'print':
                 printf = self.module.registry.get('printf')
                 fmt = self.module.try_get_global('string_fmt', lambda: self.module.global_string('%.*s\n', 'string_fmt'))
                 ptr = self.builder.first_elem(fmt, 'string_fmt_ptr')
                 s_ptr = self.builder.extract_value(args[0], 0, 's_ptr')
                 s_length = self.builder.extract_value(args[0], 1, 's_length')
                 self.builder.call(printf, [ptr, s_length, s_ptr])
-            case 'print_bool':
-                printf = self.module.registry.get('printf')
-                fmt = self.module.try_get_global('string_fmt', lambda: self.module.global_string('%s\n', 'string_fmt'))
-                ptr = self.builder.first_elem(fmt, 'string_fmt_ptr')
-                
-                true_str = self.module.try_get_global('true_str', lambda: self.module.global_string('true', 'true_str'))
-                false_str = self.module.try_get_global('false_str', lambda: self.module.global_string('false', 'false_str'))
-                true_ptr = self.builder.first_elem(true_str, 'true_ptr')
-                false_ptr = self.builder.first_elem(false_str, 'false_ptr')
-                
-                b_ptr = self.builder.select(args[0], true_ptr, false_ptr, 'b_ptr')
-                self.builder.call(printf, [ptr, b_ptr])
             case 'malloc':
                 malloc = self.module.registry.get('malloc')
                 return self.builder.call(malloc, args, 'malloc')

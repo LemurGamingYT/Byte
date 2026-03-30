@@ -53,10 +53,7 @@ class TypeChecker(ByteCompilerPass):
         self.declare_op_function('||', bool_type, bool_type, bool_type)
         self.declare_op_function('!', bool_type, bool_type)
         
-        self.declare_empty_function('print_int', params=[ast.Param(ast.Position(), int_type, 'i')])
-        self.declare_empty_function('print_float', params=[ast.Param(ast.Position(), float_type, 'f')])
-        self.declare_empty_function('print_string', params=[ast.Param(ast.Position(), self.file.type_map.get('string'), 's')])
-        self.declare_empty_function('print_bool', params=[ast.Param(ast.Position(), bool_type, 'b')])
+        self.declare_empty_function('print', params=[ast.Param(ast.Position(), string_type, 's')])
         
         self.declare_empty_function('malloc', pointer_type, [ast.Param(ast.Position(), int_type, 'length')])
         self.declare_empty_function('free', params=[ast.Param(ast.Position(), pointer_type, 'ptr')])
