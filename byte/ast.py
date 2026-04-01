@@ -33,26 +33,38 @@ class Symbol:
 
 @dataclass
 class SymbolTable:
+    parent: Union['SymbolTable', None] = None
     symbols: dict[str, Symbol] = field(default_factory=dict)
     
     def get(self, name: str):
+        if self.parent is not None and self.parent.has(name):
+            return self.parent.get(name)
+        
         return self.symbols[name]
 
     def tryget(self, name: str):
+        if self.parent is not None and self.parent.has(name):
+            return self.parent.tryget(name)
+        
         return self.symbols.get(name)
                  
     def add(self, symbol: Symbol):
         self.symbols[symbol.name] = symbol
     
     def has(self, name: str):
+        if self.parent is not None and self.parent.has(name):
+            return True
+        
         return name in self.symbols
                  
     def remove(self, name: str):
-        if self.has(name):
+        if self.parent is not None and self.parent.has(name):
+            return self.parent.remove(name)
+        elif name in self.symbols:
             del self.symbols[name]
-    
-    def clone(self):
-        return SymbolTable(self.symbols.copy())
+            return True
+        
+        return False
     
     def merge(self, other: 'SymbolTable'):
         self.symbols.update(other.symbols)
@@ -101,7 +113,7 @@ class Scope:
     data: ScopePassData = field(default_factory=ScopePassData)
     
     def clone(self):
-        return Scope(self, self.symbol_table.clone(), self.in_loop, self.data.clone())
+        return Scope(self, SymbolTable(self.symbol_table), self.in_loop, self.data.clone())
 
 @dataclass
 class File:

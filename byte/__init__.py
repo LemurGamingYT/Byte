@@ -128,6 +128,8 @@ class ArgParser:
                 exe_file.unlink()
             case _:
                 raise NotImplementedError(f'test suffix {test.suffix}')
+        
+        print(f'Completed test \'{test_name}\'')
     
     def build(self, file_path: str | None = None):
         if file_path is None:

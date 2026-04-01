@@ -7,7 +7,6 @@ static fn string.new(pointer ptr, int length) -> string {
     // TODO: check if ptr_copy is NULL
     
     memcpy(ptr_copy, ptr, length)
-    null_terminate(ptr_copy, length)
     return string_struct(ptr_copy, length)
 }
 
@@ -20,8 +19,6 @@ fn +(string a, string b) -> string {
     
     ptr_offset = gep(ptr, a.length)
     memcpy(ptr_offset, b.ptr, b.length)
-    
-    null_terminate(ptr, total_length)
     return string_struct(ptr, total_length)
 }
 
