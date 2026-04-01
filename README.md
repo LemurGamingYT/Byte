@@ -11,7 +11,7 @@ A simple compiled programming language
 - type extension
 - ternary
 - int, float, string and bool operations
-- simple memory management
+- simple memory management (very buggy too)
 - comments (defined using `//` and `/* */`)
 - operator overloading
 - `Math` static class
