@@ -397,6 +397,26 @@ class CodeGeneration(ByteCompilerPass):
             case 'Math.imax':
                 smax = self.module.registry.get('smax')
                 return self.builder.call(smax, args, 'Math.imax')
+            case 'input':
+                acrt_iob_func = self.module.registry.get('__acrt_iob_func')
+                strcspn = self.module.registry.get('strcspn')
+                fgets = self.module.registry.get('fgets')
+                
+                BUF_SIZE = 512
+                buf = self.module.try_get_global(
+                    'input_buf', lambda: self.module.global_buffer(ir.IntType(8), BUF_SIZE, 'input_buf')
+                )
+                
+                buf_ptr = self.builder.first_elem(buf, 'buf_ptr')
+                stdin = self.builder.call(acrt_iob_func, [llint(0)], 'stdin')
+                self.builder.call(fgets, [buf_ptr, llint(BUF_SIZE), stdin])
+                
+                newline_char = self.module.try_get_global('newline_char', lambda: self.module.global_string('\n', 'newline_char'))
+                newline_char_ptr = self.builder.first_elem(newline_char, 'newline_char_ptr')
+                newline_position = self.builder.call(strcspn, [buf_ptr, newline_char_ptr], 'newline_position')
+                newline_position_ptr = self.builder.gep(buf_ptr, [newline_position], True, 'newline_position_ptr')
+                self.builder.store(llint(0, 8), newline_position_ptr)
+                return self.builder.struct(self.string_type, [buf_ptr, llint(BUF_SIZE)], 'string')
     
     def visitCall(self, node: ast.Call):
         symbol = self.scope.symbol_table.get(node.callee)

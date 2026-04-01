@@ -188,6 +188,8 @@ class Type(Node):
             return file.type_map.get(ir_type.name)
         elif isinstance(ir_type, ir.PointerType):
             return file.type_map.get('pointer')
+        elif isinstance(ir_type, ir.LiteralStructType):
+            return file.type_map.get('any')
         
         raise NotImplementedError
     

@@ -66,6 +66,8 @@ class TypeChecker(ByteCompilerPass):
             ast.Param(ast.Position(), int_type, 'offset')
         ])
         
+        self.declare_empty_function('input', string_type)
+        
         self.declare_attribute_function(int_type, 'to_string', string_type)
         self.declare_attribute_function(float_type, 'to_string', string_type)
         self.declare_attribute_function(string_type, 'to_string', string_type)
