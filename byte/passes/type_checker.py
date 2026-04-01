@@ -56,12 +56,8 @@ class TypeChecker(ByteCompilerPass):
         self.declare_op_function('!', bool_type, bool_type)
         
         self.declare_empty_function('print', params=[ast.Param(ast.Position(), string_type, 's')])
-        
+        self.declare_empty_function('print_literal', params=[ast.Param(ast.Position(), string_type, 's')])
         self.declare_empty_function('string_struct', string_type, [
-            ast.Param(ast.Position(), pointer_type, 'ptr'), ast.Param(ast.Position(), int_type, 'length')
-        ])
-        
-        self.declare_empty_function('null_terminate', params=[
             ast.Param(ast.Position(), pointer_type, 'ptr'), ast.Param(ast.Position(), int_type, 'length')
         ])
         

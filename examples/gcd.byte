@@ -1,0 +1,21 @@
+fn gcd(int a, int b) -> int {
+    if a == 0 || b == 0 {
+        return Math.imax(a, b)
+    }
+    
+    mut res = Math.imin(a, b)
+    while res > 0 {
+        if a % res == 0 && b % res == 0 {
+            break
+        }
+        
+        res -= 1
+    }
+    
+    return res
+}
+
+fn main() -> int {
+    print(gcd(20, 28).to_string())
+    return 0
+}

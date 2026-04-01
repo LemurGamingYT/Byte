@@ -308,6 +308,13 @@ class CodeGeneration(ByteCompilerPass):
                 s_ptr = self.builder.extract_value(args[0], 0, 's_ptr')
                 s_length = self.builder.extract_value(args[0], 1, 's_length')
                 self.builder.call(printf, [ptr, s_length, s_ptr])
+            case 'print_literal':
+                printf = self.module.registry.get('printf')
+                fmt = self.module.try_get_global('string_fmt', lambda: self.module.global_string('%.*s', 'string_fmt'))
+                ptr = self.builder.first_elem(fmt, 'string_fmt_ptr')
+                s_ptr = self.builder.extract_value(args[0], 0, 's_ptr')
+                s_length = self.builder.extract_value(args[0], 1, 's_length')
+                self.builder.call(printf, [ptr, s_length, s_ptr])
             case 'malloc':
                 malloc = self.module.registry.get('malloc')
                 return self.builder.call(malloc, args, 'malloc')
