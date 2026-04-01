@@ -2,8 +2,8 @@ from dataclasses import dataclass, field
 from contextlib import contextmanager
 from abc import ABC, abstractmethod
 from sys import exit as sys_exit
+from logging import info, error
 from typing import Union, Any
-from logging import error
 from pathlib import Path
 
 from colorama import Fore, Style
@@ -147,6 +147,7 @@ class File:
     def child_scope(self):
         outer_scope = self.scope
         self.scope = self.scope.clone()
+        info('entering child scope')
         yield
         self.scope = outer_scope
 

@@ -151,3 +151,25 @@ class MemoryManager(ByteCompilerPass):
                 info(f'returned an owned object instance {symbol.name}, ownership is now on the callsite')
         
         return ast.Return(node.pos, cast(ast.Type, value.type), value)
+        
+    def visitElseif(self, node: ast.Elseif):
+        with self.file.child_scope():
+            body = self.visitBody(node.body)
+        
+        return ast.Elseif(node.pos, self.visit(node.cond), body)
+    
+    def visitIf(self, node: ast.If):
+        with self.file.child_scope():
+            body = self.visitBody(node.body)
+        
+        else_body = node.else_body
+        if else_body is not None:
+            else_body = self.visitBody(else_body)
+        
+        return ast.If(node.pos, self.visit(node.cond), body, else_body, [self.visitElseif(elseif) for elseif in node.elseifs])
+    
+    def visitWhile(self, node: ast.While):
+        with self.file.child_scope():
+            body = self.visitBody(node.body)
+        
+        return ast.While(node.pos, self.visit(node.cond), body)
