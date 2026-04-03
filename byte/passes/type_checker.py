@@ -24,6 +24,7 @@ class TypeChecker(ByteCompilerPass):
         string_type = self.file.type_map.get('string')
         pointer_type = self.file.type_map.get('pointer')
         Math_type = self.file.type_map.get('Math')
+        any_type = self.file.type_map.get('any')
         
         self.declare_op_function('+', int_type, int_type, int_type)
         self.declare_op_function('-', int_type, int_type, int_type)
@@ -64,6 +65,10 @@ class TypeChecker(ByteCompilerPass):
         self.declare_empty_function('gep', pointer_type, [
             ast.Param(ast.Position(), pointer_type, 'ptr'),
             ast.Param(ast.Position(), int_type, 'offset')
+        ])
+        
+        self.declare_empty_function('store', params=[
+            ast.Param(ast.Position(), pointer_type, 'ptr'), ast.Param(ast.Position(), any_type, 'value')
         ])
         
         self.declare_empty_function('input', string_type)
@@ -325,7 +330,7 @@ class TypeChecker(ByteCompilerPass):
             return False
         
         for arg, param in zip(args, params):
-            if arg.type == param.type:
+            if arg.type == param.type or str(param.type) == 'any':
                 continue
             
             return False

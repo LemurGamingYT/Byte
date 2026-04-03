@@ -398,7 +398,7 @@ class CodeGeneration(ByteCompilerPass):
                 smax = self.module.registry.get('smax')
                 return self.builder.call(smax, args, 'Math.imax')
             case 'input':
-                acrt_iob_func = self.module.registry.get('__acrt_iob_func')
+                acrt_iob_func = self.module.registry.get('acrt_iob_func')
                 strcspn = self.module.registry.get('strcspn')
                 fgets = self.module.registry.get('fgets')
                 
@@ -417,6 +417,8 @@ class CodeGeneration(ByteCompilerPass):
                 newline_position_ptr = self.builder.gep(buf_ptr, [newline_position], True, 'newline_position_ptr')
                 self.builder.store(llint(0, 8), newline_position_ptr)
                 return self.builder.struct(self.string_type, [buf_ptr, llint(BUF_SIZE)], 'string')
+            case 'store':
+                self.builder.store(args[1], args[0])
     
     def visitCall(self, node: ast.Call):
         symbol = self.scope.symbol_table.get(node.callee)

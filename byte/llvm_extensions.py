@@ -50,9 +50,9 @@ class Registry:
             RegistryDefinition('llvm.minnum.f32', ir.FunctionType(ir.FloatType(), [ir.FloatType(), ir.FloatType()]), 'minnum'),
             RegistryDefinition('llvm.smax.i32', ir.FunctionType(ir.IntType(32), [ir.IntType(32), ir.IntType(32)]), 'smax'),
             RegistryDefinition('llvm.smin.i32', ir.FunctionType(ir.IntType(32), [ir.IntType(32), ir.IntType(32)]), 'smin'),
-            RegistryDefinition('fgets', ir.FunctionType(pointer_type, [pointer_type, ir.IntType(32), FILE_type])),
+            RegistryDefinition('fgets', ir.FunctionType(ir.VoidType(), [pointer_type, ir.IntType(32), FILE_type])),
             RegistryDefinition('strcspn', ir.FunctionType(ir.IntType(32), [pointer_type, pointer_type])),
-            RegistryDefinition('__acrt_iob_func', ir.FunctionType(FILE_type, [ir.IntType(32)]))
+            RegistryDefinition('__acrt_iob_func', ir.FunctionType(FILE_type, [ir.IntType(32)]), 'acrt_iob_func')
         ]
     
     def add_function(self, name: str, func_type: ir.FunctionType, display_name: str | None = None):
