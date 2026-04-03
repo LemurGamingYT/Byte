@@ -4,7 +4,9 @@ fn string.destroy(string s) {
 
 static fn string.new(pointer ptr, int length) -> string {
     ptr_copy = malloc(length + 1)
-    // TODO: check if ptr_copy is NULL
+    if is_null(ptr_copy) {
+        error("out of memory")
+    }
     
     memcpy(ptr_copy, ptr, length)
     return string_struct(ptr_copy, length)
@@ -13,7 +15,9 @@ static fn string.new(pointer ptr, int length) -> string {
 fn +(string a, string b) -> string {
     total_length = a.length + b.length
     ptr = malloc(total_length + 1)
-    // TODO: check if ptr is NULL
+    if is_null(ptr) {
+        error("out of memory")
+    }
     
     memcpy(ptr, a.ptr, a.length)
     

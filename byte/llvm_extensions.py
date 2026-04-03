@@ -7,6 +7,14 @@ def llint(value: int, width: int = 32):
     """Returns an integer constant with the given width and value"""
     return ir.Constant(ir.IntType(width), value)
 
+def NULL(type: ir.Type | None = None):
+    """Returns a NULL pointer of the given type which is an i8 by default"""
+    
+    if type is None:
+        type = ir.IntType(8)
+    
+    return ir.Constant(ir.PointerType(type), None)
+
 # TODO: support external variable definitions as well as external functions
 class RegistryDefinition:
     def __init__(self, llvm_name: str, type: ir.FunctionType, display_name: str | None = None):
@@ -52,7 +60,8 @@ class Registry:
             RegistryDefinition('llvm.smin.i32', ir.FunctionType(ir.IntType(32), [ir.IntType(32), ir.IntType(32)]), 'smin'),
             RegistryDefinition('fgets', ir.FunctionType(ir.VoidType(), [pointer_type, ir.IntType(32), FILE_type])),
             RegistryDefinition('strcspn', ir.FunctionType(ir.IntType(32), [pointer_type, pointer_type])),
-            RegistryDefinition('__acrt_iob_func', ir.FunctionType(FILE_type, [ir.IntType(32)]), 'acrt_iob_func')
+            RegistryDefinition('__acrt_iob_func', ir.FunctionType(FILE_type, [ir.IntType(32)]), 'acrt_iob_func'),
+            RegistryDefinition('exit', ir.FunctionType(ir.VoidType(), [ir.IntType(32)]))
         ]
     
     def add_function(self, name: str, func_type: ir.FunctionType, display_name: str | None = None):

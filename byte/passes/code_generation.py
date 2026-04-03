@@ -3,7 +3,7 @@ from logging import info
 
 from llvmlite import ir, binding
 
-from byte.llvm_extensions import ModuleExt, IRBuilderExt, llint
+from byte.llvm_extensions import ModuleExt, IRBuilderExt, llint, NULL
 from byte.passes import ByteCompilerPass
 from byte import ast
 
@@ -326,8 +326,6 @@ class CodeGeneration(ByteCompilerPass):
                 return self.builder.call(memcpy, args, 'memcpy')
             case 'string_struct':
                 return self.builder.struct(self.string_type, args, 'string_struct')
-            case 'null_terminate':
-                return self.builder.null_terminate(args[0], args[1], 'null_terminate')
             case 'string.ptr':
                 return self.builder.extract_value(args[0], 0, 'string.ptr')
             case 'int.to_string':
@@ -338,6 +336,8 @@ class CodeGeneration(ByteCompilerPass):
                 
                 int_buf = self.builder.alloca(ir.PointerType(ir.IntType(8)), name='int_buf')
                 written = self.builder.call(asprintf, [int_buf, int_fmt_ptr, args[0]], 'written')
+                # TODO: check if asprintf failed
+                
                 int_buf_ptr = self.builder.load(int_buf, 'int_buf_ptr')
                 return self.builder.struct(self.string_type, [int_buf_ptr, written], 'int.to_string')
             case 'float.to_string':
@@ -410,6 +410,7 @@ class CodeGeneration(ByteCompilerPass):
                 buf_ptr = self.builder.first_elem(buf, 'buf_ptr')
                 stdin = self.builder.call(acrt_iob_func, [llint(0)], 'stdin')
                 self.builder.call(fgets, [buf_ptr, llint(BUF_SIZE), stdin])
+                # TODO: check output of fgets is not NULL
                 
                 newline_char = self.module.try_get_global('newline_char', lambda: self.module.global_string('\n', 'newline_char'))
                 newline_char_ptr = self.builder.first_elem(newline_char, 'newline_char_ptr')
@@ -419,6 +420,13 @@ class CodeGeneration(ByteCompilerPass):
                 return self.builder.struct(self.string_type, [buf_ptr, llint(BUF_SIZE)], 'string')
             case 'store':
                 self.builder.store(args[1], args[0])
+            case 'error':
+                exit = self.module.registry.get('exit')
+                
+                self.internal_call('print', args)
+                self.builder.call(exit, [llint(1)])
+            case 'is_null':
+                return self.builder.icmp_signed('==', args[0], NULL(), 'is_null')
     
     def visitCall(self, node: ast.Call):
         symbol = self.scope.symbol_table.get(node.callee)
