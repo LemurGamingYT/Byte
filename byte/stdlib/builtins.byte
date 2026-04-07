@@ -12,6 +12,15 @@ static fn string.new(pointer ptr, int length) -> string {
     return string_struct(ptr_copy, length)
 }
 
+static fn string.new(int length) -> string {
+    ptr = calloc(length, 1)
+    if is_null(ptr) {
+        error("out of memory")
+    }
+    
+    return string_struct(ptr, length)
+}
+
 fn +(string a, string b) -> string {
     total_length = a.length + b.length
     ptr = malloc(total_length + 1)
