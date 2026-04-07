@@ -455,3 +455,12 @@ class Attribute(Node):
     def __str__(self) -> str:
         args_str = ', '.join(map(str, self.args or []))
         return f'{self.value}.{self.attr}({args_str})'
+
+@dataclass
+class New(Node):
+    new_type: Type
+    args: list[Arg] = field(default_factory=list)
+    
+    def __str__(self) -> str:
+        args_str = ', '.join(map(str, self.args))
+        return f'new {self.new_type}({args_str})'

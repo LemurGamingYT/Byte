@@ -114,6 +114,11 @@ class ByteVisitor(ParseTreeVisitor):
         return self.visitChildren(ctx)
 
 
+    # Visit a parse tree produced by ByteParser#new.
+    def visitNew(self, ctx:ByteParser.NewContext):
+        return self.visitChildren(ctx)
+
+
     # Visit a parse tree produced by ByteParser#string.
     def visitString(self, ctx:ByteParser.StringContext):
         return self.visitChildren(ctx)

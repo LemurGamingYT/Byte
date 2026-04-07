@@ -152,6 +152,12 @@ class ByteASTBuilder(ByteVisitor):
             self.visitArgs(ctx.args()) if ctx.LPAREN() is not None else None
         )
     
+    def visitNew(self, ctx):
+        return ast.New(
+            self.pos(ctx), self.file.type_map.get('any'), self.visitType(ctx.type_()),
+            self.visitArgs(ctx.args())
+        )
+    
     def visitTernary(self, ctx):
         return ast.Ternary(
             self.pos(ctx), self.file.type_map.get('any'), self.visit(ctx.expr(1)),

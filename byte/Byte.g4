@@ -54,6 +54,7 @@ expr
     | STRING #string
     | BOOL #bool
     | ID #id
+    | NEW type LPAREN args? RPAREN #new
     | expr DOT ID (LPAREN args? RPAREN)? #attr
     | expr op=(MUL | DIV | MOD) expr #multiplication
     | expr op=(ADD | SUB) expr #addition
@@ -66,6 +67,7 @@ expr
 
 // Basic keywords
 IF: 'if';
+NEW: 'new';
 USE: 'use';
 FUNC: 'fn';
 ELSE: 'else';

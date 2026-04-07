@@ -47,3 +47,9 @@ class NodeExpansion(ByteCompilerPass):
             args.insert(0, value.to_arg())
         
         return ast.Call(node.pos, node.type, callee, args)
+    
+    def visitNew(self, node: ast.New):
+        new_type = self.visit(node.new_type)
+        callee = f'{new_type}.new'
+        args = [cast(ast.Arg, self.visit(arg)) for arg in node.args]
+        return ast.Call(node.pos, node.type, callee, args)

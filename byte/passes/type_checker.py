@@ -393,6 +393,17 @@ class TypeChecker(ByteCompilerPass):
             cast(ast.Arg, self.visit(arg)) for arg in node.args
         ] if node.args is not None else None)
     
+    def visitNew(self, node: ast.New):
+        new_type = cast(ast.Type, self.visit(node.new_type))
+        callee = f'{new_type}.new'
+        symbol = self.scope.symbol_table.tryget(callee)
+        if symbol is None:
+            node.pos.comptime_error(self.file, f'cannot make new type of type \'{new_type}\', no \'new\' method')
+        
+        func = cast(ast.Function, symbol.value)
+        args = [cast(ast.Arg, self.visit(arg)) for arg in node.args]
+        return ast.New(node.pos, func.ret_type, new_type, args)
+    
     def visitTernary(self, node: ast.Ternary):
         cond = self.visit(node.cond)
         true = self.visit(node.true)
