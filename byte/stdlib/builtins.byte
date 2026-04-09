@@ -1,46 +1,47 @@
 fn string.destroy(string s) {
-    free(s.ptr)
+    if s.is_allocated {
+        free(s.ptr)
+    }
 }
 
 static fn string.new(pointer ptr, int length) -> string {
-    ptr_copy = malloc(length + 1)
+    ptr_copy = malloc(length)
     if is_null(ptr_copy) {
         error("out of memory")
     }
     
     memcpy(ptr_copy, ptr, length)
-    return string_struct(ptr_copy, length)
+    return string_struct(ptr_copy, length, true)
 }
 
 static fn string.new(int length) -> string {
-    ptr = calloc(length, 1)
+    ptr = malloc(length)
     if is_null(ptr) {
         error("out of memory")
     }
     
-    return string_struct(ptr, length)
+    memset(ptr, 32, length, false)
+    return string_struct(ptr, length, true)
 }
 
 fn +(string a, string b) -> string {
     total_length = a.length + b.length
-    ptr = malloc(total_length + 1)
+    ptr = malloc(total_length)
     if is_null(ptr) {
         error("out of memory")
     }
     
     memcpy(ptr, a.ptr, a.length)
-    
-    ptr_offset = gep(ptr, a.length)
-    memcpy(ptr_offset, b.ptr, b.length)
-    return string_struct(ptr, total_length)
+    memcpy(ptr + a.length, b.ptr, b.length)
+    return string_struct(ptr, total_length, true)
 }
 
 fn ==(string a, string b) -> bool {
     if a.length != b.length { return false }
-    return memcmp(a.ptr, b.ptr, a.length)
+    return !memcmp(a.ptr, b.ptr, a.length)
 }
 
 fn !=(string a, string b) -> bool {
     if a.length != b.length { return true }
-    return !memcmp(a.ptr, b.ptr, a.length)
+    return memcmp(a.ptr, b.ptr, a.length)
 }

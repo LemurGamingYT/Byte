@@ -17,7 +17,9 @@ class CodeGeneration(ByteCompilerPass):
         
         self.builder = IRBuilderExt()
         
-        self.string_type = self.module.declare_identified_type('string', ir.PointerType(ir.IntType(8)), ir.IntType(32))
+        self.string_type = self.module.declare_identified_type(
+            'string', ir.PointerType(ir.IntType(8)), ir.IntType(32), ir.IntType(1)
+        )
         
         info('successfully created builder and module')
     
@@ -315,61 +317,57 @@ class CodeGeneration(ByteCompilerPass):
                 s_ptr = self.builder.extract_value(args[0], 0, 's_ptr')
                 s_length = self.builder.extract_value(args[0], 1, 's_length')
                 self.builder.call(printf, [ptr, s_length, s_ptr])
-            case 'malloc':
-                malloc = self.module.registry.get('malloc')
-                return self.builder.call(malloc, args, 'malloc')
-            case 'free':
-                free = self.module.registry.get('free')
-                return self.builder.call(free, args)
-            case 'memcpy':
-                memcpy = self.module.registry.get('memcpy')
-                return self.builder.call(memcpy, args, 'memcpy')
             case 'string_struct':
                 return self.builder.struct(self.string_type, args, 'string_struct')
             case 'string.ptr':
                 return self.builder.extract_value(args[0], 0, 'string.ptr')
             case 'int.to_string':
-                asprintf = self.module.registry.get('asprintf')
+                snprintf = self.module.registry.get('snprintf')
                 
                 int_fmt = self.module.try_get_global('int_fmt', lambda: self.module.global_string('%d', 'int_fmt'))
                 int_fmt_ptr = self.builder.first_elem(int_fmt, 'int_fmt_ptr')
                 
-                int_buf = self.builder.alloca(ir.PointerType(ir.IntType(8)), name='int_buf')
-                written = self.builder.call(asprintf, [int_buf, int_fmt_ptr, args[0]], 'written')
-                # TODO: check if asprintf failed
+                BUF_SIZE = 16
+                int_buf = self.builder.first_elem(
+                    self.module.global_buffer(ir.IntType(8), BUF_SIZE, self.module.get_unique_name('int_buf')),
+                    'int_buf'
+                )
                 
-                int_buf_ptr = self.builder.load(int_buf, 'int_buf_ptr')
-                return self.builder.struct(self.string_type, [int_buf_ptr, written], 'int.to_string')
+                written = self.builder.call(snprintf, [int_buf, llint(BUF_SIZE), int_fmt_ptr, args[0]], 'written')
+                # TODO: check if snprintf failed
+                
+                return self.builder.struct(self.string_type, [int_buf, written, llint(0, 1)], 'int.to_string')
             case 'float.to_string':
-                asprintf = self.module.registry.get('asprintf')
+                snprintf = self.module.registry.get('snprintf')
                 
                 float_fmt = self.module.try_get_global('float_fmt', lambda: self.module.global_string('%f', 'float_fmt'))
                 float_fmt_ptr = self.builder.first_elem(float_fmt, 'float_fmt_ptr')
                 
                 f_double = self.builder.fpext(args[0], ir.DoubleType(), 'f_double')
                 
-                float_buf = self.builder.alloca(ir.PointerType(ir.IntType(8)), name='float_buf')
-                written = self.builder.call(asprintf, [float_buf, float_fmt_ptr, f_double], 'written')
-                float_buf_ptr = self.builder.load(float_buf, 'float_buf_ptr')
-                return self.builder.struct(self.string_type, [float_buf_ptr, written], 'float.to_string')
+                BUF_SIZE = 64
+                float_buf = self.builder.first_elem(
+                    self.module.global_buffer(ir.IntType(8), BUF_SIZE, self.module.get_unique_name('float_buf')),
+                    'float_buf'
+                )
+                
+                written = self.builder.call(snprintf, [float_buf, llint(BUF_SIZE), float_fmt_ptr, f_double], 'written')
+                return self.builder.struct(self.string_type, [float_buf, written, llint(0, 1)], 'float.to_string')
             case 'string.to_string':
                 return args[0]
             case 'bool.to_string':
-                true_str = self.module.try_get_global('true_str', lambda: self.module.global_string('true', 'true_str'))
-                false_str = self.module.try_get_global('false_str', lambda: self.module.global_string('false', 'false_str'))
+                true_str = self.module.global_string('true', self.module.get_unique_name('true_str'))
+                false_str = self.module.global_string('false', self.module.get_unique_name('false_str'))
                 true_ptr = self.builder.first_elem(true_str, 'true_ptr')
                 false_ptr = self.builder.first_elem(false_str, 'false_ptr')
                 
                 ptr = self.builder.select(args[0], true_ptr, false_ptr, 'b_ptr')
-                length = self.builder.select(args[0], llint(4), llint(5))
-                return self.builder.struct(self.string_type, [ptr, length], 'bool.to_string')
+                length = self.builder.select(args[0], llint(4), llint(5), 'b_length')
+                return self.builder.struct(self.string_type, [ptr, length, llint(0, 1)], 'bool.to_string')
             case 'gep':
                 return self.builder.gep(args[0], [args[1]], True, 'gep')
             case 'string.length':
                 return self.builder.extract_value(args[0], 1, 'string.length')
-            case 'memcmp':
-                memcmp = self.module.registry.get('memcmp')
-                return self.builder.icmp_signed('==', self.builder.call(memcmp, args, 'memcmp_call'), llint(0), 'memcmp')
             case 'Math.sqrt':
                 sqrt = self.module.registry.get('sqrt')
                 return self.builder.call(sqrt, args, 'Math.sqrt')
@@ -416,8 +414,8 @@ class CodeGeneration(ByteCompilerPass):
                 newline_char_ptr = self.builder.first_elem(newline_char, 'newline_char_ptr')
                 newline_position = self.builder.call(strcspn, [buf_ptr, newline_char_ptr], 'newline_position')
                 newline_position_ptr = self.builder.gep(buf_ptr, [newline_position], True, 'newline_position_ptr')
-                self.builder.store(llint(0, 8), newline_position_ptr)
-                return self.builder.struct(self.string_type, [buf_ptr, llint(BUF_SIZE)], 'string')
+                self.builder.store(llint(0, 8), newline_position_ptr) # TODO: don't add null terminator
+                return self.builder.struct(self.string_type, [buf_ptr, newline_position, llint(0, 1)], 'string')
             case 'store':
                 self.builder.store(args[1], args[0])
             case 'error':
@@ -427,6 +425,10 @@ class CodeGeneration(ByteCompilerPass):
                 self.builder.call(exit, [llint(1)])
             case 'is_null':
                 return self.builder.icmp_signed('==', args[0], NULL(), 'is_null')
+            case '+.pointer.int':
+                return self.builder.gep(args[0], [args[1]], True, '+.pointer.int')
+            case 'string.is_allocated':
+                return self.builder.extract_value(args[0], 2, 'string.is_allocated')
     
     def visitCall(self, node: ast.Call):
         symbol = self.scope.symbol_table.get(node.callee)

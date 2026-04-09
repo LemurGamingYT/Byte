@@ -56,10 +56,13 @@ class TypeChecker(ByteCompilerPass):
         self.declare_op_function('||', bool_type, bool_type, bool_type)
         self.declare_op_function('!', bool_type, bool_type)
         
+        self.declare_op_function('+', pointer_type, pointer_type, int_type)
+        
         self.declare_empty_function('print', params=[ast.Param(ast.Position(), string_type, 's')])
         self.declare_empty_function('print_literal', params=[ast.Param(ast.Position(), string_type, 's')])
         self.declare_empty_function('string_struct', string_type, [
-            ast.Param(ast.Position(), pointer_type, 'ptr'), ast.Param(ast.Position(), int_type, 'length')
+            ast.Param(ast.Position(), pointer_type, 'ptr'), ast.Param(ast.Position(), int_type, 'length'),
+            ast.Param(ast.Position(), bool_type, 'is_allocated')
         ])
         
         self.declare_empty_function('gep', pointer_type, [
@@ -82,6 +85,7 @@ class TypeChecker(ByteCompilerPass):
         
         self.declare_attribute_function(string_type, 'ptr', pointer_type, is_method=False)
         self.declare_attribute_function(string_type, 'length', int_type, is_method=False)
+        self.declare_attribute_function(string_type, 'is_allocated', bool_type, is_method=False)
         
         self.declare_attribute_function(Math_type, 'sqrt', float_type, [
             ast.Param(ast.Position(), float_type, 'x')
