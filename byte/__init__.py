@@ -5,7 +5,6 @@ from logging import info
 from pathlib import Path
 
 from byte.passes.code_generation import CodeGeneration
-from byte.passes.node_expansion import NodeExpansion
 from byte.passes.memory_manager import MemoryManager
 from byte.passes.preprocessor import Preprocessor
 from byte.passes.type_checker import TypeChecker
@@ -17,7 +16,7 @@ BYTE_DIR = Path(__file__).parent
 TESTS_DIR = BYTE_DIR / 'tests'
 CRUNTIME_DIR = BYTE_DIR / 'cruntime'
 VERSION = '0.0.1'
-PASS_CLASSES = [Preprocessor, TypeChecker, MemoryManager, NodeExpansion]
+PASS_CLASSES = [Preprocessor, TypeChecker, MemoryManager]
 
 def parse(file: ast.File):
     builder = ByteASTBuilder(file)
@@ -53,7 +52,7 @@ def compile_to_obj(file: ast.File):
 def compile_to_exe(file: ast.File):
     obj_file = compile_to_obj(file)
     obj_files = [obj_file] + [dependency for dependency in file.dependencies if dependency.suffix == '.o']
-    for cfile in CRUNTIME_DIR.glob('*.c'):
+    for cfile in CRUNTIME_DIR.rglob('*.c'):
         c_obj = cfile.with_suffix('.o')
         run(f'clang -c {cfile} -o {c_obj}')
         
@@ -123,7 +122,7 @@ class ArgParser:
                 method()
             case '.c':
                 exe_file = test.with_suffix('.exe')
-                run(f'clang {test.absolute().as_posix()} -o {exe_file.absolute().as_posix()}')
+                run(f'clang {test.absolute().as_posix()} -o {exe_file.absolute().as_posix()} -D_TEST')
                 run(f'{exe_file}')
                 exe_file.unlink()
             case _:

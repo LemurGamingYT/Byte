@@ -76,10 +76,13 @@ class ByteASTBuilder(ByteVisitor):
         )
     
     def visitFuncName(self, ctx):
+        extend_type = self.visitType(ctx.extend_type) if ctx.extend_type is not None else None
         if ctx.ID() is not None:
-            return FuncName(ctx.ID().getText(), self.visitType(ctx.extend_type) if ctx.extend_type is not None else None)
+            return FuncName(ctx.ID().getText(), extend_type)
         elif ctx.op is not None:
             return FuncName(op=ctx.op.text)
+        elif ctx.NEW() is not None:
+            return FuncName('new', extend_type)
         
         raise NotImplementedError
     

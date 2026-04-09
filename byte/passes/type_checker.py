@@ -369,7 +369,7 @@ class TypeChecker(ByteCompilerPass):
             node.pos.comptime_error(self.file, f'invalid operation \'{node.op}\' between types \'{left.type}\' and \'{right.type}\'')
         
         func = cast(ast.Function, symbol.value)
-        return ast.Operation(node.pos, func.ret_type, node.op, left, right)
+        return self.visit(ast.Call(node.pos, func.ret_type, callee, [left.to_arg(), right.to_arg()]))
     
     def visitUnaryOperation(self, node: ast.UnaryOperation):
         value = self.visit(node.value)
@@ -379,7 +379,7 @@ class TypeChecker(ByteCompilerPass):
             node.pos.comptime_error(self.file, f'invalid operation \'{node.op}\' on type \'{value.type}\'')
         
         func = cast(ast.Function, symbol.value)
-        return ast.UnaryOperation(node.pos, func.ret_type, node.op, value)
+        return self.visit(ast.Call(node.pos, func.ret_type, callee, [value.to_arg()]))
     
     def visitAttribute(self, node: ast.Attribute):
         value = self.visit(node.value)
@@ -389,9 +389,11 @@ class TypeChecker(ByteCompilerPass):
             node.pos.comptime_error(self.file, f'unknown attribute \'{node.attr}\' on type \'{value.type}\'')
         
         func = cast(ast.Function, symbol.value)
-        return ast.Attribute(node.pos, func.ret_type, value, node.attr, [
-            cast(ast.Arg, self.visit(arg)) for arg in node.args
-        ] if node.args is not None else None)
+        args = [cast(ast.Arg, self.visit(arg)) for arg in node.args] if node.args is not None else []
+        if not func.flags.static:
+            args.insert(0, value.to_arg())
+        
+        return self.visit(ast.Call(node.pos, func.ret_type, callee, args))
     
     def visitNew(self, node: ast.New):
         new_type = cast(ast.Type, self.visit(node.new_type))
@@ -402,7 +404,8 @@ class TypeChecker(ByteCompilerPass):
         
         func = cast(ast.Function, symbol.value)
         args = [cast(ast.Arg, self.visit(arg)) for arg in node.args]
-        return ast.New(node.pos, func.ret_type, new_type, args)
+        new_type_id = ast.Id(new_type.pos, new_type, str(new_type))
+        return self.visit(ast.Attribute(node.pos, func.ret_type, new_type_id, 'new', args))
     
     def visitTernary(self, node: ast.Ternary):
         cond = self.visit(node.cond)

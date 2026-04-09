@@ -30,6 +30,8 @@ funcName
     : extend_type=type DOT ID
     | ID
     | op=(ADD | SUB | MUL | DIV | MOD | EEQ | NEQ | GT | LT | GTE | LTE | AND | OR | NOT)
+    | NEW
+    | extend_type=type DOT NEW
     ;
 
 funcAssign
