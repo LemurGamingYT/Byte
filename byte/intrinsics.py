@@ -335,7 +335,7 @@ class Intrinsics:
                     oom_msg_ptr = builder.first_elem(oom_msg, 'out_of_memory_msg_ptr')
                     
                     oom_str = builder.struct(string_type, [oom_msg_ptr, oom_length, llint(0, 1)], 'out_of_memory_str')
-                    Intrinsics.call(builder, module, 'error', [oom_str])
+                    self.call(builder, module, 'error', [oom_str])
                 
                 newline_char = module.try_get_global('newline_char', lambda: module.global_string('\n', 'newline_char'))
                 newline_char_ptr = builder.first_elem(newline_char, 'newline_char_ptr')
@@ -346,7 +346,7 @@ class Intrinsics:
             case 'error':
                 exit = module.registry.get('exit')
                 
-                Intrinsics.call(builder, module, 'print', args)
+                self.call(builder, module, 'print', args)
                 builder.call(exit, [llint(1)])
                 # TODO: builder.unreachable()
             case 'is_null':
