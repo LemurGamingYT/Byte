@@ -4,6 +4,8 @@ from subprocess import run
 from logging import info
 from pathlib import Path
 
+from colorama import Fore, Style
+
 from byte.passes.code_generation import CodeGeneration
 from byte.passes.memory_manager import MemoryManager
 from byte.passes.preprocessor import Preprocessor
@@ -122,8 +124,16 @@ class ArgParser:
                 method()
             case '.c':
                 exe_file = test.with_suffix('.exe')
-                run(f'clang {test.absolute().as_posix()} -o {exe_file.absolute().as_posix()} -D_TEST')
-                run(f'{exe_file}')
+                res = run(f'clang {test.absolute().as_posix()} -o {exe_file.absolute().as_posix()} -D_TEST')
+                if res.returncode != 0:
+                    print(f'{Style.BRIGHT}{Fore.RED}C exe compilation failed{Style.RESET_ALL}')
+                    sys_exit(1)
+                
+                res = run(f'{exe_file}')
+                if res.returncode != 0:
+                    print(f'{Style.BRIGHT}{Fore.RED}error occurred running exe file{Style.RESET_ALL}')
+                    sys_exit(1)
+                
                 exe_file.unlink()
             case _:
                 raise NotImplementedError(f'test suffix {test.suffix}')

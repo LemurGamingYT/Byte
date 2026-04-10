@@ -3,8 +3,9 @@ from logging import info
 
 from llvmlite import ir, binding
 
-from byte.llvm_extensions import ModuleExt, IRBuilderExt, llint, NULL
+from byte.llvm_extensions import ModuleExt, IRBuilderExt, llint
 from byte.passes import ByteCompilerPass
+from byte.intrinsics import Intrinsics
 from byte import ast
 
 
@@ -16,6 +17,8 @@ class CodeGeneration(ByteCompilerPass):
         self.module.triple = binding.get_default_triple()
         
         self.builder = IRBuilderExt()
+        
+        self.intrinsics = Intrinsics(file)
         
         self.string_type = self.module.declare_identified_type(
             'string', ir.PointerType(ir.IntType(8)), ir.IntType(32), ir.IntType(1)
@@ -247,188 +250,7 @@ class CodeGeneration(ByteCompilerPass):
         return self.builder.load(ptr, node.name)
     
     def internal_call(self, name: str, args: list[Any]):
-        info(f'calling intrinsic function {name} with {len(args)} arguments')
-        match name:
-            case '+.int.int':
-                return self.builder.add(args[0], args[1], '+.int.int')
-            case '-.int.int':
-                return self.builder.sub(args[0], args[1], '-.int.int')
-            case '*.int.int':
-                return self.builder.mul(args[0], args[1], '*.int.int')
-            case '/.int.int':
-                return self.builder.sdiv(args[0], args[1], '/.int.int')
-            case '%.int.int':
-                return self.builder.srem(args[0], args[1], '%.int.int')
-            case '==.int.int':
-                return self.builder.icmp_signed('==', args[0], args[1], '==.int.int')
-            case '!=.int.int':
-                return self.builder.icmp_signed('!=', args[0], args[1], '!=.int.int')
-            case '>.int.int':
-                return self.builder.icmp_signed('>', args[0], args[1], '>.int.int')
-            case '<.int.int':
-                return self.builder.icmp_signed('<', args[0], args[1], '<.int.int')
-            case '>=.int.int':
-                return self.builder.icmp_signed('>=', args[0], args[1], '>=.int.int')
-            case '<=.int.int':
-                return self.builder.icmp_signed('<=', args[0], args[1], '<=.int.int')
-            case '+.float.float':
-                return self.builder.fadd(args[0], args[1], '+.float.float')
-            case '-.float.float':
-                return self.builder.fsub(args[0], args[1], '-.float.float')
-            case '*.float.float':
-                return self.builder.fmul(args[0], args[1], '*.float.float')
-            case '/.float.float':
-                return self.builder.fdiv(args[0], args[1], '/.float.float')
-            case '%.float.float':
-                return self.builder.frem(args[0], args[1], '%.float.float')
-            case '==.float.float':
-                return self.builder.fcmp_ordered('==', args[0], args[1], '==.float.float')
-            case '!=.float.float':
-                return self.builder.fcmp_ordered('!=', args[0], args[1], '!=.float.float')
-            case '>.float.float':
-                return self.builder.fcmp_ordered('>', args[0], args[1], '>.float.float')
-            case '<.float.float':
-                return self.builder.fcmp_ordered('<', args[0], args[1], '<.float.float')
-            case '>=.float.float':
-                return self.builder.fcmp_ordered('>=', args[0], args[1], '>=.float.float')
-            case '<=.float.float':
-                return self.builder.fcmp_ordered('<=', args[0], args[1], '<=.float.float')
-            case '==.bool.bool':
-                return self.builder.icmp_signed('==', args[0], args[1], '==.bool.bool')
-            case '!=.bool.bool':
-                return self.builder.icmp_signed('!=', args[0], args[1], '!=.bool.bool')
-            case '&&.bool.bool':
-                return self.builder.and_(args[0], args[1], '&&.bool.bool')
-            case '||.bool.bool':
-                return self.builder.or_(args[0], args[1], '||.bool.bool')
-            case '!.bool':
-                return self.builder.not_(args[0], '!.bool')
-            case 'print':
-                printf = self.module.registry.get('printf')
-                fmt = self.module.try_get_global('string_fmt', lambda: self.module.global_string('%.*s\n', 'string_fmt'))
-                ptr = self.builder.first_elem(fmt, 'string_fmt_ptr')
-                s_ptr = self.builder.extract_value(args[0], 0, 's_ptr')
-                s_length = self.builder.extract_value(args[0], 1, 's_length')
-                self.builder.call(printf, [ptr, s_length, s_ptr])
-            case 'print_literal':
-                printf = self.module.registry.get('printf')
-                fmt = self.module.try_get_global('string_fmt', lambda: self.module.global_string('%.*s', 'string_fmt'))
-                ptr = self.builder.first_elem(fmt, 'string_fmt_ptr')
-                s_ptr = self.builder.extract_value(args[0], 0, 's_ptr')
-                s_length = self.builder.extract_value(args[0], 1, 's_length')
-                self.builder.call(printf, [ptr, s_length, s_ptr])
-            case 'string_struct':
-                return self.builder.struct(self.string_type, args, 'string_struct')
-            case 'string.ptr':
-                return self.builder.extract_value(args[0], 0, 'string.ptr')
-            case 'int.to_string':
-                snprintf = self.module.registry.get('snprintf')
-                
-                int_fmt = self.module.try_get_global('int_fmt', lambda: self.module.global_string('%d', 'int_fmt'))
-                int_fmt_ptr = self.builder.first_elem(int_fmt, 'int_fmt_ptr')
-                
-                BUF_SIZE = 16
-                int_buf = self.builder.first_elem(
-                    self.module.global_buffer(ir.IntType(8), BUF_SIZE, self.module.get_unique_name('int_buf')),
-                    'int_buf'
-                )
-                
-                written = self.builder.call(snprintf, [int_buf, llint(BUF_SIZE), int_fmt_ptr, args[0]], 'written')
-                # TODO: check if snprintf failed
-                
-                return self.builder.struct(self.string_type, [int_buf, written, llint(0, 1)], 'int.to_string')
-            case 'float.to_string':
-                snprintf = self.module.registry.get('snprintf')
-                
-                float_fmt = self.module.try_get_global('float_fmt', lambda: self.module.global_string('%f', 'float_fmt'))
-                float_fmt_ptr = self.builder.first_elem(float_fmt, 'float_fmt_ptr')
-                
-                f_double = self.builder.fpext(args[0], ir.DoubleType(), 'f_double')
-                
-                BUF_SIZE = 64
-                float_buf = self.builder.first_elem(
-                    self.module.global_buffer(ir.IntType(8), BUF_SIZE, self.module.get_unique_name('float_buf')),
-                    'float_buf'
-                )
-                
-                written = self.builder.call(snprintf, [float_buf, llint(BUF_SIZE), float_fmt_ptr, f_double], 'written')
-                return self.builder.struct(self.string_type, [float_buf, written, llint(0, 1)], 'float.to_string')
-            case 'string.to_string':
-                return args[0]
-            case 'bool.to_string':
-                true_str = self.module.global_string('true', self.module.get_unique_name('true_str'))
-                false_str = self.module.global_string('false', self.module.get_unique_name('false_str'))
-                true_ptr = self.builder.first_elem(true_str, 'true_ptr')
-                false_ptr = self.builder.first_elem(false_str, 'false_ptr')
-                
-                ptr = self.builder.select(args[0], true_ptr, false_ptr, 'b_ptr')
-                length = self.builder.select(args[0], llint(4), llint(5), 'b_length')
-                return self.builder.struct(self.string_type, [ptr, length, llint(0, 1)], 'bool.to_string')
-            case 'gep':
-                return self.builder.gep(args[0], [args[1]], True, 'gep')
-            case 'string.length':
-                return self.builder.extract_value(args[0], 1, 'string.length')
-            case 'Math.sqrt':
-                sqrt = self.module.registry.get('sqrt')
-                return self.builder.call(sqrt, args, 'Math.sqrt')
-            case 'Math.pow':
-                pow = self.module.registry.get('pow')
-                return self.builder.call(pow, args, 'Math.pow')
-            case 'Math.abs':
-                fabs = self.module.registry.get('fabs')
-                return self.builder.call(fabs, args, 'Math.fabs')
-            case 'Math.floor':
-                floor = self.module.registry.get('floor')
-                return self.builder.cast(self.builder.call(floor, args, 'floor_call'), ir.IntType(32), 'Math.floor')
-            case 'Math.ceil':
-                ceil = self.module.registry.get('ceil')
-                return self.builder.cast(self.builder.call(ceil, args, 'ceil_call'), ir.IntType(32), 'Math.ceil')
-            case 'Math.min':
-                minnum = self.module.registry.get('minnum')
-                return self.builder.call(minnum, args, 'Math.min')
-            case 'Math.max':
-                maxnum = self.module.registry.get('maxnum')
-                return self.builder.call(maxnum, args, 'Math.max')
-            case 'Math.imin':
-                smin = self.module.registry.get('smin')
-                return self.builder.call(smin, args, 'Math.imin')
-            case 'Math.imax':
-                smax = self.module.registry.get('smax')
-                return self.builder.call(smax, args, 'Math.imax')
-            case 'input':
-                acrt_iob_func = self.module.registry.get('acrt_iob_func')
-                strcspn = self.module.registry.get('strcspn')
-                fgets = self.module.registry.get('fgets')
-                
-                BUF_SIZE = 512
-                buf = self.module.try_get_global(
-                    'input_buf', lambda: self.module.global_buffer(ir.IntType(8), BUF_SIZE, 'input_buf')
-                )
-                
-                buf_ptr = self.builder.first_elem(buf, 'buf_ptr')
-                stdin = self.builder.call(acrt_iob_func, [llint(0)], 'stdin')
-                self.builder.call(fgets, [buf_ptr, llint(BUF_SIZE), stdin])
-                # TODO: check output of fgets is not NULL
-                
-                newline_char = self.module.try_get_global('newline_char', lambda: self.module.global_string('\n', 'newline_char'))
-                newline_char_ptr = self.builder.first_elem(newline_char, 'newline_char_ptr')
-                newline_position = self.builder.call(strcspn, [buf_ptr, newline_char_ptr], 'newline_position')
-                newline_position_ptr = self.builder.gep(buf_ptr, [newline_position], True, 'newline_position_ptr')
-                self.builder.store(llint(0, 8), newline_position_ptr) # TODO: don't add null terminator
-                return self.builder.struct(self.string_type, [buf_ptr, newline_position, llint(0, 1)], 'string')
-            case 'store':
-                self.builder.store(args[1], args[0])
-            case 'error':
-                exit = self.module.registry.get('exit')
-                
-                self.internal_call('print', args)
-                self.builder.call(exit, [llint(1)])
-            case 'is_null':
-                return self.builder.icmp_signed('==', args[0], NULL(), 'is_null')
-            case '+.pointer.int':
-                return self.builder.gep(args[0], [args[1]], True, '+.pointer.int')
-            case 'string.is_allocated':
-                return self.builder.extract_value(args[0], 2, 'string.is_allocated')
+        return self.intrinsics.call(self.builder, self.module, name, args)
     
     def visitCall(self, node: ast.Call):
         symbol = self.scope.symbol_table.get(node.callee)
