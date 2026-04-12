@@ -237,9 +237,12 @@ class Body(Node):
 
 @dataclass
 class Return(Node):
-    value: Node
+    value: Node | None = None
     
     def __str__(self) -> str:
+        if self.value is None:
+            return 'return'
+        
         return f'return {self.value}'
 
 @dataclass(kw_only=True)

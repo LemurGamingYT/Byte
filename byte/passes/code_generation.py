@@ -96,6 +96,9 @@ class CodeGeneration(ByteCompilerPass):
             self.visit(stmt)
     
     def visitReturn(self, node: ast.Return):
+        if node.value is None:
+            return self.builder.ret_void()
+        
         value = self.visit(node.value)
         self.builder.ret(value)
     

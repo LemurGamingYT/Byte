@@ -51,8 +51,8 @@ class ByteASTBuilder(ByteVisitor):
         return ast.Arg(self.pos(ctx), value.type, value)
     
     def visitReturn(self, ctx):
-        expr = self.visit(ctx.expr())
-        return ast.Return(self.pos(ctx), expr.type, expr)
+        expr = self.visit(ctx.expr()) if ctx.expr() is not None else None
+        return ast.Return(self.pos(ctx), expr.type if expr is not None else self.file.type_map.get('nil'), expr)
     
     def visitBreak(self, ctx):
         return ast.Break(self.pos(ctx))

@@ -143,6 +143,9 @@ class MemoryManager(ByteCompilerPass):
         return ast.Assignment(node.pos, cast(ast.Type, value.type), node.name, value, node.op)
     
     def visitReturn(self, node: ast.Return):
+        if node.value is None:
+            return node
+        
         value = self.visit(node.value)
         if isinstance(value, ast.Id):
             symbol = self.scope.symbol_table.get(value.name)

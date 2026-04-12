@@ -51,6 +51,9 @@ class TypeChecker(ByteCompilerPass):
         return node
     
     def visitReturn(self, node: ast.Return):
+        if node.value is None:
+            return node
+        
         value = self.visit(node.value)
         return ast.Return(node.pos, value.type, value)
     

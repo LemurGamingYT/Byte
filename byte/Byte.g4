@@ -12,7 +12,7 @@ stmt
 
 bodyStmts
     : stmt #bodyStmt
-    | RETURN expr #return
+    | RETURN expr? #return
     | BREAK #break
     | CONTINUE #continue
     ;
