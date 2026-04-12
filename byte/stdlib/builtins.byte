@@ -32,6 +32,11 @@ fn string.parse_float(string s) -> float {
     return strtof(s.ptr, null())
 }
 
+fn input(string prompt) -> string {
+    print_literal(prompt)
+    return input()
+}
+
 fn +(string a, string b) -> string {
     total_length = a.length + b.length
     ptr = malloc(total_length)

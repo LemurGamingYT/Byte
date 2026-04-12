@@ -98,9 +98,8 @@ class TypeChecker(ByteCompilerPass):
             info(f'mangled overload function name \'{func.name}\' to \'{mangled_name}\'')
             
             func.name = mangled_name
-        else:
-            self.scope.symbol_table.add(ast.Symbol(func.name, self.file.type_map.get('function'), func))
         
+        self.scope.symbol_table.add(ast.Symbol(func.name, self.file.type_map.get('function'), func))
         if func.body is not None:
             with self.file.child_scope():
                 for param in params:

@@ -230,8 +230,8 @@ class Intrinsics:
                 builder.call(printf, [ptr, s_length, s_ptr])
             case 'print_literal':
                 printf = module.registry.get('printf')
-                fmt = module.try_get_global('string_fmt', lambda: module.global_string('%.*s', 'string_fmt'))
-                ptr = builder.first_elem(fmt, 'string_fmt_ptr')
+                fmt = module.try_get_global('string_lit_fmt', lambda: module.global_string('%.*s', 'string_lit_fmt'))
+                ptr = builder.first_elem(fmt, 'string_lit_fmt_ptr')
                 s_ptr = builder.extract_value(args[0], 0, 's_ptr')
                 s_length = builder.extract_value(args[0], 1, 's_length')
                 builder.call(printf, [ptr, s_length, s_ptr])
