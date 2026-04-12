@@ -24,6 +24,14 @@ static fn string.new(int length) -> string {
     return string_struct(ptr, length, true)
 }
 
+fn string.parse_int(string s) -> int {
+    return strtol(s.ptr, null(), 10)
+}
+
+fn string.parse_float(string s) -> float {
+    return strtof(s.ptr, null())
+}
+
 fn +(string a, string b) -> string {
     total_length = a.length + b.length
     ptr = malloc(total_length)

@@ -58,7 +58,7 @@ class Registry:
             RegistryDefinition('llvm.minnum.f32', ir.FunctionType(ir.FloatType(), [ir.FloatType(), ir.FloatType()]), 'minnum'),
             RegistryDefinition('llvm.smax.i32', ir.FunctionType(ir.IntType(32), [ir.IntType(32), ir.IntType(32)]), 'smax'),
             RegistryDefinition('llvm.smin.i32', ir.FunctionType(ir.IntType(32), [ir.IntType(32), ir.IntType(32)]), 'smin'),
-            RegistryDefinition('fgets', ir.FunctionType(ir.PointerType(ir.IntType(8)), [pointer_type, ir.IntType(32), FILE_type])),
+            RegistryDefinition('fgets', ir.FunctionType(pointer_type, [pointer_type, ir.IntType(32), FILE_type])),
             RegistryDefinition('strcspn', ir.FunctionType(ir.IntType(32), [pointer_type, pointer_type])),
             RegistryDefinition('__acrt_iob_func', ir.FunctionType(FILE_type, [ir.IntType(32)]), 'acrt_iob_func'),
             RegistryDefinition('exit', ir.FunctionType(ir.VoidType(), [ir.IntType(32)])),
@@ -66,8 +66,10 @@ class Registry:
                 ir.VoidType(), [pointer_type, ir.IntType(32), ir.IntType(32), ir.IntType(1)]
             ), 'memset'),
             RegistryDefinition('snprintf', ir.FunctionType(
-                ir.IntType(32), [ir.PointerType(ir.IntType(8)), ir.IntType(32), ir.PointerType(ir.IntType(8))], True
-            ))
+                ir.IntType(32), [pointer_type, ir.IntType(32), pointer_type], True
+            )),
+            RegistryDefinition('strtol', ir.FunctionType(ir.IntType(32), [pointer_type, pointer_type, ir.IntType(32)])),
+            RegistryDefinition('strtof', ir.FunctionType(ir.FloatType(), [pointer_type, pointer_type])),
         ]
     
     def add_function(self, name: str, func_type: ir.FunctionType, display_name: str | None = None):

@@ -71,6 +71,7 @@ class Intrinsics:
         self.declare_empty_function('input', string_type)
         self.declare_empty_function('error', params=[ast.Param(ast.Position(), string_type, 'message')])
         self.declare_empty_function('is_null', bool_type, [ast.Param(ast.Position(), pointer_type, 'ptr')])
+        self.declare_empty_function('null', pointer_type)
         
         self.declare_attribute_function(int_type, 'to_string', string_type)
         self.declare_attribute_function(float_type, 'to_string', string_type)
@@ -355,3 +356,5 @@ class Intrinsics:
                 return builder.gep(args[0], [args[1]], True, '+.pointer.int')
             case 'string.is_allocated':
                 return builder.extract_value(args[0], 2, 'string.is_allocated')
+            case 'null':
+                return NULL()
