@@ -51,8 +51,8 @@ class Intrinsics:
         self.declare_op_function('!', bool_type, bool_type)
         
         self.declare_op_function('+', pointer_type, pointer_type, int_type)
-        self.declare_op_function('==', pointer_type, pointer_type, bool_type)
-        self.declare_op_function('!=', pointer_type, pointer_type, bool_type)
+        self.declare_op_function('==', bool_type, pointer_type, pointer_type)
+        self.declare_op_function('!=', bool_type, pointer_type, pointer_type)
         
         self.declare_empty_function('print', params=[ast.Param(ast.Position(), string_type, 's')])
         self.declare_empty_function('print_literal', params=[ast.Param(ast.Position(), string_type, 's')])
@@ -61,6 +61,7 @@ class Intrinsics:
             ast.Param(ast.Position(), bool_type, 'is_allocated')
         ])
         
+        self.declare_empty_function('buffer', pointer_type, [ast.Param(ast.Position(), int_type, 'size')])
         self.declare_empty_function('gep', pointer_type, [
             ast.Param(ast.Position(), pointer_type, 'ptr'),
             ast.Param(ast.Position(), int_type, 'offset')
@@ -70,7 +71,6 @@ class Intrinsics:
             ast.Param(ast.Position(), pointer_type, 'ptr'), ast.Param(ast.Position(), any_type, 'value')
         ])
         
-        self.declare_empty_function('input', string_type)
         self.declare_empty_function('error', params=[ast.Param(ast.Position(), string_type, 'message')])
         self.declare_empty_function('is_null', bool_type, [ast.Param(ast.Position(), pointer_type, 'ptr')])
         self.declare_empty_function('null', pointer_type)
@@ -129,7 +129,7 @@ class Intrinsics:
         self.file.scope.symbol_table.add(ast.Symbol(func.name, self.file.type_map.get('function'), func))
         self.registered[name] = func
     
-    def call(self, builder: IRBuilderExt, module: ModuleExt, name: str, args: list[Any]):
+    def call(self, pos: ast.Position, builder: IRBuilderExt, module: ModuleExt, name: str, args: list[Any]):
         string_type = module.context.get_identified_type('string')
         
         info(f'calling intrinsic function {name} with {len(args)} arguments')
@@ -253,41 +253,12 @@ class Intrinsics:
                 return builder.gep(args[0], [args[1]], True, 'gep')
             case 'string.length':
                 return builder.extract_value(args[0], 1, 'string.length')
-            case 'input':
-                acrt_iob_func = module.registry.get('acrt_iob_func')
-                strcspn = module.registry.get('strcspn')
-                fgets = module.registry.get('fgets')
-                
-                BUF_SIZE = 512
-                buf = module.try_get_global(
-                    'input_buf', lambda: module.global_buffer(ir.IntType(8), BUF_SIZE, 'input_buf')
-                )
-                
-                buf_ptr = builder.first_elem(buf, 'buf_ptr')
-                stdin = builder.call(acrt_iob_func, [llint(0)], 'stdin')
-                fgets_result = builder.call(fgets, [buf_ptr, llint(BUF_SIZE), stdin], 'fgets')
-                fgets_failed = builder.icmp_signed('==', fgets_result, NULL(), 'fgets_failed')
-                with builder.if_then(fgets_failed):
-                    ERR_MSG = 'input failed'
-                    err_length = llint(len(ERR_MSG))
-                    err_msg = module.try_get_global(
-                        'out_of_memory_msg', lambda: module.global_string(ERR_MSG, 'input_failed_err')
-                    )
-                    err_msg_ptr = builder.first_elem(err_msg, 'input_failed_err_ptr')
-                    
-                    err_str = builder.struct(string_type, [err_msg_ptr, err_length, llint(0, 1)], 'input_failed_err_str')
-                    self.call(builder, module, 'error', [err_str])
-                
-                newline_char = module.try_get_global('newline_char', lambda: module.global_string('\n', 'newline_char'))
-                newline_char_ptr = builder.first_elem(newline_char, 'newline_char_ptr')
-                newline_position = builder.call(strcspn, [buf_ptr, newline_char_ptr], 'newline_position')
-                return builder.struct(string_type, [buf_ptr, newline_position, llint(0, 1)], 'string')
             case 'store':
                 builder.store(args[1], args[0])
             case 'error':
                 exit = module.registry.get('exit')
                 
-                self.call(builder, module, 'print', args)
+                self.call(pos, builder, module, 'print', args)
                 builder.call(exit, [llint(1)])
                 builder.unreachable()
             case 'is_null':
@@ -305,3 +276,9 @@ class Intrinsics:
             case '!=.pointer.pointer':
                 a, b = args
                 return builder.icmp_signed('!=', a, b, '!=.pointer.pointer')
+            case 'buffer':
+                if not isinstance(args[0], ir.Constant):
+                    pos.comptime_error(self.file, 'expected literal integer')
+                
+                buf = module.global_buffer(ir.IntType(8), args[0].constant, module.get_unique_name('buffer'))
+                return builder.first_elem(buf, f'{buf.name}.ptr')

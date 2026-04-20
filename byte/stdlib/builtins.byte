@@ -6,7 +6,7 @@ fn string.destroy(string s) {
 
 static fn string.new(pointer ptr, int length) -> string {
     ptr_copy = malloc(length)
-    if is_null(ptr_copy) {
+    if ptr_copy == null() {
         error("out of memory")
     }
     
@@ -14,9 +14,13 @@ static fn string.new(pointer ptr, int length) -> string {
     return string_struct(ptr_copy, length, true)
 }
 
+static fn string.from_unallocated_pointer(pointer ptr, int length) -> string {
+    return string_struct(ptr, length, false)
+}
+
 static fn string.new(int length) -> string {
     ptr = malloc(length)
-    if is_null(ptr) {
+    if ptr == null() {
         error("out of memory")
     }
     
@@ -35,7 +39,7 @@ fn string.parse_float(string s) -> float {
 fn +(string a, string b) -> string {
     total_length = a.length + b.length
     ptr = malloc(total_length)
-    if is_null(ptr) {
+    if ptr == null() {
         error("out of memory")
     }
     
@@ -54,6 +58,17 @@ fn !=(string a, string b) -> bool {
     return memcmp(a.ptr, b.ptr, a.length)
 }
 
+
+fn input() -> string {
+    buf = buffer(512)
+    stdin = acrt_iob_func(0)
+    if fgets(buf, 512, stdin) == null() {
+        error("input failed")
+    }
+    
+    newline_pos = strcspn(buf, "\n".ptr)
+    return string.from_unallocated_pointer(buf, newline_pos - 1)
+}
 
 fn input(string prompt) -> string {
     print_literal(prompt)

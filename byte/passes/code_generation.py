@@ -255,9 +255,6 @@ class CodeGeneration(ByteCompilerPass):
         ptr = cast(Any, symbol.value)
         return self.builder.load(ptr, node.name)
     
-    def internal_call(self, name: str, args: list[Any]):
-        return self.intrinsics.call(self.builder, self.module, name, args)
-    
     def visitCall(self, node: ast.Call):
         symbol = self.scope.symbol_table.get(node.callee)
         func = cast(ast.Function | ir.Function, symbol.value)
@@ -270,7 +267,7 @@ class CodeGeneration(ByteCompilerPass):
             if func.body is not None:
                 raise NotImplementedError
             
-            return self.internal_call(node.callee, args)
+            return self.intrinsics.call(node.pos, self.builder, self.module, node.callee, args)
         
         info(f'calling function {node.callee}')
         return self.builder.call(func, args, node.callee)
