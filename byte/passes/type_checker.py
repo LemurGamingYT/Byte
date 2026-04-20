@@ -218,7 +218,7 @@ class TypeChecker(ByteCompilerPass):
             # TODO: check for multiple matching overloads
             return ast.Call(node.pos, overload.ret_type, overload.name, args)
         
-        node.pos.comptime_error(self.file, 'no matching overloads')
+        node.pos.comptime_error(self.file, f'no matching overloads for call to \'{node.callee}\'')
     
     def visitOperation(self, node: ast.Operation):
         left = self.visit(node.left)

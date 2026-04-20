@@ -17,7 +17,6 @@ class Intrinsics:
         bool_type = self.file.type_map.get('bool')
         string_type = self.file.type_map.get('string')
         pointer_type = self.file.type_map.get('pointer')
-        Math_type = self.file.type_map.get('Math')
         any_type = self.file.type_map.get('any')
         
         self.declare_op_function('+', int_type, int_type, int_type)
@@ -81,42 +80,6 @@ class Intrinsics:
         self.declare_attribute_function(string_type, 'ptr', pointer_type, is_method=False)
         self.declare_attribute_function(string_type, 'length', int_type, is_method=False)
         self.declare_attribute_function(string_type, 'is_allocated', bool_type, is_method=False)
-        
-        self.declare_attribute_function(Math_type, 'sqrt', float_type, [
-            ast.Param(ast.Position(), float_type, 'x')
-        ], is_static=True)
-        
-        self.declare_attribute_function(Math_type, 'pow', float_type, [
-            ast.Param(ast.Position(), float_type, 'base'), ast.Param(ast.Position(), float_type, 'exponent')
-        ], is_static=True)
-        
-        self.declare_attribute_function(Math_type, 'abs', float_type, [
-            ast.Param(ast.Position(), float_type, 'x')
-        ], is_static=True)
-        
-        self.declare_attribute_function(Math_type, 'floor', int_type, [
-            ast.Param(ast.Position(), float_type, 'x')
-        ], is_static=True)
-        
-        self.declare_attribute_function(Math_type, 'ceil', int_type, [
-            ast.Param(ast.Position(), float_type, 'x')
-        ], is_static=True)
-        
-        self.declare_attribute_function(Math_type, 'min', float_type, [
-            ast.Param(ast.Position(), float_type, 'a'), ast.Param(ast.Position(), float_type, 'b')
-        ], is_static=True)
-        
-        self.declare_attribute_function(Math_type, 'max', float_type, [
-            ast.Param(ast.Position(), float_type, 'a'), ast.Param(ast.Position(), float_type, 'b')
-        ], is_static=True)
-        
-        self.declare_attribute_function(Math_type, 'imin', int_type, [
-            ast.Param(ast.Position(), int_type, 'a'), ast.Param(ast.Position(), int_type, 'b')
-        ], is_static=True)
-        
-        self.declare_attribute_function(Math_type, 'imax', int_type, [
-            ast.Param(ast.Position(), int_type, 'a'), ast.Param(ast.Position(), int_type, 'b')
-        ], is_static=True)
         
         for definition in Registry.get_all_definitions():
             name = definition.display_name or definition.llvm_name
@@ -286,33 +249,6 @@ class Intrinsics:
                 return builder.gep(args[0], [args[1]], True, 'gep')
             case 'string.length':
                 return builder.extract_value(args[0], 1, 'string.length')
-            case 'Math.sqrt':
-                sqrt = module.registry.get('sqrt')
-                return builder.call(sqrt, args, 'Math.sqrt')
-            case 'Math.pow':
-                pow = module.registry.get('pow')
-                return builder.call(pow, args, 'Math.pow')
-            case 'Math.abs':
-                fabs = module.registry.get('fabs')
-                return builder.call(fabs, args, 'Math.fabs')
-            case 'Math.floor':
-                floor = module.registry.get('floor')
-                return builder.cast(builder.call(floor, args, 'floor_call'), ir.IntType(32), 'Math.floor')
-            case 'Math.ceil':
-                ceil = module.registry.get('ceil')
-                return builder.cast(builder.call(ceil, args, 'ceil_call'), ir.IntType(32), 'Math.ceil')
-            case 'Math.min':
-                minnum = module.registry.get('minnum')
-                return builder.call(minnum, args, 'Math.min')
-            case 'Math.max':
-                maxnum = module.registry.get('maxnum')
-                return builder.call(maxnum, args, 'Math.max')
-            case 'Math.imin':
-                smin = module.registry.get('smin')
-                return builder.call(smin, args, 'Math.imin')
-            case 'Math.imax':
-                smax = module.registry.get('smax')
-                return builder.call(smax, args, 'Math.imax')
             case 'input':
                 acrt_iob_func = module.registry.get('acrt_iob_func')
                 strcspn = module.registry.get('strcspn')

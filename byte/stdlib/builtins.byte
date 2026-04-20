@@ -32,11 +32,6 @@ fn string.parse_float(string s) -> float {
     return strtof(s.ptr, null())
 }
 
-fn input(string prompt) -> string {
-    print_literal(prompt)
-    return input()
-}
-
 fn +(string a, string b) -> string {
     total_length = a.length + b.length
     ptr = malloc(total_length)
@@ -58,3 +53,20 @@ fn !=(string a, string b) -> bool {
     if a.length != b.length { return true }
     return memcmp(a.ptr, b.ptr, a.length)
 }
+
+
+fn input(string prompt) -> string {
+    print_literal(prompt)
+    return input()
+}
+
+
+static fn Math.sqrt(float x) -> float { return sqrt(x) }
+static fn Math.pow(float base, float exponent) -> float { return pow(base, exponent) }
+static fn Math.abs(float x) -> float { return fabs(x) }
+static fn Math.floor(float x) -> int { return floor(x) }
+static fn Math.ceil(float x) -> int { return ceil(x) }
+static fn Math.min(float a, float b) -> float { return minnum(a, b) }
+static fn Math.min(int a, int b) -> int { return smin(a, b) }
+static fn Math.max(float a, float b) -> float { return maxnum(a, b) }
+static fn Math.max(int a, int b) -> int { return smax(a, b) }

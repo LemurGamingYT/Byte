@@ -1,3 +1,4 @@
 fn main() -> int {
+    print(Math.max(1, 2).to_string())
     return 0
 }
