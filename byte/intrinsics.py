@@ -256,9 +256,7 @@ class Intrinsics:
             case 'input':
                 acrt_iob_func = module.registry.get('acrt_iob_func')
                 strcspn = module.registry.get('strcspn')
-                ferror = module.registry.get('ferror')
                 fgets = module.registry.get('fgets')
-                feof = module.registry.get('feof')
                 
                 BUF_SIZE = 512
                 buf = module.try_get_global(
@@ -291,7 +289,7 @@ class Intrinsics:
                 
                 self.call(builder, module, 'print', args)
                 builder.call(exit, [llint(1)])
-                # TODO: builder.unreachable()
+                builder.unreachable()
             case 'is_null':
                 return builder.icmp_signed('==', args[0], NULL(), 'is_null')
             case '+.pointer.int':

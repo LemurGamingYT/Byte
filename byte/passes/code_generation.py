@@ -93,6 +93,9 @@ class CodeGeneration(ByteCompilerPass):
     
     def visitBody(self, node: ast.Body):
         for stmt in node.nodes:
+            if cast(ir.Block, self.builder.block).is_terminated:
+                break
+            
             self.visit(stmt)
     
     def visitReturn(self, node: ast.Return):
