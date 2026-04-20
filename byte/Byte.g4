@@ -27,11 +27,9 @@ useStmt: USE STRING;
 deferStmt: DEFER expr;
 
 funcName
-    : extend_type=type DOT ID
-    | ID
+    : (extend_type=type DOT)? ID
     | op=(ADD | SUB | MUL | DIV | MOD | EEQ | NEQ | GT | LT | GTE | LTE | AND | OR | NOT)
-    | NEW
-    | extend_type=type DOT NEW
+    | (extend_type=type DOT)? NEW
     ;
 
 funcAssign

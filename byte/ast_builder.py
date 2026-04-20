@@ -1,3 +1,5 @@
+from dataclasses import dataclass
+
 from antlr4.error.ErrorListener import ErrorListener as ANTLRErrorListener
 from antlr4 import InputStream, CommonTokenStream
 from antlr4.Token import CommonToken
@@ -8,11 +10,11 @@ from byte.parser.ByteLexer import ByteLexer
 from byte import ast
 
 
+@dataclass
 class FuncName:
-    def __init__(self, identifier: str | None = None, extend_type: ast.Type | None = None, op: str | None = None) -> None:
-        self.identifier = identifier
-        self.extend_type = extend_type
-        self.op = op
+    identifier: str | None = None
+    extend_type: ast.Type | None = None
+    op: str | None = None
 
 
 class ByteErrorListener(ANTLRErrorListener):
@@ -77,18 +79,19 @@ class ByteASTBuilder(ByteVisitor):
     
     def visitFuncName(self, ctx):
         extend_type = self.visitType(ctx.extend_type) if ctx.extend_type is not None else None
+        identifier = op = None
         if ctx.ID() is not None:
-            return FuncName(ctx.ID().getText(), extend_type)
+            identifier = ctx.ID().getText()
         elif ctx.op is not None:
-            return FuncName(op=ctx.op.text)
+            op = ctx.op.text
         elif ctx.NEW() is not None:
-            return FuncName('new', extend_type)
+            identifier = 'new'
         
-        raise NotImplementedError
+        return FuncName(identifier, extend_type, op)
     
     def visitFuncAssign(self, ctx):
-        flags = ast.FunctionFlags(static=ctx.STATIC() is not None)
         func_name = self.visitFuncName(ctx.funcName())
+        flags = ast.FunctionFlags(static=ctx.STATIC() is not None or func_name.identifier == 'new')
         return ast.Function(
             self.pos(ctx), self.visitType(ctx.return_type) if ctx.return_type is not None else
                 self.file.type_map.get('nil'), func_name.identifier or func_name.op,

@@ -2,9 +2,6 @@
 #include <string.h>
 #include <stdlib.h>
 #include <stdio.h>
-#include <threads.h>
-
-#include "../cruntime/tinycthread/tinycthread.c"
 
 
 typedef struct {
