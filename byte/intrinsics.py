@@ -9,6 +9,7 @@ from byte import ast
 
 class Intrinsics:
     def __init__(self, file: ast.File):
+        self.registered = {}
         self.file = file
     
     def register(self):
@@ -50,6 +51,8 @@ class Intrinsics:
         self.declare_op_function('!', bool_type, bool_type)
         
         self.declare_op_function('+', pointer_type, pointer_type, int_type)
+        self.declare_op_function('==', pointer_type, pointer_type, bool_type)
+        self.declare_op_function('!=', pointer_type, pointer_type, bool_type)
         
         self.declare_empty_function('print', params=[ast.Param(ast.Position(), string_type, 's')])
         self.declare_empty_function('print_literal', params=[ast.Param(ast.Position(), string_type, 's')])
@@ -124,6 +127,7 @@ class Intrinsics:
         
         func = ast.Function(ast.Position(), ret_type, name, params, flags=flags)
         self.file.scope.symbol_table.add(ast.Symbol(func.name, self.file.type_map.get('function'), func))
+        self.registered[name] = func
     
     def call(self, builder: IRBuilderExt, module: ModuleExt, name: str, args: list[Any]):
         string_type = module.context.get_identified_type('string')
@@ -252,7 +256,9 @@ class Intrinsics:
             case 'input':
                 acrt_iob_func = module.registry.get('acrt_iob_func')
                 strcspn = module.registry.get('strcspn')
+                ferror = module.registry.get('ferror')
                 fgets = module.registry.get('fgets')
+                feof = module.registry.get('feof')
                 
                 BUF_SIZE = 512
                 buf = module.try_get_global(
@@ -264,15 +270,15 @@ class Intrinsics:
                 fgets_result = builder.call(fgets, [buf_ptr, llint(BUF_SIZE), stdin], 'fgets')
                 fgets_failed = builder.icmp_signed('==', fgets_result, NULL(), 'fgets_failed')
                 with builder.if_then(fgets_failed):
-                    ERR_MSG = 'out of memory'
-                    oom_length = llint(len(ERR_MSG))
-                    oom_msg = module.try_get_global(
-                        'out_of_memory_msg', lambda: module.global_string(ERR_MSG, 'out_of_memory_msg')
+                    ERR_MSG = 'input failed'
+                    err_length = llint(len(ERR_MSG))
+                    err_msg = module.try_get_global(
+                        'out_of_memory_msg', lambda: module.global_string(ERR_MSG, 'input_failed_err')
                     )
-                    oom_msg_ptr = builder.first_elem(oom_msg, 'out_of_memory_msg_ptr')
+                    err_msg_ptr = builder.first_elem(err_msg, 'input_failed_err_ptr')
                     
-                    oom_str = builder.struct(string_type, [oom_msg_ptr, oom_length, llint(0, 1)], 'out_of_memory_str')
-                    self.call(builder, module, 'error', [oom_str])
+                    err_str = builder.struct(string_type, [err_msg_ptr, err_length, llint(0, 1)], 'input_failed_err_str')
+                    self.call(builder, module, 'error', [err_str])
                 
                 newline_char = module.try_get_global('newline_char', lambda: module.global_string('\n', 'newline_char'))
                 newline_char_ptr = builder.first_elem(newline_char, 'newline_char_ptr')
@@ -289,8 +295,15 @@ class Intrinsics:
             case 'is_null':
                 return builder.icmp_signed('==', args[0], NULL(), 'is_null')
             case '+.pointer.int':
-                return builder.gep(args[0], [args[1]], True, '+.pointer.int')
+                a, b = args
+                return builder.gep(a, [b], True, '+.pointer.int')
             case 'string.is_allocated':
                 return builder.extract_value(args[0], 2, 'string.is_allocated')
             case 'null':
                 return NULL()
+            case '==.pointer.pointer':
+                a, b = args
+                return builder.icmp_signed('==', a, b, '==.pointer.pointer')
+            case '!=.pointer.pointer':
+                a, b = args
+                return builder.icmp_signed('!=', a, b, '!=.pointer.pointer')
