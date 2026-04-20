@@ -1,9 +1,9 @@
 fn gcd(int a, int b) -> int {
     if a == 0 || b == 0 {
-        return Math.imax(a, b)
+        return Math.max(a, b)
     }
     
-    mut res = Math.imin(a, b)
+    mut res = Math.min(a, b)
     while res > 0 {
         if a % res == 0 && b % res == 0 {
             break
