@@ -14,10 +14,6 @@ static fn string.new(pointer ptr, int length) -> string {
     return string_struct(ptr_copy, length, true)
 }
 
-static fn string.new_unallocated(pointer ptr, int length) -> string {
-    return string_struct(ptr, length, false)
-}
-
 static fn string.new(int length) -> string {
     ptr = malloc(length)
     if ptr == null() {
@@ -26,6 +22,10 @@ static fn string.new(int length) -> string {
     
     memset(ptr, 32, length, false)
     return string_struct(ptr, length, true)
+}
+
+static fn string.new(pointer ptr, int length, bool is_allocated) -> string {
+    return string_struct(ptr, length, is_allocated)
 }
 
 fn string.parse_int(string s) -> int {
@@ -45,7 +45,7 @@ fn +(string a, string b) -> string {
     
     memcpy(ptr, a.ptr, a.length)
     memcpy(ptr + a.length, b.ptr, b.length)
-    return string_struct(ptr, total_length, true)
+    return new string(ptr, total_length, true)
 }
 
 fn ==(string a, string b) -> bool {
@@ -67,7 +67,7 @@ fn input() -> string {
     }
     
     newline_pos = strcspn(buf, "\n".ptr)
-    return string.new_unallocated(buf, newline_pos - 1)
+    return new string(buf, newline_pos - 1, false)
 }
 
 fn input(string prompt) -> string {
