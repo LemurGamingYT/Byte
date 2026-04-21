@@ -261,8 +261,6 @@ class Intrinsics:
                 self.call(pos, builder, module, 'print', args)
                 builder.call(exit, [llint(1)])
                 builder.unreachable()
-            case 'is_null':
-                return builder.icmp_signed('==', args[0], NULL(), 'is_null')
             case '+.pointer.int':
                 a, b = args
                 return builder.gep(a, [b], True, '+.pointer.int')
