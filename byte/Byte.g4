@@ -52,6 +52,7 @@ expr
     | INT #int
     | FLOAT #float
     | STRING #string
+    | STRING_POINTER #stringPointer
     | BOOL #bool
     | ID #id
     | NEW type LPAREN args? RPAREN #new
@@ -86,6 +87,7 @@ APOSTROPHE: '\'';
 INT: '-'? [0-9]+;
 FLOAT: '-'? [0-9]* '.' [0-9]+;
 STRING: '"' .*? '"' | APOSTROPHE .*? APOSTROPHE;
+STRING_POINTER: 'p' STRING;
 BOOL: 'true' | 'false';
 ID: [a-zA-Z_][a-zA-Z_0-9]*;
 

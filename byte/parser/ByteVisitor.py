@@ -129,6 +129,11 @@ class ByteVisitor(ParseTreeVisitor):
         return self.visitChildren(ctx)
 
 
+    # Visit a parse tree produced by ByteParser#stringPointer.
+    def visitStringPointer(self, ctx:ByteParser.StringPointerContext):
+        return self.visitChildren(ctx)
+
+
     # Visit a parse tree produced by ByteParser#unary.
     def visitUnary(self, ctx:ByteParser.UnaryContext):
         return self.visitChildren(ctx)

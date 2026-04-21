@@ -244,7 +244,11 @@ class CodeGeneration(ByteCompilerPass):
         return ir.Constant(ir.FloatType(), node.value)
     
     def visitString(self, node: ast.String):
-        string = self.module.global_string(node.value)
+        string = self.module.global_string(node.value, self.module.get_unique_name('str'))
+        return self.builder.first_elem(string, f'{string.name}.ptr')
+    
+    def visitStringPointer(self, node: ast.StringPointer):
+        string = self.module.global_string(node.value, self.module.get_unique_name('str'))
         return self.builder.first_elem(string, f'{string.name}.ptr')
     
     def visitBool(self, node: ast.Bool):

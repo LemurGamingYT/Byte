@@ -394,6 +394,13 @@ class String(Node):
         return f'"{self.value}"'
 
 @dataclass
+class StringPointer(Node):
+    value: str
+    
+    def __str__(self) -> str:
+        return f'p"{self.value}"'
+
+@dataclass
 class Bool(Node):
     value: bool
     

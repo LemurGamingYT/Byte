@@ -137,6 +137,9 @@ class ByteASTBuilder(ByteVisitor):
     def visitString(self, ctx):
         return ast.String(self.pos(ctx), self.file.type_map.get('string'), ctx.getText()[1:-1])
     
+    def visitStringPointer(self, ctx):
+        return ast.StringPointer(self.pos(ctx), self.file.type_map.get('pointer'), ctx.getText()[1:-1])
+    
     def visitBool(self, ctx):
         return ast.Bool(self.pos(ctx), self.file.type_map.get('bool'), ctx.getText() == 'true')
     

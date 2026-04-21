@@ -66,7 +66,7 @@ fn input() -> string {
         error("input failed")
     }
     
-    newline_pos = strcspn(buf, "\n".ptr)
+    newline_pos = strcspn(buf, p"\n")
     return new string(buf, newline_pos - 1, false)
 }
 
