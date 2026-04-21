@@ -1,7 +1,6 @@
 fn string.destroy(string s) {
-    if s.is_allocated {
-        free(s.ptr)
-    }
+    if s.is_allocated { return }
+    free(s.ptr)
 }
 
 static fn string.new(pointer ptr, int length) -> string {
