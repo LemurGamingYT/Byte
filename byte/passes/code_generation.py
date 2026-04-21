@@ -1,3 +1,4 @@
+from dataclasses import dataclass
 from typing import cast, Any
 from logging import info
 
@@ -8,6 +9,10 @@ from byte.passes import ByteCompilerPass
 from byte.intrinsics import Intrinsics
 from byte import ast
 
+
+@dataclass
+class CompileResult:
+    module: ModuleExt
 
 class CodeGeneration(ByteCompilerPass):
     def __init__(self, file: ast.File):
@@ -30,7 +35,7 @@ class CodeGeneration(ByteCompilerPass):
         for stmt in node.nodes:
             self.visit(stmt)
         
-        return str(self.module)
+        return CompileResult(self.module)
     
     def visitType(self, node: ast.Type):
         match node.type:

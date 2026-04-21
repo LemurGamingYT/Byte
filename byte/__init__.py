@@ -3,10 +3,11 @@ from sys import exit as sys_exit
 from subprocess import run
 from logging import info
 from pathlib import Path
+from typing import cast
 
 from colorama import Fore, Style
 
-from byte.passes.code_generation import CodeGeneration
+from byte.passes.code_generation import CodeGeneration, CompileResult
 from byte.passes.memory_manager import MemoryManager
 from byte.passes.preprocessor import Preprocessor
 from byte.passes.type_checker import TypeChecker
@@ -24,7 +25,7 @@ def parse(file: ast.File):
     builder = ByteASTBuilder(file)
     return builder.build()
 
-def compile_to_str(file: ast.File):
+def compile_file(file: ast.File):
     ast_file = file.path.with_suffix('.byteast')
     
     program = parse(file)
@@ -35,12 +36,12 @@ def compile_to_str(file: ast.File):
         program = cls.run(file, program)
         ast_file.write_text(str(program))
     
-    return str(CodeGeneration.run(file, program))
+    return cast(CompileResult, CodeGeneration.run(file, program))
 
 def compile_to_obj(file: ast.File):
-    code = compile_to_str(file)
+    res = compile_file(file)
     ll_file = file.path.with_suffix('.ll')
-    ll_file.write_text(code)
+    ll_file.write_text(str(res.module))
     
     obj_file = file.path.with_suffix('.o')
     flags = ['-Wno-override-module', '-Wall', '-Werror', '-Wpedantic', '-Wextra']
@@ -68,27 +69,29 @@ def compile_to_exe(file: ast.File):
     
     return exe_file
 
+
 class ArgParser:
     def __init__(self, args: list[str]):
         self.args = args
     
     def parse(self):
         action = self.arg(0)
-        match action:
-            case 'build':
-                self.build()
-            case 'test':
-                self.test()
-            case 'version':
-                self.version()
-            case _:
-                print('Usage: byte <action> <file>')
-                if action is None:
-                    print('No action')
-                else:
-                    print(f'Unknown action \'{action}\'')
-                
-                sys_exit(1)
+        if action is None:
+            print('Usage: byte <action> <file>')
+            print('No action')
+            sys_exit(1)
+        
+        method_name = f'_{action}'
+        if method_name.startswith('__'):
+            method_name = method_name[1:]
+        
+        method = getattr(self, method_name, None)
+        if method is None:
+            print('Usage: byte <action> <file>')
+            print(f'Unknown action \'{action}\'')
+            sys_exit(1)
+        
+        return method()
 
     def arg(self, index: int):
         if index < len(self.args):
@@ -101,10 +104,10 @@ class ArgParser:
             if file.stem == name:
                 return file
     
-    def version(self):
+    def _version(self):
         print(f'Byte v{VERSION}')
     
-    def test(self):
+    def _test(self):
         test_name = self.arg(1)
         if test_name is None:
             print('Usage: byte test <test-name>')
@@ -140,7 +143,7 @@ class ArgParser:
         
         print(f'Completed test \'{test_name}\'')
     
-    def build(self, file_path: str | None = None):
+    def _build(self, file_path: str | None = None):
         if file_path is None:
             file_path = self.arg(1)
         

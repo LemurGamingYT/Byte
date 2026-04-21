@@ -74,6 +74,18 @@ fn input(string prompt) -> string {
     return input()
 }
 
+fn assert(bool condition) {
+    if condition { return }
+    
+    error("assertion failed")
+}
+
+fn assert(bool condition, string msg) {
+    if condition { return }
+    
+    error(msg)
+}
+
 
 static fn Math.sqrt(float x) -> float { return sqrt(x) }
 static fn Math.pow(float base, float exponent) -> float { return pow(base, exponent) }
