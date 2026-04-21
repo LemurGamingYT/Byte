@@ -256,9 +256,16 @@ class Intrinsics:
             case 'store':
                 builder.store(args[1], args[0])
             case 'error':
+                acrt_iob_func = module.registry.get('acrt_iob_func')
+                fprintf = module.registry.get('fprintf')
                 exit = module.registry.get('exit')
                 
-                self.call(pos, builder, module, 'print', args)
+                stderr = builder.call(acrt_iob_func, [llint(2)], 'stderr')
+                fmt = module.try_get_global('error_fmt', lambda: module.global_string('error: %.*s\n', 'error_fmt'))
+                ptr = builder.first_elem(fmt, 'error_fmt_ptr')
+                s_ptr = builder.extract_value(args[0], 0, 's_ptr')
+                s_length = builder.extract_value(args[0], 1, 's_length')
+                builder.call(fprintf, [stderr, ptr, s_length, s_ptr])
                 builder.call(exit, [llint(1)])
                 builder.unreachable()
             case '+.pointer.int':
