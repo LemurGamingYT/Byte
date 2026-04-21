@@ -14,7 +14,7 @@ static fn string.new(pointer ptr, int length) -> string {
     return string_struct(ptr_copy, length, true)
 }
 
-static fn string.from_unallocated_pointer(pointer ptr, int length) -> string {
+static fn string.new_unallocated(pointer ptr, int length) -> string {
     return string_struct(ptr, length, false)
 }
 
@@ -67,7 +67,7 @@ fn input() -> string {
     }
     
     newline_pos = strcspn(buf, "\n".ptr)
-    return string.from_unallocated_pointer(buf, newline_pos - 1)
+    return string.new_unallocated(buf, newline_pos - 1)
 }
 
 fn input(string prompt) -> string {
