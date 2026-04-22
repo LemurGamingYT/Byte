@@ -54,8 +54,8 @@ class Intrinsics:
         self.declare_op_function('==', bool_type, pointer_type, pointer_type)
         self.declare_op_function('!=', bool_type, pointer_type, pointer_type)
         
-        self.declare_empty_function('print', params=[ast.Param(ast.Position(), string_type, 's')])
-        self.declare_empty_function('print_literal', params=[ast.Param(ast.Position(), string_type, 's')])
+        self.declare_empty_function('print', params=[ast.Param(ast.Position(), string_type, 's')], public=True)
+        self.declare_empty_function('print_literal', params=[ast.Param(ast.Position(), string_type, 's')], public=True)
         self.declare_empty_function('string_struct', string_type, [
             ast.Param(ast.Position(), pointer_type, 'ptr'), ast.Param(ast.Position(), int_type, 'length'),
             ast.Param(ast.Position(), bool_type, 'is_allocated')
@@ -71,8 +71,7 @@ class Intrinsics:
             ast.Param(ast.Position(), pointer_type, 'ptr'), ast.Param(ast.Position(), any_type, 'value')
         ])
         
-        self.declare_empty_function('error', params=[ast.Param(ast.Position(), string_type, 'message')])
-        self.declare_empty_function('is_null', bool_type, [ast.Param(ast.Position(), pointer_type, 'ptr')])
+        self.declare_empty_function('error', params=[ast.Param(ast.Position(), string_type, 'message')], public=True)
         self.declare_empty_function('null', pointer_type)
         
         self.declare_attribute_function(int_type, 'to_string', string_type)
@@ -92,7 +91,9 @@ class Intrinsics:
             self.declare_empty_function(name, ret_type, params)
             info(f'declared C registry function {name}')
     
-    def declare_op_function(self, op: str, ret_type: ast.Type, a_type: ast.Type, b_type: ast.Type | None = None):
+    def declare_op_function(
+        self, op: str, ret_type: ast.Type, a_type: ast.Type, b_type: ast.Type | None = None, public: bool = True
+    ):
         if b_type is None:
             name = f'{op}.{a_type}'
             params = [ast.Param(ast.Position(), a_type, 'a')]
@@ -100,11 +101,11 @@ class Intrinsics:
             name = f'{op}.{a_type}.{b_type}'
             params = [ast.Param(ast.Position(), a_type, 'a'), ast.Param(ast.Position(), b_type, 'b')]
         
-        self.declare_empty_function(name, ret_type, params)
+        self.declare_empty_function(name, ret_type, params, public=public)
     
     def declare_attribute_function(self, object_type: ast.Type, attr_name: str,
         ret_type: ast.Type | None = None, params: list[ast.Param] | None = None,
-        is_static: bool = False, is_method: bool = True):
+        is_static: bool = False, is_method: bool = True, public: bool = True):
         if params is None:
             params = []
         
@@ -112,10 +113,10 @@ class Intrinsics:
             params.insert(0, ast.Param(ast.Position(), object_type, 'self'))
         
         flags = ast.FunctionFlags(static=is_static, property=not is_method, method=is_method)
-        self.declare_empty_function(f'{object_type}.{attr_name}', ret_type, params, flags)
+        self.declare_empty_function(f'{object_type}.{attr_name}', ret_type, params, flags, public)
     
     def declare_empty_function(self, name: str, ret_type: ast.Type | None = None, params: list[ast.Param] | None = None,
-        flags: ast.FunctionFlags | None = None):
+        flags: ast.FunctionFlags | None = None, public: bool = False):
         if flags is None:
             flags = ast.FunctionFlags()
         
@@ -126,7 +127,7 @@ class Intrinsics:
             ret_type = self.file.type_map.get('nil')
         
         func = ast.Function(ast.Position(), ret_type, name, params, flags=flags)
-        self.file.scope.symbol_table.add(ast.Symbol(func.name, self.file.type_map.get('function'), func, static_symbol=True))
+        self.file.scope.symbol_table.add(ast.Symbol(func.name, self.file.type_map.get('function'), func, public=public))
         self.registered[name] = func
     
     def call(self, pos: ast.Position, builder: IRBuilderExt, module: ModuleExt, name: str, args: list[Any]):
