@@ -205,6 +205,9 @@ class CodeGeneration(ByteCompilerPass):
     
     def visitUse(self, node: ast.Use):
         lib_name = node.path
+        if lib_name == 'intrinsics':
+            return node # already handled in type checker pass
+        
         stdlib_path = ast.STDLIB_PATH / f'{lib_name}.byte'
         if not stdlib_path.exists():
             node.pos.comptime_error(self.file, f'unknown library \'{lib_name}\'')

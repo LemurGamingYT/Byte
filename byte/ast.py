@@ -30,6 +30,7 @@ class Symbol:
     type: 'Type'
     value: Any
     is_mutable: bool = False
+    static_symbol: bool = False
 
 @dataclass
 class SymbolTable:
@@ -66,8 +67,12 @@ class SymbolTable:
         
         return False
     
-    def merge(self, other: 'SymbolTable'):
-        self.symbols.update(other.symbols)
+    def merge(self, other: 'SymbolTable', include_static_symbols: bool = False):
+        if include_static_symbols:
+            self.symbols.update(other.symbols)
+        else:
+            non_static_symbols = {k: v for k, v in other.symbols.items() if not v.static_symbol}
+            self.symbols.update(non_static_symbols)
                  
 @dataclass
 class TypeMap:

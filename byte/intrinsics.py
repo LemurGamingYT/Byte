@@ -126,7 +126,7 @@ class Intrinsics:
             ret_type = self.file.type_map.get('nil')
         
         func = ast.Function(ast.Position(), ret_type, name, params, flags=flags)
-        self.file.scope.symbol_table.add(ast.Symbol(func.name, self.file.type_map.get('function'), func))
+        self.file.scope.symbol_table.add(ast.Symbol(func.name, self.file.type_map.get('function'), func, static_symbol=True))
         self.registered[name] = func
     
     def call(self, pos: ast.Position, builder: IRBuilderExt, module: ModuleExt, name: str, args: list[Any]):

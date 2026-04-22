@@ -15,12 +15,6 @@ def length_word(word: str, count: int):
         return f'{count} {word}s'
 
 class TypeChecker(ByteCompilerPass):
-    def __init__(self, file: ast.File):
-        super().__init__(file)
-        
-        intrinsics = Intrinsics(file)
-        intrinsics.register()
-    
     def visitType(self, node: ast.Type):
         typ = self.file.type_map.tryget(node.type)
         if typ is None:
@@ -163,6 +157,11 @@ class TypeChecker(ByteCompilerPass):
     
     def visitUse(self, node: ast.Use):
         lib_name = node.path
+        if lib_name == 'intrinsics':
+            intrinsics = Intrinsics(self.file)
+            intrinsics.register()
+            return node
+        
         stdlib_path = ast.STDLIB_PATH / f'{lib_name}.byte'
         if not stdlib_path.exists():
             node.pos.comptime_error(self.file, f'unknown library \'{lib_name}\'')
