@@ -16,7 +16,7 @@ int thread(void* arg) {
     multiply_thread data = *(multiply_thread*)arg;
     free(arg);
     
-    printf("Thread Index = %d, a = %d, b = %d, Result = %d\n", data.thread_index, data.a, data.b, data.a + data.b);
+    printf("Thread Index = %d, a = %d, b = %d, Result = %d\n", data.thread_index, data.a, data.b, data.a * data.b);
     return 0;
 }
 
