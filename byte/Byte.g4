@@ -46,8 +46,28 @@ args: arg (COMMA arg)*;
 param: MUTABLE? type ID;
 params: param (COMMA param)*;
 
-expr
+expr: ternary;
+
+ternary: logical (IF logical ELSE logical)?;
+
+logical: relational ((AND | OR) relational)*;
+
+relational: addition ((EEQ | NEQ | GT | LT | GTE | LTE) addition)*;
+
+addition: multiplication ((ADD | SUB) multiplication)*;
+
+multiplication: unary ((MUL | DIV | MOD) unary)*;
+
+unary
+    : (NOT | ADD | SUB) unary
+    | postfix
+    ;
+
+postfix: primary (DOT ID (LPAREN args? RPAREN)?)*;
+
+primary
     : ID LPAREN args? RPAREN #call
+    | NEW type LPAREN args? RPAREN #new
     | LPAREN expr RPAREN #paren
     | INT #int
     | FLOAT #float
@@ -55,14 +75,6 @@ expr
     | STRING_POINTER #stringPointer
     | BOOL #bool
     | ID #id
-    | NEW type LPAREN args? RPAREN #new
-    | expr DOT ID (LPAREN args? RPAREN)? #attr
-    | expr op=(MUL | DIV | MOD) expr #multiplication
-    | expr op=(ADD | SUB) expr #addition
-    | expr op=(EEQ | NEQ | GT | LT | GTE | LTE) expr #relational
-    | expr op=(AND | OR) expr #logical
-    | op=(NOT | SUB | ADD) expr #unary
-    | expr IF expr ELSE expr #ternary
     ;
 
 

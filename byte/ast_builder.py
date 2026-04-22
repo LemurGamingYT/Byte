@@ -1,7 +1,8 @@
 from dataclasses import dataclass
+from typing import cast
 
 from antlr4.error.ErrorListener import ErrorListener as ANTLRErrorListener
-from antlr4 import InputStream, CommonTokenStream
+from antlr4 import InputStream, CommonTokenStream, TerminalNode
 from antlr4.Token import CommonToken
 
 from byte.parser.ByteVisitor import ByteVisitor
@@ -155,6 +156,62 @@ class ByteASTBuilder(ByteVisitor):
         expr = self.visit(ctx.expr())
         return ast.Bracketed(self.pos(ctx), expr.type, expr)
     
+    def visitTernary(self, ctx):
+        if ctx.ELSE():
+            cond = self.visit(ctx.logical(1))
+            true = self.visit(ctx.logical(0))
+            false = self.visit(ctx.logical(2))
+            return ast.Ternary(self.pos(ctx), true.type, cond, true, false)
+        
+        return self.visit(ctx.logical(0))
+    
+    def generic_op(self, ctx, operand_list):
+        node = self.visit(operand_list[0])
+        for i in range(1, len(operand_list)):
+            op = ctx.getChild(2 * i - 1).getText()
+            right = self.visit(operand_list[i])
+            node = ast.Operation(self.pos(ctx), self.file.type_map.get('any'), op, node, right)
+        
+        return node
+    
+    def visitLogical(self, ctx):
+        return self.generic_op(ctx, ctx.relational())
+    
+    def visitRelational(self, ctx):
+        return self.generic_op(ctx, ctx.addition())
+    
+    def visitAddition(self, ctx):
+        return self.generic_op(ctx, ctx.multiplication())
+    
+    def visitMultiplication(self, ctx):
+        return self.generic_op(ctx, ctx.unary())
+    
+    def visitUnary(self, ctx):
+        if ctx.unary():
+            op = ctx.getChild(0).getText()
+            operand = self.visit(ctx.unary())
+            return ast.UnaryOperation(self.pos(ctx), self.file.type_map.get('any'), op, operand)
+        
+        return self.visit(ctx.postfix())
+    
+    def visitPostfix(self, ctx):
+        node = self.visit(ctx.primary())
+        ids = cast(list[TerminalNode], ctx.ID())
+        arg_lists = ctx.args()
+        arg_index = 0
+        for i, id_token in enumerate(ids):
+            name = id_token.getText()
+            if arg_index < len(arg_lists) and ctx.getChildCount() > 0:
+                if ctx.args(arg_index):
+                    args = self.visitArgs(ctx.args(arg_index))
+                    node = ast.Attribute(self.pos(ctx), self.file.type_map.get('any'), node, name, args)
+                    arg_index += 1
+                    continue
+            
+            node = ast.Attribute(self.pos(ctx), self.file.type_map.get('any'), node, name)
+        
+        return node
+    
     def visitAttr(self, ctx):
         return ast.Attribute(
             self.pos(ctx), self.file.type_map.get('any'), self.visit(ctx.expr()), ctx.ID().getText(),
@@ -166,34 +223,3 @@ class ByteASTBuilder(ByteVisitor):
             self.pos(ctx), self.file.type_map.get('any'), self.visitType(ctx.type_()),
             self.visitArgs(ctx.args())
         )
-    
-    def visitTernary(self, ctx):
-        return ast.Ternary(
-            self.pos(ctx), self.file.type_map.get('any'), self.visit(ctx.expr(1)),
-            self.visit(ctx.expr(0)), self.visit(ctx.expr(2))
-        )
-    
-    def visitOperation(self, ctx):
-        pos = self.pos(ctx)
-        op = ctx.op.text
-        if isinstance(ctx.expr(), list):
-            left, right = self.visit(ctx.expr(0)), self.visit(ctx.expr(1))
-            return ast.Operation(pos, self.file.type_map.get('any'), op, left, right)
-        else:
-            value = self.visit(ctx.expr())
-            return ast.UnaryOperation(pos, self.file.type_map.get('any'), op, value)
-    
-    def visitAddition(self, ctx):
-        return self.visitOperation(ctx)
-    
-    def visitMultiplication(self, ctx):
-        return self.visitOperation(ctx)
-    
-    def visitRelational(self, ctx):
-        return self.visitOperation(ctx)
-    
-    def visitLogical(self, ctx):
-        return self.visitOperation(ctx)
-    
-    def visitUnary(self, ctx):
-        return self.visitOperation(ctx)

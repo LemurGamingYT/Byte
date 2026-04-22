@@ -114,73 +114,8 @@ class ByteVisitor(ParseTreeVisitor):
         return self.visitChildren(ctx)
 
 
-    # Visit a parse tree produced by ByteParser#new.
-    def visitNew(self, ctx:ByteParser.NewContext):
-        return self.visitChildren(ctx)
-
-
-    # Visit a parse tree produced by ByteParser#string.
-    def visitString(self, ctx:ByteParser.StringContext):
-        return self.visitChildren(ctx)
-
-
-    # Visit a parse tree produced by ByteParser#bool.
-    def visitBool(self, ctx:ByteParser.BoolContext):
-        return self.visitChildren(ctx)
-
-
-    # Visit a parse tree produced by ByteParser#stringPointer.
-    def visitStringPointer(self, ctx:ByteParser.StringPointerContext):
-        return self.visitChildren(ctx)
-
-
-    # Visit a parse tree produced by ByteParser#unary.
-    def visitUnary(self, ctx:ByteParser.UnaryContext):
-        return self.visitChildren(ctx)
-
-
-    # Visit a parse tree produced by ByteParser#float.
-    def visitFloat(self, ctx:ByteParser.FloatContext):
-        return self.visitChildren(ctx)
-
-
-    # Visit a parse tree produced by ByteParser#int.
-    def visitInt(self, ctx:ByteParser.IntContext):
-        return self.visitChildren(ctx)
-
-
-    # Visit a parse tree produced by ByteParser#logical.
-    def visitLogical(self, ctx:ByteParser.LogicalContext):
-        return self.visitChildren(ctx)
-
-
-    # Visit a parse tree produced by ByteParser#call.
-    def visitCall(self, ctx:ByteParser.CallContext):
-        return self.visitChildren(ctx)
-
-
-    # Visit a parse tree produced by ByteParser#paren.
-    def visitParen(self, ctx:ByteParser.ParenContext):
-        return self.visitChildren(ctx)
-
-
-    # Visit a parse tree produced by ByteParser#relational.
-    def visitRelational(self, ctx:ByteParser.RelationalContext):
-        return self.visitChildren(ctx)
-
-
-    # Visit a parse tree produced by ByteParser#id.
-    def visitId(self, ctx:ByteParser.IdContext):
-        return self.visitChildren(ctx)
-
-
-    # Visit a parse tree produced by ByteParser#multiplication.
-    def visitMultiplication(self, ctx:ByteParser.MultiplicationContext):
-        return self.visitChildren(ctx)
-
-
-    # Visit a parse tree produced by ByteParser#attr.
-    def visitAttr(self, ctx:ByteParser.AttrContext):
+    # Visit a parse tree produced by ByteParser#expr.
+    def visitExpr(self, ctx:ByteParser.ExprContext):
         return self.visitChildren(ctx)
 
 
@@ -189,8 +124,78 @@ class ByteVisitor(ParseTreeVisitor):
         return self.visitChildren(ctx)
 
 
+    # Visit a parse tree produced by ByteParser#logical.
+    def visitLogical(self, ctx:ByteParser.LogicalContext):
+        return self.visitChildren(ctx)
+
+
+    # Visit a parse tree produced by ByteParser#relational.
+    def visitRelational(self, ctx:ByteParser.RelationalContext):
+        return self.visitChildren(ctx)
+
+
     # Visit a parse tree produced by ByteParser#addition.
     def visitAddition(self, ctx:ByteParser.AdditionContext):
+        return self.visitChildren(ctx)
+
+
+    # Visit a parse tree produced by ByteParser#multiplication.
+    def visitMultiplication(self, ctx:ByteParser.MultiplicationContext):
+        return self.visitChildren(ctx)
+
+
+    # Visit a parse tree produced by ByteParser#unary.
+    def visitUnary(self, ctx:ByteParser.UnaryContext):
+        return self.visitChildren(ctx)
+
+
+    # Visit a parse tree produced by ByteParser#postfix.
+    def visitPostfix(self, ctx:ByteParser.PostfixContext):
+        return self.visitChildren(ctx)
+
+
+    # Visit a parse tree produced by ByteParser#call.
+    def visitCall(self, ctx:ByteParser.CallContext):
+        return self.visitChildren(ctx)
+
+
+    # Visit a parse tree produced by ByteParser#new.
+    def visitNew(self, ctx:ByteParser.NewContext):
+        return self.visitChildren(ctx)
+
+
+    # Visit a parse tree produced by ByteParser#paren.
+    def visitParen(self, ctx:ByteParser.ParenContext):
+        return self.visitChildren(ctx)
+
+
+    # Visit a parse tree produced by ByteParser#int.
+    def visitInt(self, ctx:ByteParser.IntContext):
+        return self.visitChildren(ctx)
+
+
+    # Visit a parse tree produced by ByteParser#float.
+    def visitFloat(self, ctx:ByteParser.FloatContext):
+        return self.visitChildren(ctx)
+
+
+    # Visit a parse tree produced by ByteParser#string.
+    def visitString(self, ctx:ByteParser.StringContext):
+        return self.visitChildren(ctx)
+
+
+    # Visit a parse tree produced by ByteParser#stringPointer.
+    def visitStringPointer(self, ctx:ByteParser.StringPointerContext):
+        return self.visitChildren(ctx)
+
+
+    # Visit a parse tree produced by ByteParser#bool.
+    def visitBool(self, ctx:ByteParser.BoolContext):
+        return self.visitChildren(ctx)
+
+
+    # Visit a parse tree produced by ByteParser#id.
+    def visitId(self, ctx:ByteParser.IdContext):
         return self.visitChildren(ctx)
 
 
