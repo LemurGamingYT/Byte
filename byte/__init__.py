@@ -1,6 +1,9 @@
+import sys
+from contextlib import contextmanager
 from importlib import import_module
 from sys import exit as sys_exit
 from subprocess import run
+from io import TextIOBase
 from logging import info
 from pathlib import Path
 from typing import cast
@@ -69,6 +72,29 @@ def compile_to_exe(file: ast.File):
     
     return exe_file
 
+@contextmanager
+def disable_io():
+    stdout = sys.stdout
+    stdin = sys.stdin
+    stderr = sys.stderr
+    
+    sys.stdout = DummyIO()
+    sys.stdin = DummyIO()
+    sys.stderr = DummyIO()
+    
+    yield
+    
+    sys.stdout = stdout
+    sys.stdin = stdin
+    sys.stderr = stderr
+
+
+class DummyIO(TextIOBase):
+    def write(self, _: str, /) -> int:
+        return 0
+    
+    def read(self, _: int | None = -1, /) -> str:
+        return ''
 
 class ArgParser:
     def __init__(self, args: list[str]):
@@ -107,12 +133,20 @@ class ArgParser:
     def _version(self):
         print(f'Byte v{VERSION}')
     
-    def _test(self):
-        test_name = self.arg(1)
+    def _test(self, test_name: str | None = None):
+        if test_name is None:
+            test_name = self.arg(1)
+        
         if test_name is None:
             print('Usage: byte test <test-name>')
             print('No test name')
             sys_exit(1)
+        
+        folder_test = TESTS_DIR / test_name
+        if folder_test.is_dir():
+            passed_count, num_tests = self.test_dir(folder_test)
+            print(f'{passed_count}/{num_tests} tests passed')
+            return
         
         test = self.find_first_file(TESTS_DIR, test_name)
         if test is None:
@@ -120,10 +154,38 @@ class ArgParser:
             print('Unknown test name')
             sys_exit(1)
         
+        try:
+            self.test_file(test)
+            print('test passed')
+        except SystemExit:
+            print('test failed')
+    
+    def test_dir(self, path: Path):
+        tests = list(path.glob('*.byte'))
+        passed_count = 0
+        for byte_file in tests:
+            with disable_io():
+                try:
+                    self.test_file(byte_file)
+                    had_error = False
+                except SystemExit:
+                    had_error = True
+            
+            dir_name = byte_file.parent.name
+            success = (dir_name == 'fail' and had_error) or (dir_name == 'pass' and not had_error)
+            if success:
+                print(f'{byte_file.stem} test passed')
+                passed_count += 1
+            else:
+                print(f'{byte_file.stem} test failed')
+        
+        return passed_count, len(tests)
+    
+    def test_file(self, test: Path):
         match test.suffix:
             case '.py':
-                module = import_module(f'byte.tests.{test_name}')
-                method = getattr(module, f'test_{test_name}')
+                module = import_module(f'byte.tests.{test.stem}')
+                method = getattr(module, f'test_{test.stem}')
                 method()
             case '.c':
                 exe_file = test.with_suffix('.exe')
@@ -138,10 +200,10 @@ class ArgParser:
                     sys_exit(1)
                 
                 exe_file.unlink()
+            case '.byte':
+                self._build(str(test))
             case _:
                 raise NotImplementedError(f'test suffix {test.suffix}')
-        
-        print(f'Completed test \'{test_name}\'')
     
     def _build(self, file_path: str | None = None):
         if file_path is None:
