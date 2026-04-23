@@ -201,10 +201,13 @@ class IRBuilderExt(ir.IRBuilder):
         
         return struct
     
-    def first_elem(self, ptr: Any, name: str = '', inbounds: bool = True):
+    def first_elem(self, ptr: Any, name: str = '', inbounds: bool = True, use_instruction: bool = False):
         """Gets the first element of a pointer or array"""
         
-        return self.gep(ptr, [llint(0), llint(0)], inbounds, name)
+        if use_instruction:
+            return self.gep(ptr, [llint(0), llint(0)], inbounds, name)
+        else:
+            return ir.Constant.gep(ptr, [llint(0), llint(0)])
     
     def null_terminate(self, ptr: Any, length: Any, name: str = '', ptr_width: int = 8, inbounds: bool = True):
         """Null terminates (adds \\0 at length in the given pointer) the pointer assuming that it is a pointer of 8 bit ints"""

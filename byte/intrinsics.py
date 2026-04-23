@@ -74,8 +74,14 @@ class Intrinsics:
         self.declare_empty_function('error', params=[ast.Param(ast.Position(), string_type, 'message')], public=True)
         self.declare_empty_function('null', pointer_type)
         
+        self.declare_attribute_function(int_type, 'min', int_type, is_static=True, is_method=False)
+        self.declare_attribute_function(int_type, 'max', int_type, is_static=True, is_method=False)
         self.declare_attribute_function(int_type, 'to_string', string_type)
+        
+        # self.declare_attribute_function(float_type, 'min', float_type, is_static=True, is_method=False)
+        # self.declare_attribute_function(float_type, 'max', float_type, is_static=True, is_method=False)
         self.declare_attribute_function(float_type, 'to_string', string_type)
+        
         self.declare_attribute_function(string_type, 'to_string', string_type)
         self.declare_attribute_function(bool_type, 'to_string', string_type)
         
@@ -191,6 +197,7 @@ class Intrinsics:
                 return builder.not_(args[0], '!.bool')
             case 'print':
                 printf = module.registry.get('printf')
+                
                 fmt = module.try_get_global('string_fmt', lambda: module.global_string('%.*s\n', 'string_fmt'))
                 ptr = builder.first_elem(fmt, 'string_fmt_ptr')
                 s_ptr = builder.extract_value(args[0], 0, 's_ptr')
@@ -198,6 +205,7 @@ class Intrinsics:
                 builder.call(printf, [ptr, s_length, s_ptr])
             case 'print_literal':
                 printf = module.registry.get('printf')
+                
                 fmt = module.try_get_global('string_lit_fmt', lambda: module.global_string('%.*s', 'string_lit_fmt'))
                 ptr = builder.first_elem(fmt, 'string_lit_fmt_ptr')
                 s_ptr = builder.extract_value(args[0], 0, 's_ptr')
@@ -288,3 +296,11 @@ class Intrinsics:
                 
                 buf = module.global_buffer(ir.IntType(8), args[0].constant, module.get_unique_name('buffer'))
                 return builder.first_elem(buf, f'{buf.name}.ptr')
+            case 'int.min':
+                return llint(-2147483648)
+            case 'int.max':
+                return llint(2147483647)
+            case 'float.min':
+                return ir.Constant(ir.FloatType(), 1.175494e-38)
+            case 'float.max':
+                return ir.Constant(ir.FloatType(), 3.402823e+38)

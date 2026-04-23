@@ -1,3 +1,5 @@
+#include <float.h>
+#include <limits.h>
 #include <stdbool.h>
 #include <string.h>
 #include <stdlib.h>
