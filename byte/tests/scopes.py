@@ -20,3 +20,4 @@ def test_scopes():
     
     assert file.scope.symbol_table.remove('a')
     assert not file.scope.symbol_table.has('a')
+    return True

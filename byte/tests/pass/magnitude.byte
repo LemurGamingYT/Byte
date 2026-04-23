@@ -1,0 +1,15 @@
+fn int.magnitude(mut int x) -> int {
+    mut mag = 0
+    while x > 1000 {
+        x /= 1000
+        mag += 1
+    }
+    
+    return mag
+}
+
+fn main() -> int {
+    x = 3 * 1000000
+    print(x.magnitude().to_string())
+    return 0
+}

@@ -32,12 +32,14 @@ def compile_file(file: ast.File):
     ast_file = file.path.with_suffix('.byteast')
     
     program = parse(file)
-    ast_file.write_text(str(program))
+    if file.options.debug:
+        ast_file.write_text(str(program))
     
     for cls in PASS_CLASSES:
         info(f'running pass {cls.__name__}')
         program = cls.run(file, program)
-        ast_file.write_text(str(program))
+        if file.options.debug:
+            ast_file.write_text(str(program))
     
     return cast(CompileResult, CodeGeneration.run(file, program))
 
@@ -52,6 +54,9 @@ def compile_to_obj(file: ast.File):
     compile_cmd = f'clang -c -o {obj_file} {ll_file} {flags_str}'
     info(f'running clang compile command \'{compile_cmd}\'')
     run(compile_cmd, shell=True)
+    
+    if file.options.clean:
+        ll_file.unlink()
     
     return obj_file
 
@@ -69,6 +74,10 @@ def compile_to_exe(file: ast.File):
     link_cmd = f'clang {obj_files_str} -o {exe_file}'
     info(f'running clang link command \'{link_cmd}\'')
     run(link_cmd, shell=True)
+    
+    if file.options.clean:
+        for obj in obj_files:
+            obj.unlink()
     
     return exe_file
 
@@ -125,6 +134,9 @@ class ArgParser:
         
         return None
     
+    def flag(self, name: str):
+        return any(f'--{name}' == arg for arg in self.args)
+    
     def find_first_file(self, path: Path, name: str):
         for file in path.iterdir():
             if file.stem == name:
@@ -138,9 +150,12 @@ class ArgParser:
             test_name = self.arg(1)
         
         if test_name is None:
-            print('Usage: byte test <test-name>')
-            print('No test name')
-            sys_exit(1)
+            fail_pass_count, num_fail_tests = self.test_dir(TESTS_DIR / 'fail')
+            pass_pass_count, num_pass_tests = self.test_dir(TESTS_DIR / 'pass')
+            passed_count = fail_pass_count + pass_pass_count
+            num_tests = num_fail_tests + num_pass_tests
+            print(f'{passed_count}/{num_tests} tests passed')
+            return
         
         folder_test = TESTS_DIR / test_name
         if folder_test.is_dir():
@@ -154,22 +169,17 @@ class ArgParser:
             print('Unknown test name')
             sys_exit(1)
         
-        try:
-            self.test_file(test)
-            print('test passed')
-        except SystemExit:
+        had_error = self.test_file(test)
+        if had_error:
             print('test failed')
+        else:
+            print('test passed')
     
     def test_dir(self, path: Path):
         tests = list(path.glob('*.byte'))
         passed_count = 0
         for byte_file in tests:
-            with disable_io():
-                try:
-                    self.test_file(byte_file)
-                    had_error = False
-                except SystemExit:
-                    had_error = True
+            had_error = self.test_file(byte_file)
             
             dir_name = byte_file.parent.name
             success = (dir_name == 'fail' and had_error) or (dir_name == 'pass' and not had_error)
@@ -186,22 +196,30 @@ class ArgParser:
             case '.py':
                 module = import_module(f'byte.tests.{test.stem}')
                 method = getattr(module, f'test_{test.stem}')
-                method()
+                return not method()
             case '.c':
                 exe_file = test.with_suffix('.exe')
                 res = run(f'clang {test.absolute().as_posix()} -o {exe_file.absolute().as_posix()} -D_TEST')
                 if res.returncode != 0:
                     print(f'{Style.BRIGHT}{Fore.RED}C exe compilation failed{Style.RESET_ALL}')
-                    sys_exit(1)
+                    return True
                 
-                res = run(f'{exe_file}')
+                with disable_io():
+                    res = run(f'{exe_file}')
+                
                 if res.returncode != 0:
                     print(f'{Style.BRIGHT}{Fore.RED}error occurred running exe file{Style.RESET_ALL}')
-                    sys_exit(1)
+                    return True
                 
                 exe_file.unlink()
+                return False
             case '.byte':
-                self._build(str(test))
+                with disable_io():
+                    try:
+                        self._build(str(test))
+                        return False
+                    except SystemExit:
+                        return True
             case _:
                 raise NotImplementedError(f'test suffix {test.suffix}')
     
@@ -225,5 +243,6 @@ class ArgParser:
             print(f'File \'{file_path}\' is not a file')
             sys_exit(1)
         
-        file = ast.File(path)
+        options = ast.CompileOptions(self.flag('debug'), self.flag('opt') or self.flag('optimise'), self.flag('clean'))
+        file = ast.File(path, options=options)
         compile_to_exe(file)

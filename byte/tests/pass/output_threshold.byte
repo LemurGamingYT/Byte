@@ -1,0 +1,13 @@
+fn print_num_with_threshold(int x, int threshold) {
+    if x < threshold { return }
+    
+    print(x.to_string())
+}
+
+fn main() -> int {
+    threshold = 1000
+    print_num_with_threshold(20, threshold)
+    print_num_with_threshold(3000, threshold)
+    print_num_with_threshold(900, threshold)
+    return 0
+}

@@ -121,11 +121,18 @@ class Scope:
         return Scope(self, SymbolTable(self.symbol_table), self.in_loop, self.data.clone())
 
 @dataclass
+class CompileOptions:
+    debug: bool = False
+    optimise: bool = False
+    clean: bool = False
+
+@dataclass
 class File:
     path: Path
     scope: Scope = field(default_factory=Scope)
     type_map: TypeMap = field(default_factory=TypeMap)
     dependencies: list[Path] = field(default_factory=list)
+    options: CompileOptions = field(default_factory=CompileOptions)
     
     @property
     def unique_name(self):

@@ -20,7 +20,7 @@ def test_pass_visitor():
     
     test_pass = TestPass(file)
     output_program = test_pass.visit(program)
-    assert output_program == expected_program
+    return output_program == expected_program
 
 
 class TestPass(ByteCompilerPass):

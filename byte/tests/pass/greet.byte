@@ -1,0 +1,8 @@
+fn greet() {
+    print("Hello User!")
+}
+
+fn main() -> int {
+    greet()
+    return 0
+}
