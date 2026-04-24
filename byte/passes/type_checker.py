@@ -6,14 +6,6 @@ from byte.intrinsics import Intrinsics
 from byte import ast
 
 
-def length_word(word: str, count: int):
-    if count == 0:
-        return f'no {word}s'
-    elif count == 1:
-        return f'{count} {word}'
-    else:
-        return f'{count} {word}s'
-
 class TypeChecker(ByteCompilerPass):
     def visitType(self, node: ast.Type):
         typ = self.file.type_map.tryget(node.type)
