@@ -208,9 +208,8 @@ class TypeChecker(ByteCompilerPass):
             
             info(f'calling overload {overload.name}')
             
-            new_args = []
-            for arg, param in zip(args, overload.params):
-                if isinstance(param.type, ast.ReferenceType):
+            for i, (arg, param) in enumerate(zip(args, overload.params)):
+                if param.type.is_reference():
                     if not isinstance(arg.value, ast.Id):
                         arg.pos.comptime_error(self.file, 'cannot reference non-identifier')
                     
@@ -223,12 +222,10 @@ class TypeChecker(ByteCompilerPass):
                             self.file, 'argument reference symbol is immutable but is being passed by mutable reference'
                         )
                     
-                    new_args.append(ast.Ref(node.pos, arg.type.reference(), arg.value.name))
-                else:
-                    new_args.append(arg)
+                    args[i] = ast.Ref(node.pos, arg.type.reference(), arg.value.name).to_arg()
             
             # TODO: check for multiple matching overloads
-            return ast.Call(node.pos, overload.ret_type, overload.name, new_args)
+            return ast.Call(node.pos, overload.ret_type, overload.name, args)
         
         node.pos.comptime_error(self.file, f'no matching overloads for call to \'{node.callee}\'')
     
