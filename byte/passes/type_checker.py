@@ -263,12 +263,9 @@ class TypeChecker(ByteCompilerPass):
     
     def visitAttribute(self, node: ast.Attribute):
         value = self.visit(node.value)
-        if not isinstance(value, ast.Type):
-            value_type = value.type
-            if value_type.is_reference():
-                value_type = value_type.type
-        else:
-            value_type = value
+        value_type = value.type
+        if value_type.is_reference():
+            value_type = value_type.type
         
         callee = f'{value_type}.{node.attr}'
         symbol = self.scope.symbol_table.tryget(callee)
