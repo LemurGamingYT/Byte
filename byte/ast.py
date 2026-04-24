@@ -205,8 +205,33 @@ class Type(Node):
         
         raise NotImplementedError
     
+    def reference(self):
+        return ReferenceType(self)
+    
+    def is_reference(self):
+        return isinstance(self, ReferenceType)
+    
     def __str__(self) -> str:
         return self.type
+
+@dataclass
+class ReferenceType(Type):
+    type: Type # type: ignore
+    
+    def __eq__(self, other: object):
+        if not isinstance(other, Type):
+            return False
+        
+        return self.type == other
+    
+    def __ne__(self, other: object):
+        if not isinstance(other, Type):
+            return False
+        
+        return self.type != other
+    
+    def __str__(self) -> str:
+        return f'{self.type}&'
 
 @dataclass
 class Program(TypelessNode):
@@ -423,6 +448,9 @@ class Bool(Node):
 class Id(Node):
     name: str
     
+    def to_ref(self):
+        return Ref(self.pos, self.type.reference(), self.name)
+    
     def __str__(self) -> str:
         return self.name
 
@@ -486,3 +514,10 @@ class New(Node):
     def __str__(self) -> str:
         args_str = ', '.join(map(str, self.args))
         return f'new {self.new_type}({args_str})'
+
+@dataclass
+class Ref(Node):
+    name: str
+    
+    def __str__(self) -> str:
+        return f'&{self.name}'

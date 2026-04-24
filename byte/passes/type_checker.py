@@ -191,7 +191,9 @@ class TypeChecker(ByteCompilerPass):
             return False
         
         for arg, param in zip(args, params):
-            if arg.type == param.type or str(param.type) == 'any':
+            arg_type = arg.type
+            param_type = param.type
+            if arg_type == param_type or str(param_type) == 'any':
                 continue
             
             return False
@@ -214,8 +216,27 @@ class TypeChecker(ByteCompilerPass):
             
             info(f'calling overload {overload.name}')
             
+            new_args = []
+            for arg, param in zip(args, overload.params):
+                if isinstance(param.type, ast.ReferenceType):
+                    if not isinstance(arg.value, ast.Id):
+                        arg.pos.comptime_error(self.file, 'cannot reference non-identifier')
+                    
+                    ref_symbol = self.scope.symbol_table.tryget(arg.value.name)
+                    if ref_symbol is None:
+                        arg.pos.comptime_error(self.file, 'cannot reference unknown identifier')
+                    
+                    if not ref_symbol.is_mutable and param.is_mutable:
+                        arg.pos.comptime_error(
+                            self.file, 'argument reference symbol is immutable but is being passed by mutable reference'
+                        )
+                    
+                    new_args.append(ast.Ref(node.pos, arg.type.reference(), arg.value.name))
+                else:
+                    new_args.append(arg)
+            
             # TODO: check for multiple matching overloads
-            return ast.Call(node.pos, overload.ret_type, overload.name, args)
+            return ast.Call(node.pos, overload.ret_type, overload.name, new_args)
         
         node.pos.comptime_error(self.file, f'no matching overloads for call to \'{node.callee}\'')
     
@@ -242,7 +263,14 @@ class TypeChecker(ByteCompilerPass):
     
     def visitAttribute(self, node: ast.Attribute):
         value = self.visit(node.value)
-        callee = f'{value.type}.{node.attr}'
+        if not isinstance(value, ast.Type):
+            value_type = value.type
+            if value_type.is_reference():
+                value_type = value_type.type
+        else:
+            value_type = value
+        
+        callee = f'{value_type}.{node.attr}'
         symbol = self.scope.symbol_table.tryget(callee)
         if symbol is None:
             node.pos.comptime_error(self.file, f'unknown attribute \'{node.attr}\' on type \'{value.type}\'')

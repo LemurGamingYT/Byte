@@ -2,7 +2,10 @@ grammar Byte;
 
 program: stmt* EOF;
 
-type: ID;
+type
+    : ID
+    | type AMPERSAND
+    ;
 
 stmt
     : varAssign | funcAssign
@@ -126,6 +129,7 @@ RPAREN: ')';
 LBRACE: '{';
 RBRACE: '}';
 RETURNS: '->';
+AMPERSAND: '&';
 
 COMMENT: '//' .*? '\n' -> skip;
 MULTILINE_COMMENT: '/*' .*? '*/' -> skip;

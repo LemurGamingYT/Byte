@@ -44,6 +44,9 @@ class ByteASTBuilder(ByteVisitor):
         return ast.Program(self.pos(ctx), [self.visit(stmt) for stmt in ctx.stmt()])
     
     def visitType(self, ctx):
+        if ctx.AMPERSAND():
+            return ast.ReferenceType(self.visit(ctx.type_()))
+        
         return ast.Type(ctx.getText())
     
     def visitArgs(self, ctx):

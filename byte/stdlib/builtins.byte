@@ -1,7 +1,7 @@
 use "intrinsics"
 
 
-fn string.destroy(string s) {
+fn string.destroy(string& s) {
     if !s.is_allocated { return }
     free(s.ptr)
 }

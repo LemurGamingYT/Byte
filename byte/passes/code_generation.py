@@ -52,6 +52,9 @@ class CodeGeneration(ByteCompilerPass):
             case 'any' | 'pointer' | 'function':
                 return ir.PointerType(ir.IntType(8))
     
+    def visitReferenceType(self, node: ast.ReferenceType):
+        return ir.PointerType(self.visit(node.type))
+    
     def visitArg(self, node: ast.Arg):
         return self.visit(node.value)
     
@@ -243,6 +246,9 @@ class CodeGeneration(ByteCompilerPass):
         value = self.visit(node.value)
         symbol = self.scope.symbol_table.get(node.name)
         ptr = cast(Any, symbol.value)
+        if isinstance(symbol.type, ast.ReferenceType):
+            ptr = self.builder.load(ptr, f'{symbol.name}.ref')
+        
         self.builder.store(value, ptr)
     
     def visitInt(self, node: ast.Int):
@@ -265,6 +271,9 @@ class CodeGeneration(ByteCompilerPass):
     def visitId(self, node: ast.Id):
         symbol = self.scope.symbol_table.get(node.name)
         ptr = cast(Any, symbol.value)
+        if isinstance(symbol.type, ast.ReferenceType):
+            ptr = self.builder.load(ptr, f'{node.name}.ref')
+        
         return self.builder.load(ptr, node.name)
     
     def visitCall(self, node: ast.Call):
@@ -289,3 +298,7 @@ class CodeGeneration(ByteCompilerPass):
     
     def visitBracketed(self, node: ast.Bracketed):
         return self.visit(node.value)
+    
+    def visitRef(self, node: ast.Ref):
+        symbol = self.scope.symbol_table.get(node.name)
+        return symbol.value

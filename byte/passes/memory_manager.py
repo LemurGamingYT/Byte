@@ -66,7 +66,7 @@ class MemoryManager(ByteCompilerPass):
             
             info(f'{symbol.name} was not moved and needs to be freed, adding destroy call')
             nodes.append(ast.Call(pos, destroy_func.ret_type, destroy_func.name, [
-                ast.Id(pos, symbol.type, symbol.name).to_arg()
+                ast.Id(pos, symbol.type, symbol.name).to_ref().to_arg()
             ]))
         
         return nodes
