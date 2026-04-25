@@ -91,6 +91,10 @@ class Intrinsics:
         self.declare_attribute_function(string_type, 'is_allocated', bool_type, is_method=False)
         
         self.declare_attribute_function(System_type, 'os', string_type, is_static=True, is_method=False)
+        self.declare_attribute_function(System_type, 'pid', int_type, is_static=True, is_method=False)
+        self.declare_attribute_function(System_type, 'sleep', params=[
+            ast.Param(ast.Position(), int_type, 'milliseconds')
+        ], is_static=True)
         
         for definition in Registry.get_all_definitions():
             name = definition.display_name or definition.llvm_name
@@ -312,3 +316,20 @@ class Intrinsics:
                 os_name = module.global_string(text, 'os_name')
                 os_name_ptr = builder.first_elem(os_name, 'os_name_ptr')
                 return builder.struct(string_type, [os_name_ptr, llint(len(text)), llint(0, 1)], 'System.os')
+            case 'System.sleep':
+                duration = args[0]
+                
+                if self.file.target == ast.Target.WINDOWS:
+                    Sleep = module.registry.get('Sleep')
+                    builder.call(Sleep, [duration])
+                else:
+                    usleep = module.registry.get('usleep')
+                    duration_microseconds = builder.mul(duration, llint(1000), 'duration_microseconds')
+                    builder.call(usleep, [duration_microseconds])
+            case 'System.pid':
+                if self.file.target == ast.Target.WINDOWS:
+                    GetCurrentProcessId = module.registry.get('GetCurrentProcessId')
+                    return builder.call(GetCurrentProcessId, [], 'System.pid')
+                else:
+                    getpid = module.registry.get('getpid')
+                    return builder.call(getpid, [], 'System.pid')

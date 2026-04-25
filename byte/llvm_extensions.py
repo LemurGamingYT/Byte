@@ -70,7 +70,11 @@ class Registry:
             )),
             RegistryDefinition('strtol', ir.FunctionType(ir.IntType(32), [pointer_type, pointer_type, ir.IntType(32)])),
             RegistryDefinition('strtof', ir.FunctionType(ir.FloatType(), [pointer_type, pointer_type])),
-            RegistryDefinition('fprintf', ir.FunctionType(ir.VoidType(), [FILE_type, pointer_type], True))
+            RegistryDefinition('fprintf', ir.FunctionType(ir.VoidType(), [FILE_type, pointer_type], True)),
+            RegistryDefinition('Sleep', ir.FunctionType(ir.VoidType(), [ir.IntType(32)])),
+            RegistryDefinition('usleep', ir.FunctionType(ir.VoidType(), [ir.IntType(32)])),
+            RegistryDefinition('GetCurrentProcessId', ir.FunctionType(ir.IntType(32), [])),
+            RegistryDefinition('getpid', ir.FunctionType(ir.IntType(32), [])),
         ]
     
     def add_function(self, name: str, func_type: ir.FunctionType, display_name: str | None = None):
