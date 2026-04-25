@@ -22,7 +22,7 @@ bodyStmts
 
 body
     : LBRACE bodyStmts* RBRACE
-    | bodyStmts
+    // | bodyStmts
     ;
 
 ifStmt: IF expr body elseifStmt* elseStmt?;
