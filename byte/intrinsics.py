@@ -1,4 +1,3 @@
-from platform import system
 from logging import info
 from typing import Any
 
@@ -309,10 +308,7 @@ class Intrinsics:
             case 'float.max':
                 return ir.Constant(ir.FloatType(), 3.402823e+38)
             case 'System.os':
-                text = system()
-                if text == 'Darwin':
-                    text = 'MacOS'
-                
+                text = self.file.target.name.title()
                 os_name = module.global_string(text, 'os_name')
                 os_name_ptr = builder.first_elem(os_name, 'os_name_ptr')
-                return builder.struct(string_type, [os_name_ptr, llint(len(text)), llint(0, 1)])
+                return builder.struct(string_type, [os_name_ptr, llint(len(text)), llint(0, 1)], 'System.os')

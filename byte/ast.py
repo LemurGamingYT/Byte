@@ -4,13 +4,28 @@ from abc import ABC, abstractmethod
 from sys import exit as sys_exit
 from logging import info, error
 from typing import Union, Any
+from platform import system
 from pathlib import Path
+from enum import Enum
 
 from colorama import Fore, Style
 from llvmlite import ir
 
 
 STDLIB_PATH = Path(__file__).parent / 'stdlib'
+
+class Target(Enum):
+    WINDOWS = 'Windows'
+    LINUX = 'Linux'
+    MACOS = 'Darwin'
+    
+    @staticmethod
+    def current():
+        return Target(system())
+    
+    @property
+    def exe_extension(self):
+        return '.exe' if self == Target.WINDOWS else ''
 
 @dataclass
 class Position:
@@ -133,6 +148,7 @@ class File:
     type_map: TypeMap = field(default_factory=TypeMap)
     dependencies: list[Path] = field(default_factory=list)
     options: CompileOptions = field(default_factory=CompileOptions)
+    target: Target = field(default_factory=Target.current)
     
     @property
     def unique_name(self):
