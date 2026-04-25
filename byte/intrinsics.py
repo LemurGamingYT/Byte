@@ -1,3 +1,4 @@
+from platform import system
 from logging import info
 from typing import Any
 
@@ -19,6 +20,7 @@ class Intrinsics:
         string_type = self.file.type_map.get('string')
         pointer_type = self.file.type_map.get('pointer')
         any_type = self.file.type_map.get('any')
+        System_type = self.file.type_map.get('System')
         
         self.declare_op_function('+', int_type, int_type, int_type)
         self.declare_op_function('-', int_type, int_type, int_type)
@@ -88,6 +90,8 @@ class Intrinsics:
         self.declare_attribute_function(string_type, 'ptr', pointer_type, is_method=False)
         self.declare_attribute_function(string_type, 'length', int_type, is_method=False)
         self.declare_attribute_function(string_type, 'is_allocated', bool_type, is_method=False)
+        
+        self.declare_attribute_function(System_type, 'os', string_type, is_static=True, is_method=False)
         
         for definition in Registry.get_all_definitions():
             name = definition.display_name or definition.llvm_name
@@ -304,3 +308,11 @@ class Intrinsics:
                 return ir.Constant(ir.FloatType(), 1.175494e-38)
             case 'float.max':
                 return ir.Constant(ir.FloatType(), 3.402823e+38)
+            case 'System.os':
+                text = system()
+                if text == 'Darwin':
+                    text = 'MacOS'
+                
+                os_name = module.global_string(text, 'os_name')
+                os_name_ptr = builder.first_elem(os_name, 'os_name_ptr')
+                return builder.struct(string_type, [os_name_ptr, llint(len(text)), llint(0, 1)])

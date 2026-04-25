@@ -150,6 +150,7 @@ class File:
         
         self.type_map.add('string')
         self.type_map.add('Math')
+        self.type_map.add('System')
         
         self.type_map.add('any')
         self.type_map.add('pointer')
