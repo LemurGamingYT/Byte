@@ -185,6 +185,13 @@ class Type(Node):
     pos: Position = field(default_factory=Position, init=False, compare=False)
     type: str #type: ignore
     
+    @property
+    def basic_type(self):
+        if self.is_reference():
+            return self.type
+        
+        return self
+    
     @staticmethod
     def from_llvm(file: File, ir_type: ir.Type):
         if isinstance(ir_type, ir.IntType):

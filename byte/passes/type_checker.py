@@ -274,7 +274,9 @@ class TypeChecker(ByteCompilerPass):
     def visitOperation(self, node: ast.Operation):
         left = self.visit(node.left)
         right = self.visit(node.right)
-        callee = f'{node.op}.{left.type}.{right.type}'
+        left_type = left.type.basic_type
+        right_type = right.type.basic_type
+        callee = f'{node.op}.{left_type}.{right_type}'
         symbol = self.scope.symbol_table.tryget(callee)
         if symbol is None:
             node.pos.comptime_error(self.file, f'invalid operation \'{node.op}\' between types \'{left.type}\' and \'{right.type}\'')
@@ -284,7 +286,8 @@ class TypeChecker(ByteCompilerPass):
     
     def visitUnaryOperation(self, node: ast.UnaryOperation):
         value = self.visit(node.value)
-        callee = f'{node.op}.{value.type}'
+        value_type = value.type.basic_type
+        callee = f'{node.op}.{value_type}'
         symbol = self.scope.symbol_table.tryget(callee)
         if symbol is None:
             node.pos.comptime_error(self.file, f'invalid operation \'{node.op}\' on type \'{value.type}\'')
@@ -294,10 +297,7 @@ class TypeChecker(ByteCompilerPass):
     
     def visitAttribute(self, node: ast.Attribute):
         value = self.visit(node.value)
-        value_type = value.type
-        if value_type.is_reference():
-            value_type = value_type.type
-        
+        value_type = value.type.basic_type
         callee = f'{value_type}.{node.attr}'
         symbol = self.scope.symbol_table.tryget(callee)
         if symbol is None:
