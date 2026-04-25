@@ -20,7 +20,10 @@ bodyStmts
     | CONTINUE #continue
     ;
 
-body: LBRACE bodyStmts* RBRACE;
+body
+    : LBRACE bodyStmts* RBRACE
+    | bodyStmts
+    ;
 
 ifStmt: IF expr body elseifStmt* elseStmt?;
 elseifStmt: ELSE IF expr body;
