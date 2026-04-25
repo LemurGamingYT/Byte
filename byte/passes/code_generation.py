@@ -251,6 +251,50 @@ class CodeGeneration(ByteCompilerPass):
         
         self.builder.store(value, ptr)
     
+    def visitForRange(self, node: ast.ForRange):
+        func = cast(ir.Function, self.builder.function)
+        
+        cond_block = func.append_basic_block('for_range_cond')
+        body_block = func.append_basic_block('for_range_body')
+        inc_block = func.append_basic_block('for_inc_body')
+        merge_block = func.append_basic_block('for_merge_block')
+        
+        self.scope.data.codegen_while_merge_block = merge_block
+        self.scope.data.codegen_while_test_block = cond_block
+        
+        if node.step is None:
+            raise RuntimeError('node.step still not evaluated')
+        
+        start = self.visit(node.start)
+        end = self.visit(node.end)
+        step = self.visit(node.step)
+        default_value = llint(0) if isinstance(start.type, ir.IntType) else ir.Constant(ir.FloatType(), 0.0)
+        
+        var_ptr = self.builder.allocate_value(default_value, name=f'{node.iter_name}.addr')
+        self.builder.branch(cond_block)
+        self.builder.position_at_end(cond_block)
+        
+        var_value = self.builder.load(var_ptr, node.iter_name)
+        cond = self.builder.icmp_signed('<', var_value, end, 'cond')
+        self.builder.cbranch(cond, body_block, merge_block)
+        self.builder.position_at_end(body_block)
+        
+        self.scope.symbol_table.add(ast.Symbol(node.iter_name, node.start.type, var_ptr))
+        self.visit(node.body)
+        
+        self.builder.branch(inc_block)
+        self.builder.position_at_end(inc_block)
+        
+        var_value = self.builder.load(var_ptr, node.iter_name)
+        if isinstance(start.type, ir.IntType):
+            var_inc = self.builder.add(var_value, step, 'var_inc')
+        else:
+            var_inc = self.builder.fadd(var_value, step, 'var_inc')
+        
+        self.builder.store(var_inc, var_ptr)
+        self.builder.branch(cond_block)
+        self.builder.position_at_end(merge_block)
+    
     def visitInt(self, node: ast.Int):
         return llint(node.value)
     

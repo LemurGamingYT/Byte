@@ -9,7 +9,7 @@ type
 
 stmt
     : varAssign | funcAssign
-    | whileStmt | ifStmt | useStmt// | deferStmt
+    | whileStmt | ifStmt | useStmt | forRangeStmt// | deferStmt
     | expr
     ;
 
@@ -28,6 +28,7 @@ elseStmt: ELSE body;
 whileStmt: WHILE expr body;
 useStmt: USE STRING;
 deferStmt: DEFER expr;
+forRangeStmt: FOR ID IN expr DOUBLEDOT expr (DOUBLEDOT expr)? body;
 
 funcName
     : (extend_type=type DOT)? ID
@@ -83,6 +84,8 @@ primary
 
 // Basic keywords
 IF: 'if';
+IN: 'in';
+FOR: 'for';
 NEW: 'new';
 USE: 'use';
 FUNC: 'fn';
@@ -130,6 +133,7 @@ LBRACE: '{';
 RBRACE: '}';
 RETURNS: '->';
 AMPERSAND: '&';
+DOUBLEDOT: '..';
 
 COMMENT: '//' .*? '\n' -> skip;
 MULTILINE_COMMENT: '/*' .*? '*/' -> skip;

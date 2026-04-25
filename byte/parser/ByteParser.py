@@ -10,109 +10,114 @@ else:
 
 def serializedATN():
     return [
-        4,1,46,286,2,0,7,0,2,1,7,1,2,2,7,2,2,3,7,3,2,4,7,4,2,5,7,5,2,6,7,
+        4,1,49,301,2,0,7,0,2,1,7,1,2,2,7,2,2,3,7,3,2,4,7,4,2,5,7,5,2,6,7,
         6,2,7,7,7,2,8,7,8,2,9,7,9,2,10,7,10,2,11,7,11,2,12,7,12,2,13,7,13,
         2,14,7,14,2,15,7,15,2,16,7,16,2,17,7,17,2,18,7,18,2,19,7,19,2,20,
         7,20,2,21,7,21,2,22,7,22,2,23,7,23,2,24,7,24,2,25,7,25,2,26,7,26,
-        1,0,5,0,56,8,0,10,0,12,0,59,9,0,1,0,1,0,1,1,1,1,1,1,1,1,1,1,5,1,
-        68,8,1,10,1,12,1,71,9,1,1,2,1,2,1,2,1,2,1,2,1,2,3,2,79,8,2,1,3,1,
-        3,1,3,3,3,84,8,3,1,3,1,3,3,3,88,8,3,1,4,1,4,5,4,92,8,4,10,4,12,4,
-        95,9,4,1,4,1,4,1,5,1,5,1,5,1,5,5,5,103,8,5,10,5,12,5,106,9,5,1,5,
-        3,5,109,8,5,1,6,1,6,1,6,1,6,1,6,1,7,1,7,1,7,1,8,1,8,1,8,1,8,1,9,
-        1,9,1,9,1,10,1,10,1,10,1,11,1,11,1,11,3,11,132,8,11,1,11,1,11,1,
-        11,1,11,1,11,3,11,139,8,11,1,11,3,11,142,8,11,1,12,3,12,145,8,12,
-        1,12,1,12,1,12,1,12,3,12,151,8,12,1,12,1,12,1,12,3,12,156,8,12,1,
-        12,1,12,1,13,1,13,3,13,162,8,13,1,13,1,13,1,13,3,13,167,8,13,1,13,
-        1,13,1,13,3,13,172,8,13,1,14,1,14,1,15,1,15,1,15,5,15,179,8,15,10,
-        15,12,15,182,9,15,1,16,3,16,185,8,16,1,16,1,16,1,16,1,17,1,17,1,
-        17,5,17,193,8,17,10,17,12,17,196,9,17,1,18,1,18,1,19,1,19,1,19,1,
-        19,1,19,1,19,3,19,206,8,19,1,20,1,20,1,20,5,20,211,8,20,10,20,12,
-        20,214,9,20,1,21,1,21,1,21,5,21,219,8,21,10,21,12,21,222,9,21,1,
-        22,1,22,1,22,5,22,227,8,22,10,22,12,22,230,9,22,1,23,1,23,1,23,5,
-        23,235,8,23,10,23,12,23,238,9,23,1,24,1,24,1,24,3,24,243,8,24,1,
-        25,1,25,1,25,1,25,1,25,3,25,250,8,25,1,25,3,25,253,8,25,5,25,255,
-        8,25,10,25,12,25,258,9,25,1,26,1,26,1,26,3,26,263,8,26,1,26,1,26,
-        1,26,1,26,1,26,3,26,270,8,26,1,26,1,26,1,26,1,26,1,26,1,26,1,26,
-        1,26,1,26,1,26,1,26,1,26,3,26,284,8,26,1,26,0,1,2,27,0,2,4,6,8,10,
-        12,14,16,18,20,22,24,26,28,30,32,34,36,38,40,42,44,46,48,50,52,0,
-        7,1,0,20,33,1,0,20,24,1,0,31,32,1,0,25,30,1,0,20,21,1,0,22,24,2,
-        0,20,21,33,33,304,0,57,1,0,0,0,2,62,1,0,0,0,4,78,1,0,0,0,6,87,1,
-        0,0,0,8,89,1,0,0,0,10,98,1,0,0,0,12,110,1,0,0,0,14,115,1,0,0,0,16,
-        118,1,0,0,0,18,122,1,0,0,0,20,125,1,0,0,0,22,141,1,0,0,0,24,144,
-        1,0,0,0,26,171,1,0,0,0,28,173,1,0,0,0,30,175,1,0,0,0,32,184,1,0,
-        0,0,34,189,1,0,0,0,36,197,1,0,0,0,38,199,1,0,0,0,40,207,1,0,0,0,
-        42,215,1,0,0,0,44,223,1,0,0,0,46,231,1,0,0,0,48,242,1,0,0,0,50,244,
-        1,0,0,0,52,283,1,0,0,0,54,56,3,4,2,0,55,54,1,0,0,0,56,59,1,0,0,0,
-        57,55,1,0,0,0,57,58,1,0,0,0,58,60,1,0,0,0,59,57,1,0,0,0,60,61,5,
-        0,0,1,61,1,1,0,0,0,62,63,6,1,-1,0,63,64,5,19,0,0,64,69,1,0,0,0,65,
-        66,10,1,0,0,66,68,5,42,0,0,67,65,1,0,0,0,68,71,1,0,0,0,69,67,1,0,
-        0,0,69,70,1,0,0,0,70,3,1,0,0,0,71,69,1,0,0,0,72,79,3,26,13,0,73,
-        79,3,24,12,0,74,79,3,16,8,0,75,79,3,10,5,0,76,79,3,18,9,0,77,79,
-        3,36,18,0,78,72,1,0,0,0,78,73,1,0,0,0,78,74,1,0,0,0,78,75,1,0,0,
-        0,78,76,1,0,0,0,78,77,1,0,0,0,79,5,1,0,0,0,80,88,3,4,2,0,81,83,5,
-        8,0,0,82,84,3,36,18,0,83,82,1,0,0,0,83,84,1,0,0,0,84,88,1,0,0,0,
-        85,88,5,11,0,0,86,88,5,12,0,0,87,80,1,0,0,0,87,81,1,0,0,0,87,85,
-        1,0,0,0,87,86,1,0,0,0,88,7,1,0,0,0,89,93,5,39,0,0,90,92,3,6,3,0,
-        91,90,1,0,0,0,92,95,1,0,0,0,93,91,1,0,0,0,93,94,1,0,0,0,94,96,1,
-        0,0,0,95,93,1,0,0,0,96,97,5,40,0,0,97,9,1,0,0,0,98,99,5,1,0,0,99,
-        100,3,36,18,0,100,104,3,8,4,0,101,103,3,12,6,0,102,101,1,0,0,0,103,
-        106,1,0,0,0,104,102,1,0,0,0,104,105,1,0,0,0,105,108,1,0,0,0,106,
-        104,1,0,0,0,107,109,3,14,7,0,108,107,1,0,0,0,108,109,1,0,0,0,109,
-        11,1,0,0,0,110,111,5,5,0,0,111,112,5,1,0,0,112,113,3,36,18,0,113,
-        114,3,8,4,0,114,13,1,0,0,0,115,116,5,5,0,0,116,117,3,8,4,0,117,15,
-        1,0,0,0,118,119,5,10,0,0,119,120,3,36,18,0,120,121,3,8,4,0,121,17,
-        1,0,0,0,122,123,5,3,0,0,123,124,5,16,0,0,124,19,1,0,0,0,125,126,
-        5,7,0,0,126,127,3,36,18,0,127,21,1,0,0,0,128,129,3,2,1,0,129,130,
-        5,34,0,0,130,132,1,0,0,0,131,128,1,0,0,0,131,132,1,0,0,0,132,133,
-        1,0,0,0,133,142,5,19,0,0,134,142,7,0,0,0,135,136,3,2,1,0,136,137,
-        5,34,0,0,137,139,1,0,0,0,138,135,1,0,0,0,138,139,1,0,0,0,139,140,
-        1,0,0,0,140,142,5,2,0,0,141,131,1,0,0,0,141,134,1,0,0,0,141,138,
-        1,0,0,0,142,23,1,0,0,0,143,145,5,9,0,0,144,143,1,0,0,0,144,145,1,
-        0,0,0,145,146,1,0,0,0,146,147,5,4,0,0,147,148,3,22,11,0,148,150,
-        5,37,0,0,149,151,3,34,17,0,150,149,1,0,0,0,150,151,1,0,0,0,151,152,
-        1,0,0,0,152,155,5,38,0,0,153,154,5,41,0,0,154,156,3,2,1,0,155,153,
-        1,0,0,0,155,156,1,0,0,0,156,157,1,0,0,0,157,158,3,8,4,0,158,25,1,
-        0,0,0,159,161,5,19,0,0,160,162,7,1,0,0,161,160,1,0,0,0,161,162,1,
-        0,0,0,162,163,1,0,0,0,163,164,5,36,0,0,164,172,3,36,18,0,165,167,
-        5,6,0,0,166,165,1,0,0,0,166,167,1,0,0,0,167,168,1,0,0,0,168,169,
-        5,19,0,0,169,170,5,36,0,0,170,172,3,36,18,0,171,159,1,0,0,0,171,
-        166,1,0,0,0,172,27,1,0,0,0,173,174,3,36,18,0,174,29,1,0,0,0,175,
-        180,3,28,14,0,176,177,5,35,0,0,177,179,3,28,14,0,178,176,1,0,0,0,
-        179,182,1,0,0,0,180,178,1,0,0,0,180,181,1,0,0,0,181,31,1,0,0,0,182,
-        180,1,0,0,0,183,185,5,6,0,0,184,183,1,0,0,0,184,185,1,0,0,0,185,
-        186,1,0,0,0,186,187,3,2,1,0,187,188,5,19,0,0,188,33,1,0,0,0,189,
-        194,3,32,16,0,190,191,5,35,0,0,191,193,3,32,16,0,192,190,1,0,0,0,
-        193,196,1,0,0,0,194,192,1,0,0,0,194,195,1,0,0,0,195,35,1,0,0,0,196,
-        194,1,0,0,0,197,198,3,38,19,0,198,37,1,0,0,0,199,205,3,40,20,0,200,
-        201,5,1,0,0,201,202,3,40,20,0,202,203,5,5,0,0,203,204,3,40,20,0,
-        204,206,1,0,0,0,205,200,1,0,0,0,205,206,1,0,0,0,206,39,1,0,0,0,207,
-        212,3,42,21,0,208,209,7,2,0,0,209,211,3,42,21,0,210,208,1,0,0,0,
-        211,214,1,0,0,0,212,210,1,0,0,0,212,213,1,0,0,0,213,41,1,0,0,0,214,
-        212,1,0,0,0,215,220,3,44,22,0,216,217,7,3,0,0,217,219,3,44,22,0,
-        218,216,1,0,0,0,219,222,1,0,0,0,220,218,1,0,0,0,220,221,1,0,0,0,
-        221,43,1,0,0,0,222,220,1,0,0,0,223,228,3,46,23,0,224,225,7,4,0,0,
-        225,227,3,46,23,0,226,224,1,0,0,0,227,230,1,0,0,0,228,226,1,0,0,
-        0,228,229,1,0,0,0,229,45,1,0,0,0,230,228,1,0,0,0,231,236,3,48,24,
-        0,232,233,7,5,0,0,233,235,3,48,24,0,234,232,1,0,0,0,235,238,1,0,
-        0,0,236,234,1,0,0,0,236,237,1,0,0,0,237,47,1,0,0,0,238,236,1,0,0,
-        0,239,240,7,6,0,0,240,243,3,48,24,0,241,243,3,50,25,0,242,239,1,
-        0,0,0,242,241,1,0,0,0,243,49,1,0,0,0,244,256,3,52,26,0,245,246,5,
-        34,0,0,246,252,5,19,0,0,247,249,5,37,0,0,248,250,3,30,15,0,249,248,
-        1,0,0,0,249,250,1,0,0,0,250,251,1,0,0,0,251,253,5,38,0,0,252,247,
-        1,0,0,0,252,253,1,0,0,0,253,255,1,0,0,0,254,245,1,0,0,0,255,258,
-        1,0,0,0,256,254,1,0,0,0,256,257,1,0,0,0,257,51,1,0,0,0,258,256,1,
-        0,0,0,259,260,5,19,0,0,260,262,5,37,0,0,261,263,3,30,15,0,262,261,
-        1,0,0,0,262,263,1,0,0,0,263,264,1,0,0,0,264,284,5,38,0,0,265,266,
-        5,2,0,0,266,267,3,2,1,0,267,269,5,37,0,0,268,270,3,30,15,0,269,268,
-        1,0,0,0,269,270,1,0,0,0,270,271,1,0,0,0,271,272,5,38,0,0,272,284,
-        1,0,0,0,273,274,5,37,0,0,274,275,3,36,18,0,275,276,5,38,0,0,276,
-        284,1,0,0,0,277,284,5,14,0,0,278,284,5,15,0,0,279,284,5,16,0,0,280,
-        284,5,17,0,0,281,284,5,18,0,0,282,284,5,19,0,0,283,259,1,0,0,0,283,
-        265,1,0,0,0,283,273,1,0,0,0,283,277,1,0,0,0,283,278,1,0,0,0,283,
-        279,1,0,0,0,283,280,1,0,0,0,283,281,1,0,0,0,283,282,1,0,0,0,284,
-        53,1,0,0,0,32,57,69,78,83,87,93,104,108,131,138,141,144,150,155,
-        161,166,171,180,184,194,205,212,220,228,236,242,249,252,256,262,
-        269,283
+        2,27,7,27,1,0,5,0,58,8,0,10,0,12,0,61,9,0,1,0,1,0,1,1,1,1,1,1,1,
+        1,1,1,5,1,70,8,1,10,1,12,1,73,9,1,1,2,1,2,1,2,1,2,1,2,1,2,1,2,3,
+        2,82,8,2,1,3,1,3,1,3,3,3,87,8,3,1,3,1,3,3,3,91,8,3,1,4,1,4,5,4,95,
+        8,4,10,4,12,4,98,9,4,1,4,1,4,1,5,1,5,1,5,1,5,5,5,106,8,5,10,5,12,
+        5,109,9,5,1,5,3,5,112,8,5,1,6,1,6,1,6,1,6,1,6,1,7,1,7,1,7,1,8,1,
+        8,1,8,1,8,1,9,1,9,1,9,1,10,1,10,1,10,1,11,1,11,1,11,1,11,1,11,1,
+        11,1,11,1,11,3,11,140,8,11,1,11,1,11,1,12,1,12,1,12,3,12,147,8,12,
+        1,12,1,12,1,12,1,12,1,12,3,12,154,8,12,1,12,3,12,157,8,12,1,13,3,
+        13,160,8,13,1,13,1,13,1,13,1,13,3,13,166,8,13,1,13,1,13,1,13,3,13,
+        171,8,13,1,13,1,13,1,14,1,14,3,14,177,8,14,1,14,1,14,1,14,3,14,182,
+        8,14,1,14,1,14,1,14,3,14,187,8,14,1,15,1,15,1,16,1,16,1,16,5,16,
+        194,8,16,10,16,12,16,197,9,16,1,17,3,17,200,8,17,1,17,1,17,1,17,
+        1,18,1,18,1,18,5,18,208,8,18,10,18,12,18,211,9,18,1,19,1,19,1,20,
+        1,20,1,20,1,20,1,20,1,20,3,20,221,8,20,1,21,1,21,1,21,5,21,226,8,
+        21,10,21,12,21,229,9,21,1,22,1,22,1,22,5,22,234,8,22,10,22,12,22,
+        237,9,22,1,23,1,23,1,23,5,23,242,8,23,10,23,12,23,245,9,23,1,24,
+        1,24,1,24,5,24,250,8,24,10,24,12,24,253,9,24,1,25,1,25,1,25,3,25,
+        258,8,25,1,26,1,26,1,26,1,26,1,26,3,26,265,8,26,1,26,3,26,268,8,
+        26,5,26,270,8,26,10,26,12,26,273,9,26,1,27,1,27,1,27,3,27,278,8,
+        27,1,27,1,27,1,27,1,27,1,27,3,27,285,8,27,1,27,1,27,1,27,1,27,1,
+        27,1,27,1,27,1,27,1,27,1,27,1,27,1,27,3,27,299,8,27,1,27,0,1,2,28,
+        0,2,4,6,8,10,12,14,16,18,20,22,24,26,28,30,32,34,36,38,40,42,44,
+        46,48,50,52,54,0,7,1,0,22,35,1,0,22,26,1,0,33,34,1,0,27,32,1,0,22,
+        23,1,0,24,26,2,0,22,23,35,35,320,0,59,1,0,0,0,2,64,1,0,0,0,4,81,
+        1,0,0,0,6,90,1,0,0,0,8,92,1,0,0,0,10,101,1,0,0,0,12,113,1,0,0,0,
+        14,118,1,0,0,0,16,121,1,0,0,0,18,125,1,0,0,0,20,128,1,0,0,0,22,131,
+        1,0,0,0,24,156,1,0,0,0,26,159,1,0,0,0,28,186,1,0,0,0,30,188,1,0,
+        0,0,32,190,1,0,0,0,34,199,1,0,0,0,36,204,1,0,0,0,38,212,1,0,0,0,
+        40,214,1,0,0,0,42,222,1,0,0,0,44,230,1,0,0,0,46,238,1,0,0,0,48,246,
+        1,0,0,0,50,257,1,0,0,0,52,259,1,0,0,0,54,298,1,0,0,0,56,58,3,4,2,
+        0,57,56,1,0,0,0,58,61,1,0,0,0,59,57,1,0,0,0,59,60,1,0,0,0,60,62,
+        1,0,0,0,61,59,1,0,0,0,62,63,5,0,0,1,63,1,1,0,0,0,64,65,6,1,-1,0,
+        65,66,5,21,0,0,66,71,1,0,0,0,67,68,10,1,0,0,68,70,5,44,0,0,69,67,
+        1,0,0,0,70,73,1,0,0,0,71,69,1,0,0,0,71,72,1,0,0,0,72,3,1,0,0,0,73,
+        71,1,0,0,0,74,82,3,28,14,0,75,82,3,26,13,0,76,82,3,16,8,0,77,82,
+        3,10,5,0,78,82,3,18,9,0,79,82,3,22,11,0,80,82,3,38,19,0,81,74,1,
+        0,0,0,81,75,1,0,0,0,81,76,1,0,0,0,81,77,1,0,0,0,81,78,1,0,0,0,81,
+        79,1,0,0,0,81,80,1,0,0,0,82,5,1,0,0,0,83,91,3,4,2,0,84,86,5,10,0,
+        0,85,87,3,38,19,0,86,85,1,0,0,0,86,87,1,0,0,0,87,91,1,0,0,0,88,91,
+        5,13,0,0,89,91,5,14,0,0,90,83,1,0,0,0,90,84,1,0,0,0,90,88,1,0,0,
+        0,90,89,1,0,0,0,91,7,1,0,0,0,92,96,5,41,0,0,93,95,3,6,3,0,94,93,
+        1,0,0,0,95,98,1,0,0,0,96,94,1,0,0,0,96,97,1,0,0,0,97,99,1,0,0,0,
+        98,96,1,0,0,0,99,100,5,42,0,0,100,9,1,0,0,0,101,102,5,1,0,0,102,
+        103,3,38,19,0,103,107,3,8,4,0,104,106,3,12,6,0,105,104,1,0,0,0,106,
+        109,1,0,0,0,107,105,1,0,0,0,107,108,1,0,0,0,108,111,1,0,0,0,109,
+        107,1,0,0,0,110,112,3,14,7,0,111,110,1,0,0,0,111,112,1,0,0,0,112,
+        11,1,0,0,0,113,114,5,7,0,0,114,115,5,1,0,0,115,116,3,38,19,0,116,
+        117,3,8,4,0,117,13,1,0,0,0,118,119,5,7,0,0,119,120,3,8,4,0,120,15,
+        1,0,0,0,121,122,5,12,0,0,122,123,3,38,19,0,123,124,3,8,4,0,124,17,
+        1,0,0,0,125,126,5,5,0,0,126,127,5,18,0,0,127,19,1,0,0,0,128,129,
+        5,9,0,0,129,130,3,38,19,0,130,21,1,0,0,0,131,132,5,3,0,0,132,133,
+        5,21,0,0,133,134,5,2,0,0,134,135,3,38,19,0,135,136,5,45,0,0,136,
+        139,3,38,19,0,137,138,5,45,0,0,138,140,3,38,19,0,139,137,1,0,0,0,
+        139,140,1,0,0,0,140,141,1,0,0,0,141,142,3,8,4,0,142,23,1,0,0,0,143,
+        144,3,2,1,0,144,145,5,36,0,0,145,147,1,0,0,0,146,143,1,0,0,0,146,
+        147,1,0,0,0,147,148,1,0,0,0,148,157,5,21,0,0,149,157,7,0,0,0,150,
+        151,3,2,1,0,151,152,5,36,0,0,152,154,1,0,0,0,153,150,1,0,0,0,153,
+        154,1,0,0,0,154,155,1,0,0,0,155,157,5,4,0,0,156,146,1,0,0,0,156,
+        149,1,0,0,0,156,153,1,0,0,0,157,25,1,0,0,0,158,160,5,11,0,0,159,
+        158,1,0,0,0,159,160,1,0,0,0,160,161,1,0,0,0,161,162,5,6,0,0,162,
+        163,3,24,12,0,163,165,5,39,0,0,164,166,3,36,18,0,165,164,1,0,0,0,
+        165,166,1,0,0,0,166,167,1,0,0,0,167,170,5,40,0,0,168,169,5,43,0,
+        0,169,171,3,2,1,0,170,168,1,0,0,0,170,171,1,0,0,0,171,172,1,0,0,
+        0,172,173,3,8,4,0,173,27,1,0,0,0,174,176,5,21,0,0,175,177,7,1,0,
+        0,176,175,1,0,0,0,176,177,1,0,0,0,177,178,1,0,0,0,178,179,5,38,0,
+        0,179,187,3,38,19,0,180,182,5,8,0,0,181,180,1,0,0,0,181,182,1,0,
+        0,0,182,183,1,0,0,0,183,184,5,21,0,0,184,185,5,38,0,0,185,187,3,
+        38,19,0,186,174,1,0,0,0,186,181,1,0,0,0,187,29,1,0,0,0,188,189,3,
+        38,19,0,189,31,1,0,0,0,190,195,3,30,15,0,191,192,5,37,0,0,192,194,
+        3,30,15,0,193,191,1,0,0,0,194,197,1,0,0,0,195,193,1,0,0,0,195,196,
+        1,0,0,0,196,33,1,0,0,0,197,195,1,0,0,0,198,200,5,8,0,0,199,198,1,
+        0,0,0,199,200,1,0,0,0,200,201,1,0,0,0,201,202,3,2,1,0,202,203,5,
+        21,0,0,203,35,1,0,0,0,204,209,3,34,17,0,205,206,5,37,0,0,206,208,
+        3,34,17,0,207,205,1,0,0,0,208,211,1,0,0,0,209,207,1,0,0,0,209,210,
+        1,0,0,0,210,37,1,0,0,0,211,209,1,0,0,0,212,213,3,40,20,0,213,39,
+        1,0,0,0,214,220,3,42,21,0,215,216,5,1,0,0,216,217,3,42,21,0,217,
+        218,5,7,0,0,218,219,3,42,21,0,219,221,1,0,0,0,220,215,1,0,0,0,220,
+        221,1,0,0,0,221,41,1,0,0,0,222,227,3,44,22,0,223,224,7,2,0,0,224,
+        226,3,44,22,0,225,223,1,0,0,0,226,229,1,0,0,0,227,225,1,0,0,0,227,
+        228,1,0,0,0,228,43,1,0,0,0,229,227,1,0,0,0,230,235,3,46,23,0,231,
+        232,7,3,0,0,232,234,3,46,23,0,233,231,1,0,0,0,234,237,1,0,0,0,235,
+        233,1,0,0,0,235,236,1,0,0,0,236,45,1,0,0,0,237,235,1,0,0,0,238,243,
+        3,48,24,0,239,240,7,4,0,0,240,242,3,48,24,0,241,239,1,0,0,0,242,
+        245,1,0,0,0,243,241,1,0,0,0,243,244,1,0,0,0,244,47,1,0,0,0,245,243,
+        1,0,0,0,246,251,3,50,25,0,247,248,7,5,0,0,248,250,3,50,25,0,249,
+        247,1,0,0,0,250,253,1,0,0,0,251,249,1,0,0,0,251,252,1,0,0,0,252,
+        49,1,0,0,0,253,251,1,0,0,0,254,255,7,6,0,0,255,258,3,50,25,0,256,
+        258,3,52,26,0,257,254,1,0,0,0,257,256,1,0,0,0,258,51,1,0,0,0,259,
+        271,3,54,27,0,260,261,5,36,0,0,261,267,5,21,0,0,262,264,5,39,0,0,
+        263,265,3,32,16,0,264,263,1,0,0,0,264,265,1,0,0,0,265,266,1,0,0,
+        0,266,268,5,40,0,0,267,262,1,0,0,0,267,268,1,0,0,0,268,270,1,0,0,
+        0,269,260,1,0,0,0,270,273,1,0,0,0,271,269,1,0,0,0,271,272,1,0,0,
+        0,272,53,1,0,0,0,273,271,1,0,0,0,274,275,5,21,0,0,275,277,5,39,0,
+        0,276,278,3,32,16,0,277,276,1,0,0,0,277,278,1,0,0,0,278,279,1,0,
+        0,0,279,299,5,40,0,0,280,281,5,4,0,0,281,282,3,2,1,0,282,284,5,39,
+        0,0,283,285,3,32,16,0,284,283,1,0,0,0,284,285,1,0,0,0,285,286,1,
+        0,0,0,286,287,5,40,0,0,287,299,1,0,0,0,288,289,5,39,0,0,289,290,
+        3,38,19,0,290,291,5,40,0,0,291,299,1,0,0,0,292,299,5,16,0,0,293,
+        299,5,17,0,0,294,299,5,18,0,0,295,299,5,19,0,0,296,299,5,20,0,0,
+        297,299,5,21,0,0,298,274,1,0,0,0,298,280,1,0,0,0,298,288,1,0,0,0,
+        298,292,1,0,0,0,298,293,1,0,0,0,298,294,1,0,0,0,298,295,1,0,0,0,
+        298,296,1,0,0,0,298,297,1,0,0,0,299,55,1,0,0,0,33,59,71,81,86,90,
+        96,107,111,139,146,153,156,159,165,170,176,181,186,195,199,209,220,
+        227,235,243,251,257,264,267,271,277,284,298
     ]
 
 class ByteParser ( Parser ):
@@ -125,22 +130,23 @@ class ByteParser ( Parser ):
 
     sharedContextCache = PredictionContextCache()
 
-    literalNames = [ "<INVALID>", "'if'", "'new'", "'use'", "'fn'", "'else'", 
-                     "'mut'", "'defer'", "'return'", "'static'", "'while'", 
-                     "'break'", "'continue'", "'''", "<INVALID>", "<INVALID>", 
+    literalNames = [ "<INVALID>", "'if'", "'in'", "'for'", "'new'", "'use'", 
+                     "'fn'", "'else'", "'mut'", "'defer'", "'return'", "'static'", 
+                     "'while'", "'break'", "'continue'", "'''", "<INVALID>", 
                      "<INVALID>", "<INVALID>", "<INVALID>", "<INVALID>", 
-                     "'+'", "'-'", "'*'", "'/'", "'%'", "'=='", "'!='", 
-                     "'>'", "'<'", "'>='", "'<='", "'&&'", "'||'", "'!'", 
-                     "'.'", "','", "'='", "'('", "')'", "'{'", "'}'", "'->'", 
-                     "'&'" ]
+                     "<INVALID>", "'+'", "'-'", "'*'", "'/'", "'%'", "'=='", 
+                     "'!='", "'>'", "'<'", "'>='", "'<='", "'&&'", "'||'", 
+                     "'!'", "'.'", "','", "'='", "'('", "')'", "'{'", "'}'", 
+                     "'->'", "'&'", "'..'" ]
 
-    symbolicNames = [ "<INVALID>", "IF", "NEW", "USE", "FUNC", "ELSE", "MUTABLE", 
-                      "DEFER", "RETURN", "STATIC", "WHILE", "BREAK", "CONTINUE", 
-                      "APOSTROPHE", "INT", "FLOAT", "STRING", "STRING_POINTER", 
-                      "BOOL", "ID", "ADD", "SUB", "MUL", "DIV", "MOD", "EEQ", 
-                      "NEQ", "GT", "LT", "GTE", "LTE", "AND", "OR", "NOT", 
-                      "DOT", "COMMA", "ASSIGN", "LPAREN", "RPAREN", "LBRACE", 
-                      "RBRACE", "RETURNS", "AMPERSAND", "COMMENT", "MULTILINE_COMMENT", 
+    symbolicNames = [ "<INVALID>", "IF", "IN", "FOR", "NEW", "USE", "FUNC", 
+                      "ELSE", "MUTABLE", "DEFER", "RETURN", "STATIC", "WHILE", 
+                      "BREAK", "CONTINUE", "APOSTROPHE", "INT", "FLOAT", 
+                      "STRING", "STRING_POINTER", "BOOL", "ID", "ADD", "SUB", 
+                      "MUL", "DIV", "MOD", "EEQ", "NEQ", "GT", "LT", "GTE", 
+                      "LTE", "AND", "OR", "NOT", "DOT", "COMMA", "ASSIGN", 
+                      "LPAREN", "RPAREN", "LBRACE", "RBRACE", "RETURNS", 
+                      "AMPERSAND", "DOUBLEDOT", "COMMENT", "MULTILINE_COMMENT", 
                       "WHITESPACE", "OTHER" ]
 
     RULE_program = 0
@@ -154,76 +160,81 @@ class ByteParser ( Parser ):
     RULE_whileStmt = 8
     RULE_useStmt = 9
     RULE_deferStmt = 10
-    RULE_funcName = 11
-    RULE_funcAssign = 12
-    RULE_varAssign = 13
-    RULE_arg = 14
-    RULE_args = 15
-    RULE_param = 16
-    RULE_params = 17
-    RULE_expr = 18
-    RULE_ternary = 19
-    RULE_logical = 20
-    RULE_relational = 21
-    RULE_addition = 22
-    RULE_multiplication = 23
-    RULE_unary = 24
-    RULE_postfix = 25
-    RULE_primary = 26
+    RULE_forRangeStmt = 11
+    RULE_funcName = 12
+    RULE_funcAssign = 13
+    RULE_varAssign = 14
+    RULE_arg = 15
+    RULE_args = 16
+    RULE_param = 17
+    RULE_params = 18
+    RULE_expr = 19
+    RULE_ternary = 20
+    RULE_logical = 21
+    RULE_relational = 22
+    RULE_addition = 23
+    RULE_multiplication = 24
+    RULE_unary = 25
+    RULE_postfix = 26
+    RULE_primary = 27
 
     ruleNames =  [ "program", "type", "stmt", "bodyStmts", "body", "ifStmt", 
                    "elseifStmt", "elseStmt", "whileStmt", "useStmt", "deferStmt", 
-                   "funcName", "funcAssign", "varAssign", "arg", "args", 
-                   "param", "params", "expr", "ternary", "logical", "relational", 
-                   "addition", "multiplication", "unary", "postfix", "primary" ]
+                   "forRangeStmt", "funcName", "funcAssign", "varAssign", 
+                   "arg", "args", "param", "params", "expr", "ternary", 
+                   "logical", "relational", "addition", "multiplication", 
+                   "unary", "postfix", "primary" ]
 
     EOF = Token.EOF
     IF=1
-    NEW=2
-    USE=3
-    FUNC=4
-    ELSE=5
-    MUTABLE=6
-    DEFER=7
-    RETURN=8
-    STATIC=9
-    WHILE=10
-    BREAK=11
-    CONTINUE=12
-    APOSTROPHE=13
-    INT=14
-    FLOAT=15
-    STRING=16
-    STRING_POINTER=17
-    BOOL=18
-    ID=19
-    ADD=20
-    SUB=21
-    MUL=22
-    DIV=23
-    MOD=24
-    EEQ=25
-    NEQ=26
-    GT=27
-    LT=28
-    GTE=29
-    LTE=30
-    AND=31
-    OR=32
-    NOT=33
-    DOT=34
-    COMMA=35
-    ASSIGN=36
-    LPAREN=37
-    RPAREN=38
-    LBRACE=39
-    RBRACE=40
-    RETURNS=41
-    AMPERSAND=42
-    COMMENT=43
-    MULTILINE_COMMENT=44
-    WHITESPACE=45
-    OTHER=46
+    IN=2
+    FOR=3
+    NEW=4
+    USE=5
+    FUNC=6
+    ELSE=7
+    MUTABLE=8
+    DEFER=9
+    RETURN=10
+    STATIC=11
+    WHILE=12
+    BREAK=13
+    CONTINUE=14
+    APOSTROPHE=15
+    INT=16
+    FLOAT=17
+    STRING=18
+    STRING_POINTER=19
+    BOOL=20
+    ID=21
+    ADD=22
+    SUB=23
+    MUL=24
+    DIV=25
+    MOD=26
+    EEQ=27
+    NEQ=28
+    GT=29
+    LT=30
+    GTE=31
+    LTE=32
+    AND=33
+    OR=34
+    NOT=35
+    DOT=36
+    COMMA=37
+    ASSIGN=38
+    LPAREN=39
+    RPAREN=40
+    LBRACE=41
+    RBRACE=42
+    RETURNS=43
+    AMPERSAND=44
+    DOUBLEDOT=45
+    COMMENT=46
+    MULTILINE_COMMENT=47
+    WHITESPACE=48
+    OTHER=49
 
     def __init__(self, input:TokenStream, output:TextIO = sys.stdout):
         super().__init__(input, output)
@@ -270,17 +281,17 @@ class ByteParser ( Parser ):
         self._la = 0 # Token type
         try:
             self.enterOuterAlt(localctx, 1)
-            self.state = 57
+            self.state = 59
             self._errHandler.sync(self)
             _la = self._input.LA(1)
-            while (((_la) & ~0x3f) == 0 and ((1 << _la) & 146033067614) != 0):
-                self.state = 54
+            while (((_la) & ~0x3f) == 0 and ((1 << _la) & 584132270458) != 0):
+                self.state = 56
                 self.stmt()
-                self.state = 59
+                self.state = 61
                 self._errHandler.sync(self)
                 _la = self._input.LA(1)
 
-            self.state = 60
+            self.state = 62
             self.match(ByteParser.EOF)
         except RecognitionException as re:
             localctx.exception = re
@@ -328,10 +339,10 @@ class ByteParser ( Parser ):
         self.enterRecursionRule(localctx, 2, self.RULE_type, _p)
         try:
             self.enterOuterAlt(localctx, 1)
-            self.state = 63
+            self.state = 65
             self.match(ByteParser.ID)
             self._ctx.stop = self._input.LT(-1)
-            self.state = 69
+            self.state = 71
             self._errHandler.sync(self)
             _alt = self._interp.adaptivePredict(self._input,1,self._ctx)
             while _alt!=2 and _alt!=ATN.INVALID_ALT_NUMBER:
@@ -341,13 +352,13 @@ class ByteParser ( Parser ):
                     _prevctx = localctx
                     localctx = ByteParser.TypeContext(self, _parentctx, _parentState)
                     self.pushNewRecursionContext(localctx, _startState, self.RULE_type)
-                    self.state = 65
+                    self.state = 67
                     if not self.precpred(self._ctx, 1):
                         from antlr4.error.Errors import FailedPredicateException
                         raise FailedPredicateException(self, "self.precpred(self._ctx, 1)")
-                    self.state = 66
+                    self.state = 68
                     self.match(ByteParser.AMPERSAND) 
-                self.state = 71
+                self.state = 73
                 self._errHandler.sync(self)
                 _alt = self._interp.adaptivePredict(self._input,1,self._ctx)
 
@@ -387,6 +398,10 @@ class ByteParser ( Parser ):
             return self.getTypedRuleContext(ByteParser.UseStmtContext,0)
 
 
+        def forRangeStmt(self):
+            return self.getTypedRuleContext(ByteParser.ForRangeStmtContext,0)
+
+
         def expr(self):
             return self.getTypedRuleContext(ByteParser.ExprContext,0)
 
@@ -408,42 +423,48 @@ class ByteParser ( Parser ):
         localctx = ByteParser.StmtContext(self, self._ctx, self.state)
         self.enterRule(localctx, 4, self.RULE_stmt)
         try:
-            self.state = 78
+            self.state = 81
             self._errHandler.sync(self)
             la_ = self._interp.adaptivePredict(self._input,2,self._ctx)
             if la_ == 1:
                 self.enterOuterAlt(localctx, 1)
-                self.state = 72
+                self.state = 74
                 self.varAssign()
                 pass
 
             elif la_ == 2:
                 self.enterOuterAlt(localctx, 2)
-                self.state = 73
+                self.state = 75
                 self.funcAssign()
                 pass
 
             elif la_ == 3:
                 self.enterOuterAlt(localctx, 3)
-                self.state = 74
+                self.state = 76
                 self.whileStmt()
                 pass
 
             elif la_ == 4:
                 self.enterOuterAlt(localctx, 4)
-                self.state = 75
+                self.state = 77
                 self.ifStmt()
                 pass
 
             elif la_ == 5:
                 self.enterOuterAlt(localctx, 5)
-                self.state = 76
+                self.state = 78
                 self.useStmt()
                 pass
 
             elif la_ == 6:
                 self.enterOuterAlt(localctx, 6)
-                self.state = 77
+                self.state = 79
+                self.forRangeStmt()
+                pass
+
+            elif la_ == 7:
+                self.enterOuterAlt(localctx, 7)
+                self.state = 80
                 self.expr()
                 pass
 
@@ -548,39 +569,39 @@ class ByteParser ( Parser ):
         localctx = ByteParser.BodyStmtsContext(self, self._ctx, self.state)
         self.enterRule(localctx, 6, self.RULE_bodyStmts)
         try:
-            self.state = 87
+            self.state = 90
             self._errHandler.sync(self)
             token = self._input.LA(1)
-            if token in [1, 2, 3, 4, 6, 9, 10, 14, 15, 16, 17, 18, 19, 20, 21, 33, 37]:
+            if token in [1, 3, 4, 5, 6, 8, 11, 12, 16, 17, 18, 19, 20, 21, 22, 23, 35, 39]:
                 localctx = ByteParser.BodyStmtContext(self, localctx)
                 self.enterOuterAlt(localctx, 1)
-                self.state = 80
+                self.state = 83
                 self.stmt()
                 pass
-            elif token in [8]:
+            elif token in [10]:
                 localctx = ByteParser.ReturnContext(self, localctx)
                 self.enterOuterAlt(localctx, 2)
-                self.state = 81
+                self.state = 84
                 self.match(ByteParser.RETURN)
-                self.state = 83
+                self.state = 86
                 self._errHandler.sync(self)
                 la_ = self._interp.adaptivePredict(self._input,3,self._ctx)
                 if la_ == 1:
-                    self.state = 82
+                    self.state = 85
                     self.expr()
 
 
                 pass
-            elif token in [11]:
+            elif token in [13]:
                 localctx = ByteParser.BreakContext(self, localctx)
                 self.enterOuterAlt(localctx, 3)
-                self.state = 85
+                self.state = 88
                 self.match(ByteParser.BREAK)
                 pass
-            elif token in [12]:
+            elif token in [14]:
                 localctx = ByteParser.ContinueContext(self, localctx)
                 self.enterOuterAlt(localctx, 4)
-                self.state = 86
+                self.state = 89
                 self.match(ByteParser.CONTINUE)
                 pass
             else:
@@ -634,19 +655,19 @@ class ByteParser ( Parser ):
         self._la = 0 # Token type
         try:
             self.enterOuterAlt(localctx, 1)
-            self.state = 89
+            self.state = 92
             self.match(ByteParser.LBRACE)
-            self.state = 93
+            self.state = 96
             self._errHandler.sync(self)
             _la = self._input.LA(1)
-            while (((_la) & ~0x3f) == 0 and ((1 << _la) & 146033074014) != 0):
-                self.state = 90
+            while (((_la) & ~0x3f) == 0 and ((1 << _la) & 584132296058) != 0):
+                self.state = 93
                 self.bodyStmts()
-                self.state = 95
+                self.state = 98
                 self._errHandler.sync(self)
                 _la = self._input.LA(1)
 
-            self.state = 96
+            self.state = 99
             self.match(ByteParser.RBRACE)
         except RecognitionException as re:
             localctx.exception = re
@@ -705,28 +726,28 @@ class ByteParser ( Parser ):
         self._la = 0 # Token type
         try:
             self.enterOuterAlt(localctx, 1)
-            self.state = 98
+            self.state = 101
             self.match(ByteParser.IF)
-            self.state = 99
+            self.state = 102
             self.expr()
-            self.state = 100
+            self.state = 103
             self.body()
-            self.state = 104
+            self.state = 107
             self._errHandler.sync(self)
             _alt = self._interp.adaptivePredict(self._input,6,self._ctx)
             while _alt!=2 and _alt!=ATN.INVALID_ALT_NUMBER:
                 if _alt==1:
-                    self.state = 101
+                    self.state = 104
                     self.elseifStmt() 
-                self.state = 106
+                self.state = 109
                 self._errHandler.sync(self)
                 _alt = self._interp.adaptivePredict(self._input,6,self._ctx)
 
-            self.state = 108
+            self.state = 111
             self._errHandler.sync(self)
             _la = self._input.LA(1)
-            if _la==5:
-                self.state = 107
+            if _la==7:
+                self.state = 110
                 self.elseStmt()
 
 
@@ -778,13 +799,13 @@ class ByteParser ( Parser ):
         self.enterRule(localctx, 12, self.RULE_elseifStmt)
         try:
             self.enterOuterAlt(localctx, 1)
-            self.state = 110
-            self.match(ByteParser.ELSE)
-            self.state = 111
-            self.match(ByteParser.IF)
-            self.state = 112
-            self.expr()
             self.state = 113
+            self.match(ByteParser.ELSE)
+            self.state = 114
+            self.match(ByteParser.IF)
+            self.state = 115
+            self.expr()
+            self.state = 116
             self.body()
         except RecognitionException as re:
             localctx.exception = re
@@ -827,9 +848,9 @@ class ByteParser ( Parser ):
         self.enterRule(localctx, 14, self.RULE_elseStmt)
         try:
             self.enterOuterAlt(localctx, 1)
-            self.state = 115
+            self.state = 118
             self.match(ByteParser.ELSE)
-            self.state = 116
+            self.state = 119
             self.body()
         except RecognitionException as re:
             localctx.exception = re
@@ -876,11 +897,11 @@ class ByteParser ( Parser ):
         self.enterRule(localctx, 16, self.RULE_whileStmt)
         try:
             self.enterOuterAlt(localctx, 1)
-            self.state = 118
+            self.state = 121
             self.match(ByteParser.WHILE)
-            self.state = 119
+            self.state = 122
             self.expr()
-            self.state = 120
+            self.state = 123
             self.body()
         except RecognitionException as re:
             localctx.exception = re
@@ -922,9 +943,9 @@ class ByteParser ( Parser ):
         self.enterRule(localctx, 18, self.RULE_useStmt)
         try:
             self.enterOuterAlt(localctx, 1)
-            self.state = 122
+            self.state = 125
             self.match(ByteParser.USE)
-            self.state = 123
+            self.state = 126
             self.match(ByteParser.STRING)
         except RecognitionException as re:
             localctx.exception = re
@@ -967,10 +988,95 @@ class ByteParser ( Parser ):
         self.enterRule(localctx, 20, self.RULE_deferStmt)
         try:
             self.enterOuterAlt(localctx, 1)
-            self.state = 125
+            self.state = 128
             self.match(ByteParser.DEFER)
-            self.state = 126
+            self.state = 129
             self.expr()
+        except RecognitionException as re:
+            localctx.exception = re
+            self._errHandler.reportError(self, re)
+            self._errHandler.recover(self, re)
+        finally:
+            self.exitRule()
+        return localctx
+
+
+    class ForRangeStmtContext(ParserRuleContext):
+        __slots__ = 'parser'
+
+        def __init__(self, parser, parent:ParserRuleContext=None, invokingState:int=-1):
+            super().__init__(parent, invokingState)
+            self.parser = parser
+
+        def FOR(self):
+            return self.getToken(ByteParser.FOR, 0)
+
+        def ID(self):
+            return self.getToken(ByteParser.ID, 0)
+
+        def IN(self):
+            return self.getToken(ByteParser.IN, 0)
+
+        def expr(self, i:int=None):
+            if i is None:
+                return self.getTypedRuleContexts(ByteParser.ExprContext)
+            else:
+                return self.getTypedRuleContext(ByteParser.ExprContext,i)
+
+
+        def DOUBLEDOT(self, i:int=None):
+            if i is None:
+                return self.getTokens(ByteParser.DOUBLEDOT)
+            else:
+                return self.getToken(ByteParser.DOUBLEDOT, i)
+
+        def body(self):
+            return self.getTypedRuleContext(ByteParser.BodyContext,0)
+
+
+        def getRuleIndex(self):
+            return ByteParser.RULE_forRangeStmt
+
+        def accept(self, visitor:ParseTreeVisitor):
+            if hasattr( visitor, "visitForRangeStmt" ):
+                return visitor.visitForRangeStmt(self)
+            else:
+                return visitor.visitChildren(self)
+
+
+
+
+    def forRangeStmt(self):
+
+        localctx = ByteParser.ForRangeStmtContext(self, self._ctx, self.state)
+        self.enterRule(localctx, 22, self.RULE_forRangeStmt)
+        self._la = 0 # Token type
+        try:
+            self.enterOuterAlt(localctx, 1)
+            self.state = 131
+            self.match(ByteParser.FOR)
+            self.state = 132
+            self.match(ByteParser.ID)
+            self.state = 133
+            self.match(ByteParser.IN)
+            self.state = 134
+            self.expr()
+            self.state = 135
+            self.match(ByteParser.DOUBLEDOT)
+            self.state = 136
+            self.expr()
+            self.state = 139
+            self._errHandler.sync(self)
+            _la = self._input.LA(1)
+            if _la==45:
+                self.state = 137
+                self.match(ByteParser.DOUBLEDOT)
+                self.state = 138
+                self.expr()
+
+
+            self.state = 141
+            self.body()
         except RecognitionException as re:
             localctx.exception = re
             self._errHandler.reportError(self, re)
@@ -1059,34 +1165,34 @@ class ByteParser ( Parser ):
     def funcName(self):
 
         localctx = ByteParser.FuncNameContext(self, self._ctx, self.state)
-        self.enterRule(localctx, 22, self.RULE_funcName)
+        self.enterRule(localctx, 24, self.RULE_funcName)
         self._la = 0 # Token type
         try:
-            self.state = 141
+            self.state = 156
             self._errHandler.sync(self)
-            la_ = self._interp.adaptivePredict(self._input,10,self._ctx)
+            la_ = self._interp.adaptivePredict(self._input,11,self._ctx)
             if la_ == 1:
                 self.enterOuterAlt(localctx, 1)
-                self.state = 131
+                self.state = 146
                 self._errHandler.sync(self)
-                la_ = self._interp.adaptivePredict(self._input,8,self._ctx)
+                la_ = self._interp.adaptivePredict(self._input,9,self._ctx)
                 if la_ == 1:
-                    self.state = 128
+                    self.state = 143
                     localctx.extend_type = self.type_(0)
-                    self.state = 129
+                    self.state = 144
                     self.match(ByteParser.DOT)
 
 
-                self.state = 133
+                self.state = 148
                 self.match(ByteParser.ID)
                 pass
 
             elif la_ == 2:
                 self.enterOuterAlt(localctx, 2)
-                self.state = 134
+                self.state = 149
                 localctx.op = self._input.LT(1)
                 _la = self._input.LA(1)
-                if not((((_la) & ~0x3f) == 0 and ((1 << _la) & 17178820608) != 0)):
+                if not((((_la) & ~0x3f) == 0 and ((1 << _la) & 68715282432) != 0)):
                     localctx.op = self._errHandler.recoverInline(self)
                 else:
                     self._errHandler.reportMatch(self)
@@ -1095,17 +1201,17 @@ class ByteParser ( Parser ):
 
             elif la_ == 3:
                 self.enterOuterAlt(localctx, 3)
-                self.state = 138
+                self.state = 153
                 self._errHandler.sync(self)
                 _la = self._input.LA(1)
-                if _la==19:
-                    self.state = 135
+                if _la==21:
+                    self.state = 150
                     localctx.extend_type = self.type_(0)
-                    self.state = 136
+                    self.state = 151
                     self.match(ByteParser.DOT)
 
 
-                self.state = 140
+                self.state = 155
                 self.match(ByteParser.NEW)
                 pass
 
@@ -1173,45 +1279,45 @@ class ByteParser ( Parser ):
     def funcAssign(self):
 
         localctx = ByteParser.FuncAssignContext(self, self._ctx, self.state)
-        self.enterRule(localctx, 24, self.RULE_funcAssign)
+        self.enterRule(localctx, 26, self.RULE_funcAssign)
         self._la = 0 # Token type
         try:
             self.enterOuterAlt(localctx, 1)
-            self.state = 144
+            self.state = 159
             self._errHandler.sync(self)
             _la = self._input.LA(1)
-            if _la==9:
-                self.state = 143
+            if _la==11:
+                self.state = 158
                 self.match(ByteParser.STATIC)
 
 
-            self.state = 146
+            self.state = 161
             self.match(ByteParser.FUNC)
-            self.state = 147
+            self.state = 162
             self.funcName()
-            self.state = 148
+            self.state = 163
             self.match(ByteParser.LPAREN)
-            self.state = 150
+            self.state = 165
             self._errHandler.sync(self)
             _la = self._input.LA(1)
-            if _la==6 or _la==19:
-                self.state = 149
+            if _la==8 or _la==21:
+                self.state = 164
                 self.params()
 
 
-            self.state = 152
+            self.state = 167
             self.match(ByteParser.RPAREN)
-            self.state = 155
+            self.state = 170
             self._errHandler.sync(self)
             _la = self._input.LA(1)
-            if _la==41:
-                self.state = 153
+            if _la==43:
+                self.state = 168
                 self.match(ByteParser.RETURNS)
-                self.state = 154
+                self.state = 169
                 localctx.return_type = self.type_(0)
 
 
-            self.state = 157
+            self.state = 172
             self.body()
         except RecognitionException as re:
             localctx.exception = re
@@ -1273,51 +1379,51 @@ class ByteParser ( Parser ):
     def varAssign(self):
 
         localctx = ByteParser.VarAssignContext(self, self._ctx, self.state)
-        self.enterRule(localctx, 26, self.RULE_varAssign)
+        self.enterRule(localctx, 28, self.RULE_varAssign)
         self._la = 0 # Token type
         try:
-            self.state = 171
+            self.state = 186
             self._errHandler.sync(self)
-            la_ = self._interp.adaptivePredict(self._input,16,self._ctx)
+            la_ = self._interp.adaptivePredict(self._input,17,self._ctx)
             if la_ == 1:
                 self.enterOuterAlt(localctx, 1)
-                self.state = 159
+                self.state = 174
                 self.match(ByteParser.ID)
-                self.state = 161
+                self.state = 176
                 self._errHandler.sync(self)
                 _la = self._input.LA(1)
-                if (((_la) & ~0x3f) == 0 and ((1 << _la) & 32505856) != 0):
-                    self.state = 160
+                if (((_la) & ~0x3f) == 0 and ((1 << _la) & 130023424) != 0):
+                    self.state = 175
                     localctx.op = self._input.LT(1)
                     _la = self._input.LA(1)
-                    if not((((_la) & ~0x3f) == 0 and ((1 << _la) & 32505856) != 0)):
+                    if not((((_la) & ~0x3f) == 0 and ((1 << _la) & 130023424) != 0)):
                         localctx.op = self._errHandler.recoverInline(self)
                     else:
                         self._errHandler.reportMatch(self)
                         self.consume()
 
 
-                self.state = 163
+                self.state = 178
                 self.match(ByteParser.ASSIGN)
-                self.state = 164
+                self.state = 179
                 self.expr()
                 pass
 
             elif la_ == 2:
                 self.enterOuterAlt(localctx, 2)
-                self.state = 166
+                self.state = 181
                 self._errHandler.sync(self)
                 _la = self._input.LA(1)
-                if _la==6:
-                    self.state = 165
+                if _la==8:
+                    self.state = 180
                     self.match(ByteParser.MUTABLE)
 
 
-                self.state = 168
+                self.state = 183
                 self.match(ByteParser.ID)
-                self.state = 169
+                self.state = 184
                 self.match(ByteParser.ASSIGN)
-                self.state = 170
+                self.state = 185
                 self.expr()
                 pass
 
@@ -1357,10 +1463,10 @@ class ByteParser ( Parser ):
     def arg(self):
 
         localctx = ByteParser.ArgContext(self, self._ctx, self.state)
-        self.enterRule(localctx, 28, self.RULE_arg)
+        self.enterRule(localctx, 30, self.RULE_arg)
         try:
             self.enterOuterAlt(localctx, 1)
-            self.state = 173
+            self.state = 188
             self.expr()
         except RecognitionException as re:
             localctx.exception = re
@@ -1406,21 +1512,21 @@ class ByteParser ( Parser ):
     def args(self):
 
         localctx = ByteParser.ArgsContext(self, self._ctx, self.state)
-        self.enterRule(localctx, 30, self.RULE_args)
+        self.enterRule(localctx, 32, self.RULE_args)
         self._la = 0 # Token type
         try:
             self.enterOuterAlt(localctx, 1)
-            self.state = 175
+            self.state = 190
             self.arg()
-            self.state = 180
+            self.state = 195
             self._errHandler.sync(self)
             _la = self._input.LA(1)
-            while _la==35:
-                self.state = 176
+            while _la==37:
+                self.state = 191
                 self.match(ByteParser.COMMA)
-                self.state = 177
+                self.state = 192
                 self.arg()
-                self.state = 182
+                self.state = 197
                 self._errHandler.sync(self)
                 _la = self._input.LA(1)
 
@@ -1465,21 +1571,21 @@ class ByteParser ( Parser ):
     def param(self):
 
         localctx = ByteParser.ParamContext(self, self._ctx, self.state)
-        self.enterRule(localctx, 32, self.RULE_param)
+        self.enterRule(localctx, 34, self.RULE_param)
         self._la = 0 # Token type
         try:
             self.enterOuterAlt(localctx, 1)
-            self.state = 184
+            self.state = 199
             self._errHandler.sync(self)
             _la = self._input.LA(1)
-            if _la==6:
-                self.state = 183
+            if _la==8:
+                self.state = 198
                 self.match(ByteParser.MUTABLE)
 
 
-            self.state = 186
+            self.state = 201
             self.type_(0)
-            self.state = 187
+            self.state = 202
             self.match(ByteParser.ID)
         except RecognitionException as re:
             localctx.exception = re
@@ -1525,21 +1631,21 @@ class ByteParser ( Parser ):
     def params(self):
 
         localctx = ByteParser.ParamsContext(self, self._ctx, self.state)
-        self.enterRule(localctx, 34, self.RULE_params)
+        self.enterRule(localctx, 36, self.RULE_params)
         self._la = 0 # Token type
         try:
             self.enterOuterAlt(localctx, 1)
-            self.state = 189
+            self.state = 204
             self.param()
-            self.state = 194
+            self.state = 209
             self._errHandler.sync(self)
             _la = self._input.LA(1)
-            while _la==35:
-                self.state = 190
+            while _la==37:
+                self.state = 205
                 self.match(ByteParser.COMMA)
-                self.state = 191
+                self.state = 206
                 self.param()
-                self.state = 196
+                self.state = 211
                 self._errHandler.sync(self)
                 _la = self._input.LA(1)
 
@@ -1578,10 +1684,10 @@ class ByteParser ( Parser ):
     def expr(self):
 
         localctx = ByteParser.ExprContext(self, self._ctx, self.state)
-        self.enterRule(localctx, 36, self.RULE_expr)
+        self.enterRule(localctx, 38, self.RULE_expr)
         try:
             self.enterOuterAlt(localctx, 1)
-            self.state = 197
+            self.state = 212
             self.ternary()
         except RecognitionException as re:
             localctx.exception = re
@@ -1627,22 +1733,22 @@ class ByteParser ( Parser ):
     def ternary(self):
 
         localctx = ByteParser.TernaryContext(self, self._ctx, self.state)
-        self.enterRule(localctx, 38, self.RULE_ternary)
+        self.enterRule(localctx, 40, self.RULE_ternary)
         try:
             self.enterOuterAlt(localctx, 1)
-            self.state = 199
+            self.state = 214
             self.logical()
-            self.state = 205
+            self.state = 220
             self._errHandler.sync(self)
-            la_ = self._interp.adaptivePredict(self._input,20,self._ctx)
+            la_ = self._interp.adaptivePredict(self._input,21,self._ctx)
             if la_ == 1:
-                self.state = 200
+                self.state = 215
                 self.match(ByteParser.IF)
-                self.state = 201
+                self.state = 216
                 self.logical()
-                self.state = 202
+                self.state = 217
                 self.match(ByteParser.ELSE)
-                self.state = 203
+                self.state = 218
                 self.logical()
 
 
@@ -1696,26 +1802,26 @@ class ByteParser ( Parser ):
     def logical(self):
 
         localctx = ByteParser.LogicalContext(self, self._ctx, self.state)
-        self.enterRule(localctx, 40, self.RULE_logical)
+        self.enterRule(localctx, 42, self.RULE_logical)
         self._la = 0 # Token type
         try:
             self.enterOuterAlt(localctx, 1)
-            self.state = 207
+            self.state = 222
             self.relational()
-            self.state = 212
+            self.state = 227
             self._errHandler.sync(self)
             _la = self._input.LA(1)
-            while _la==31 or _la==32:
-                self.state = 208
+            while _la==33 or _la==34:
+                self.state = 223
                 _la = self._input.LA(1)
-                if not(_la==31 or _la==32):
+                if not(_la==33 or _la==34):
                     self._errHandler.recoverInline(self)
                 else:
                     self._errHandler.reportMatch(self)
                     self.consume()
-                self.state = 209
+                self.state = 224
                 self.relational()
-                self.state = 214
+                self.state = 229
                 self._errHandler.sync(self)
                 _la = self._input.LA(1)
 
@@ -1793,26 +1899,26 @@ class ByteParser ( Parser ):
     def relational(self):
 
         localctx = ByteParser.RelationalContext(self, self._ctx, self.state)
-        self.enterRule(localctx, 42, self.RULE_relational)
+        self.enterRule(localctx, 44, self.RULE_relational)
         self._la = 0 # Token type
         try:
             self.enterOuterAlt(localctx, 1)
-            self.state = 215
+            self.state = 230
             self.addition()
-            self.state = 220
+            self.state = 235
             self._errHandler.sync(self)
             _la = self._input.LA(1)
-            while (((_la) & ~0x3f) == 0 and ((1 << _la) & 2113929216) != 0):
-                self.state = 216
+            while (((_la) & ~0x3f) == 0 and ((1 << _la) & 8455716864) != 0):
+                self.state = 231
                 _la = self._input.LA(1)
-                if not((((_la) & ~0x3f) == 0 and ((1 << _la) & 2113929216) != 0)):
+                if not((((_la) & ~0x3f) == 0 and ((1 << _la) & 8455716864) != 0)):
                     self._errHandler.recoverInline(self)
                 else:
                     self._errHandler.reportMatch(self)
                     self.consume()
-                self.state = 217
+                self.state = 232
                 self.addition()
-                self.state = 222
+                self.state = 237
                 self._errHandler.sync(self)
                 _la = self._input.LA(1)
 
@@ -1866,29 +1972,29 @@ class ByteParser ( Parser ):
     def addition(self):
 
         localctx = ByteParser.AdditionContext(self, self._ctx, self.state)
-        self.enterRule(localctx, 44, self.RULE_addition)
+        self.enterRule(localctx, 46, self.RULE_addition)
         self._la = 0 # Token type
         try:
             self.enterOuterAlt(localctx, 1)
-            self.state = 223
+            self.state = 238
             self.multiplication()
-            self.state = 228
+            self.state = 243
             self._errHandler.sync(self)
-            _alt = self._interp.adaptivePredict(self._input,23,self._ctx)
+            _alt = self._interp.adaptivePredict(self._input,24,self._ctx)
             while _alt!=2 and _alt!=ATN.INVALID_ALT_NUMBER:
                 if _alt==1:
-                    self.state = 224
+                    self.state = 239
                     _la = self._input.LA(1)
-                    if not(_la==20 or _la==21):
+                    if not(_la==22 or _la==23):
                         self._errHandler.recoverInline(self)
                     else:
                         self._errHandler.reportMatch(self)
                         self.consume()
-                    self.state = 225
+                    self.state = 240
                     self.multiplication() 
-                self.state = 230
+                self.state = 245
                 self._errHandler.sync(self)
-                _alt = self._interp.adaptivePredict(self._input,23,self._ctx)
+                _alt = self._interp.adaptivePredict(self._input,24,self._ctx)
 
         except RecognitionException as re:
             localctx.exception = re
@@ -1946,26 +2052,26 @@ class ByteParser ( Parser ):
     def multiplication(self):
 
         localctx = ByteParser.MultiplicationContext(self, self._ctx, self.state)
-        self.enterRule(localctx, 46, self.RULE_multiplication)
+        self.enterRule(localctx, 48, self.RULE_multiplication)
         self._la = 0 # Token type
         try:
             self.enterOuterAlt(localctx, 1)
-            self.state = 231
+            self.state = 246
             self.unary()
-            self.state = 236
+            self.state = 251
             self._errHandler.sync(self)
             _la = self._input.LA(1)
-            while (((_la) & ~0x3f) == 0 and ((1 << _la) & 29360128) != 0):
-                self.state = 232
+            while (((_la) & ~0x3f) == 0 and ((1 << _la) & 117440512) != 0):
+                self.state = 247
                 _la = self._input.LA(1)
-                if not((((_la) & ~0x3f) == 0 and ((1 << _la) & 29360128) != 0)):
+                if not((((_la) & ~0x3f) == 0 and ((1 << _la) & 117440512) != 0)):
                     self._errHandler.recoverInline(self)
                 else:
                     self._errHandler.reportMatch(self)
                     self.consume()
-                self.state = 233
+                self.state = 248
                 self.unary()
-                self.state = 238
+                self.state = 253
                 self._errHandler.sync(self)
                 _la = self._input.LA(1)
 
@@ -2017,27 +2123,27 @@ class ByteParser ( Parser ):
     def unary(self):
 
         localctx = ByteParser.UnaryContext(self, self._ctx, self.state)
-        self.enterRule(localctx, 48, self.RULE_unary)
+        self.enterRule(localctx, 50, self.RULE_unary)
         self._la = 0 # Token type
         try:
-            self.state = 242
+            self.state = 257
             self._errHandler.sync(self)
             token = self._input.LA(1)
-            if token in [20, 21, 33]:
+            if token in [22, 23, 35]:
                 self.enterOuterAlt(localctx, 1)
-                self.state = 239
+                self.state = 254
                 _la = self._input.LA(1)
-                if not((((_la) & ~0x3f) == 0 and ((1 << _la) & 8593080320) != 0)):
+                if not((((_la) & ~0x3f) == 0 and ((1 << _la) & 34372321280) != 0)):
                     self._errHandler.recoverInline(self)
                 else:
                     self._errHandler.reportMatch(self)
                     self.consume()
-                self.state = 240
+                self.state = 255
                 self.unary()
                 pass
-            elif token in [2, 14, 15, 16, 17, 18, 19, 37]:
+            elif token in [4, 16, 17, 18, 19, 20, 21, 39]:
                 self.enterOuterAlt(localctx, 2)
-                self.state = 241
+                self.state = 256
                 self.postfix()
                 pass
             else:
@@ -2109,39 +2215,39 @@ class ByteParser ( Parser ):
     def postfix(self):
 
         localctx = ByteParser.PostfixContext(self, self._ctx, self.state)
-        self.enterRule(localctx, 50, self.RULE_postfix)
+        self.enterRule(localctx, 52, self.RULE_postfix)
         self._la = 0 # Token type
         try:
             self.enterOuterAlt(localctx, 1)
-            self.state = 244
+            self.state = 259
             self.primary()
-            self.state = 256
+            self.state = 271
             self._errHandler.sync(self)
             _la = self._input.LA(1)
-            while _la==34:
-                self.state = 245
+            while _la==36:
+                self.state = 260
                 self.match(ByteParser.DOT)
-                self.state = 246
+                self.state = 261
                 self.match(ByteParser.ID)
-                self.state = 252
+                self.state = 267
                 self._errHandler.sync(self)
-                la_ = self._interp.adaptivePredict(self._input,27,self._ctx)
+                la_ = self._interp.adaptivePredict(self._input,28,self._ctx)
                 if la_ == 1:
-                    self.state = 247
+                    self.state = 262
                     self.match(ByteParser.LPAREN)
-                    self.state = 249
+                    self.state = 264
                     self._errHandler.sync(self)
                     _la = self._input.LA(1)
-                    if (((_la) & ~0x3f) == 0 and ((1 << _la) & 146033065988) != 0):
-                        self.state = 248
+                    if (((_la) & ~0x3f) == 0 and ((1 << _la) & 584132263952) != 0):
+                        self.state = 263
                         self.args()
 
 
-                    self.state = 251
+                    self.state = 266
                     self.match(ByteParser.RPAREN)
 
 
-                self.state = 258
+                self.state = 273
                 self._errHandler.sync(self)
                 _la = self._input.LA(1)
 
@@ -2341,102 +2447,102 @@ class ByteParser ( Parser ):
     def primary(self):
 
         localctx = ByteParser.PrimaryContext(self, self._ctx, self.state)
-        self.enterRule(localctx, 52, self.RULE_primary)
+        self.enterRule(localctx, 54, self.RULE_primary)
         self._la = 0 # Token type
         try:
-            self.state = 283
+            self.state = 298
             self._errHandler.sync(self)
-            la_ = self._interp.adaptivePredict(self._input,31,self._ctx)
+            la_ = self._interp.adaptivePredict(self._input,32,self._ctx)
             if la_ == 1:
                 localctx = ByteParser.CallContext(self, localctx)
                 self.enterOuterAlt(localctx, 1)
-                self.state = 259
+                self.state = 274
                 self.match(ByteParser.ID)
-                self.state = 260
+                self.state = 275
                 self.match(ByteParser.LPAREN)
-                self.state = 262
+                self.state = 277
                 self._errHandler.sync(self)
                 _la = self._input.LA(1)
-                if (((_la) & ~0x3f) == 0 and ((1 << _la) & 146033065988) != 0):
-                    self.state = 261
+                if (((_la) & ~0x3f) == 0 and ((1 << _la) & 584132263952) != 0):
+                    self.state = 276
                     self.args()
 
 
-                self.state = 264
+                self.state = 279
                 self.match(ByteParser.RPAREN)
                 pass
 
             elif la_ == 2:
                 localctx = ByteParser.NewContext(self, localctx)
                 self.enterOuterAlt(localctx, 2)
-                self.state = 265
+                self.state = 280
                 self.match(ByteParser.NEW)
-                self.state = 266
+                self.state = 281
                 self.type_(0)
-                self.state = 267
+                self.state = 282
                 self.match(ByteParser.LPAREN)
-                self.state = 269
+                self.state = 284
                 self._errHandler.sync(self)
                 _la = self._input.LA(1)
-                if (((_la) & ~0x3f) == 0 and ((1 << _la) & 146033065988) != 0):
-                    self.state = 268
+                if (((_la) & ~0x3f) == 0 and ((1 << _la) & 584132263952) != 0):
+                    self.state = 283
                     self.args()
 
 
-                self.state = 271
+                self.state = 286
                 self.match(ByteParser.RPAREN)
                 pass
 
             elif la_ == 3:
                 localctx = ByteParser.ParenContext(self, localctx)
                 self.enterOuterAlt(localctx, 3)
-                self.state = 273
+                self.state = 288
                 self.match(ByteParser.LPAREN)
-                self.state = 274
+                self.state = 289
                 self.expr()
-                self.state = 275
+                self.state = 290
                 self.match(ByteParser.RPAREN)
                 pass
 
             elif la_ == 4:
                 localctx = ByteParser.IntContext(self, localctx)
                 self.enterOuterAlt(localctx, 4)
-                self.state = 277
+                self.state = 292
                 self.match(ByteParser.INT)
                 pass
 
             elif la_ == 5:
                 localctx = ByteParser.FloatContext(self, localctx)
                 self.enterOuterAlt(localctx, 5)
-                self.state = 278
+                self.state = 293
                 self.match(ByteParser.FLOAT)
                 pass
 
             elif la_ == 6:
                 localctx = ByteParser.StringContext(self, localctx)
                 self.enterOuterAlt(localctx, 6)
-                self.state = 279
+                self.state = 294
                 self.match(ByteParser.STRING)
                 pass
 
             elif la_ == 7:
                 localctx = ByteParser.StringPointerContext(self, localctx)
                 self.enterOuterAlt(localctx, 7)
-                self.state = 280
+                self.state = 295
                 self.match(ByteParser.STRING_POINTER)
                 pass
 
             elif la_ == 8:
                 localctx = ByteParser.BoolContext(self, localctx)
                 self.enterOuterAlt(localctx, 8)
-                self.state = 281
+                self.state = 296
                 self.match(ByteParser.BOOL)
                 pass
 
             elif la_ == 9:
                 localctx = ByteParser.IdContext(self, localctx)
                 self.enterOuterAlt(localctx, 9)
-                self.state = 282
+                self.state = 297
                 self.match(ByteParser.ID)
                 pass
 

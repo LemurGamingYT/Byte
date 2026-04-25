@@ -176,3 +176,12 @@ class MemoryManager(ByteCompilerPass):
             body = self.visitBody(node.body)
         
         return ast.While(node.pos, self.visit(node.cond), body)
+    
+    def visitForRange(self, node: ast.ForRange):
+        with self.file.child_scope():
+            body = self.visitBody(node.body)
+        
+        return ast.ForRange(
+            node.pos, node.iter_name, self.visit(node.start), self.visit(node.end), body,
+            self.visit(node.step) if node.step is not None else None
+        )

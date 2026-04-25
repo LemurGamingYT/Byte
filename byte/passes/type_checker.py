@@ -147,6 +147,47 @@ class TypeChecker(ByteCompilerPass):
         
         return ast.While(node.pos, self.visit(node.cond), body)
     
+    def is_valid_range_type(self, type: ast.Type):
+        return str(type) in ('int', 'float')
+    
+    def determine_step_value(self, pos: ast.Position, type: ast.Type):
+        if str(type) == 'int':
+            return ast.Int(pos, self.file.type_map.get('int'), 1)
+        elif str(type) == 'float':
+            return ast.Float(pos, self.file.type_map.get('float'), 1.0)
+        
+        raise NotImplementedError(str(type))
+    
+    def visitForRange(self, node: ast.ForRange):
+        if self.scope.symbol_table.has(node.iter_name):
+            node.pos.comptime_error(self.file, f'name \'{node.iter_name}\' already in use')
+        
+        start = self.visit(node.start)
+        end = self.visit(node.end)
+        step = self.visit(node.step) if node.step is not None else None
+        if not self.is_valid_range_type(start.type):
+            start.pos.comptime_error(self.file, f'invalid range type \'{start.type}\'')
+        
+        if not self.is_valid_range_type(end.type):
+            end.pos.comptime_error(self.file, f'invalid range type \'{end.type}\'')
+        
+        if start.type != end.type:
+            start.pos.comptime_error(self.file, f'range start and end types do not match (\'{start.type}\' and \'{end.type}\')')
+        
+        if step is not None and not self.is_valid_range_type(step.type):
+            step.pos.comptime_error(self.file, f'invalid range type \'{step.type}\'')
+        
+        if step is None:
+            step = self.determine_step_value(node.pos, start.type)
+        
+        with self.file.child_scope():
+            self.scope.in_loop = True
+            self.scope.symbol_table.add(ast.Symbol(node.iter_name, start.type, step))
+            
+            body = cast(ast.Body, self.visit(node.body))
+        
+        return ast.ForRange(node.pos, node.iter_name, start, end, body, step)
+    
     def visitUse(self, node: ast.Use):
         lib_name = node.path
         if lib_name == 'intrinsics':

@@ -123,6 +123,12 @@ class ByteASTBuilder(ByteVisitor):
     def visitWhileStmt(self, ctx):
         return ast.While(self.pos(ctx), self.visit(ctx.expr()), self.visitBody(ctx.body()))
     
+    def visitForRangeStmt(self, ctx):
+        return ast.ForRange(
+            self.pos(ctx), ctx.ID().getText(), self.visit(ctx.expr(0)), self.visit(ctx.expr(1)), self.visitBody(ctx.body()),
+            self.visit(ctx.expr(2)) if len(ctx.expr()) == 3 else None
+        )
+    
     def visitUseStmt(self, ctx):
         return ast.Use(self.pos(ctx), ctx.STRING().getText()[1:-1])
     

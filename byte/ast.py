@@ -390,6 +390,18 @@ class While(TypelessNode):
 }}"""
 
 @dataclass
+class ForRange(TypelessNode):
+    iter_name: str
+    start: Node
+    end: Node
+    body: Body
+    step: Node | None = None
+    
+    def __str__(self) -> str:
+        step = f'..{self.step}' if self.step is not None else ''
+        return f'for {self.iter_name} in {self.start}..{self.end}{step}'
+
+@dataclass
 class Break(TypelessNode):
     def __str__(self) -> str:
         return 'break'
