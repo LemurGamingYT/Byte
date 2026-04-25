@@ -268,9 +268,15 @@ class CodeGeneration(ByteCompilerPass):
         start = self.visit(node.start)
         end = self.visit(node.end)
         step = self.visit(node.step)
-        default_value = llint(0) if isinstance(start.type, ir.IntType) else ir.Constant(ir.FloatType(), 0.0)
+        is_decrementing = self.builder.icmp_signed('>', start, end, 'is_decrementing')
+        with self.builder.if_then(is_decrementing):
+            err_msg = 'for range loop start is greater than end'
+            err_msg_global = self.module.global_string(err_msg, 'loop_error')
+            err_msg_ptr = self.builder.first_elem(err_msg_global, 'err_msg_ptr')
+            err_msg_string = self.builder.struct(self.string_type, [err_msg_ptr, llint(len(err_msg))], 'err_msg_string')
+            self.intrinsics.call(node.pos, self.builder, self.module, 'error', [err_msg_string])
         
-        var_ptr = self.builder.allocate_value(default_value, name=f'{node.iter_name}.addr')
+        var_ptr = self.builder.allocate_value(start, name=f'{node.iter_name}.addr')
         self.builder.branch(cond_block)
         self.builder.position_at_end(cond_block)
         
