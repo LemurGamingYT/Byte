@@ -178,7 +178,8 @@ class TypeChecker(ByteCompilerPass):
         
         return ast.Id(node.pos, symbol.type if symbol is not None else cast(ast.Type, typ), node.name)
     
-    def check_args(self, args: list[ast.Arg], params: list[ast.Param]):
+    def check_args(self, args: list[ast.Arg], func: ast.Function):
+        params = func.params
         if len(args) != len(params):
             return False
         
@@ -203,28 +204,28 @@ class TypeChecker(ByteCompilerPass):
         for overload in [func] + func.overloads:
             param_types = [str(param.type) for param in overload.params]
             info(f'checking call types for {overload.name} - arg_types = {arg_types}, param_types = {param_types}')
-            if not self.check_args(args, overload.params):
+            if not self.check_args(args, overload):
                 continue
             
             info(f'calling overload {overload.name}')
-            
             for i, (arg, param) in enumerate(zip(args, overload.params)):
-                if param.type.is_reference():
-                    if not isinstance(arg.value, ast.Id):
-                        arg.pos.comptime_error(self.file, 'cannot reference non-identifier')
-                    
-                    ref_symbol = self.scope.symbol_table.tryget(arg.value.name)
-                    if ref_symbol is None:
-                        arg.pos.comptime_error(self.file, 'cannot reference unknown identifier')
-                    
-                    if not ref_symbol.is_mutable and param.is_mutable:
-                        arg.pos.comptime_error(
-                            self.file, 'argument reference symbol is immutable but is being passed by mutable reference'
-                        )
-                    
-                    args[i] = ast.Ref(node.pos, arg.type.reference(), arg.value.name).to_arg()
+                if not param.type.is_reference():
+                    continue
+                
+                if not isinstance(arg.value, ast.Id):
+                    arg.pos.comptime_error(self.file, 'cannot reference non-identifier')
+                
+                ref_symbol = self.scope.symbol_table.tryget(arg.value.name)
+                if ref_symbol is None:
+                    arg.pos.comptime_error(self.file, 'cannot reference unknown identifier')
+                
+                if not ref_symbol.is_mutable and param.is_mutable:
+                    arg.pos.comptime_error(
+                        self.file, 'argument reference symbol is immutable but is being passed by mutable reference'
+                    )
+                
+                args[i] = ast.Ref(node.pos, arg.type.reference(), arg.value.name).to_arg()
             
-            # TODO: check for multiple matching overloads
             return ast.Call(node.pos, overload.ret_type, overload.name, args)
         
         node.pos.comptime_error(self.file, f'no matching overloads for call to \'{node.callee}\'')

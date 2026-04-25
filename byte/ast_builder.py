@@ -67,10 +67,7 @@ class ByteASTBuilder(ByteVisitor):
         return ast.Continue(self.pos(ctx))
     
     def visitBody(self, ctx):
-        return ast.Body(
-            self.pos(ctx), self.file.type_map.get('any'),
-            [self.visit(stmt) for stmt in ctx.bodyStmts()]
-        )
+        return ast.Body(self.pos(ctx), self.file.type_map.get('any'), [self.visit(stmt) for stmt in ctx.bodyStmts()])
     
     def visitParams(self, ctx):
         return [self.visitParam(param) for param in ctx.param()] if ctx is not None else []
@@ -84,11 +81,11 @@ class ByteASTBuilder(ByteVisitor):
     def visitFuncName(self, ctx):
         extend_type = self.visitType(ctx.extend_type) if ctx.extend_type is not None else None
         identifier = op = None
-        if ctx.ID() is not None:
+        if ctx.ID():
             identifier = ctx.ID().getText()
-        elif ctx.op is not None:
+        elif ctx.op:
             op = ctx.op.text
-        elif ctx.NEW() is not None:
+        elif ctx.NEW():
             identifier = 'new'
         
         return FuncName(identifier, extend_type, op)

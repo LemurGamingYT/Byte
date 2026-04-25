@@ -39,7 +39,14 @@ class ByteCompilerPass(ABC):
             if isinstance(value, ast.Node):
                 args.append(self.visit(value))
             elif isinstance(value, list):
-                args.append([self.visit(elem) for elem in value if isinstance(elem, ast.Node)])
+                new_list = []
+                for elem in value:
+                    if isinstance(elem, ast.Node):
+                        new_list.append(self.visit(elem))
+                    else:
+                        new_list.append(elem)
+                
+                args.append(new_list)
             else:
                 args.append(value)
         

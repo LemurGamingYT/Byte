@@ -314,10 +314,14 @@ class Function(Node):
     def ret_type(self):
         return self.type
     
-    def __str__(self) -> str:
+    @property
+    def signature(self):
         params_str = ', '.join(map(str, self.params))
         extend_type = f'{self.extend_type}.' if self.extend_type is not None else ''
-        signature = f'{self.flags}fn {extend_type}{self.name}({params_str}) -> {self.ret_type}'
+        return f'{self.flags}fn {extend_type}{self.name}({params_str}) -> {self.ret_type}'
+    
+    def __str__(self) -> str:
+        signature = self.signature
         if self.body is None:
             return signature
         

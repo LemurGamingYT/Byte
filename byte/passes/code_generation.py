@@ -285,9 +285,6 @@ class CodeGeneration(ByteCompilerPass):
                 ir_func = self.module.registry.get(node.callee)
                 return self.builder.call(ir_func, args, node.callee)
             
-            if func.body is not None:
-                raise NotImplementedError
-            
             return self.intrinsics.call(node.pos, self.builder, self.module, node.callee, args)
         
         info(f'calling function {node.callee}')

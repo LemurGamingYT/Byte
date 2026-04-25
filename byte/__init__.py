@@ -37,6 +37,8 @@ def compile_file(file: ast.File):
     
     for cls in PASS_CLASSES:
         info(f'running pass {cls.__name__}')
+        ast_file = ast_file.with_stem(f'{file.path.stem}_{cls.__name__.lower()}')
+        
         program = cls.run(file, program)
         if file.options.debug:
             ast_file.write_text(str(program))
@@ -129,8 +131,12 @@ class ArgParser:
         return method()
 
     def arg(self, index: int):
-        if index < len(self.args):
-            return self.args[index]
+        while index < len(self.args):
+            arg = self.args[index]
+            if not arg.startswith('--'):
+                return arg
+            
+            index += 1
         
         return None
     
