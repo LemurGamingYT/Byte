@@ -1,7 +1,6 @@
 #include <stdbool.h>
 #include <string.h>
 #include <stdlib.h>
-#include <ctype.h>
 #include <stdio.h>
 
 
@@ -13,7 +12,7 @@ typedef struct {
 
 
 void error(const char* message) {
-    fprintf(stderr, "error: %s", message);
+    fprintf(stderr, "error: %s\n", message);
     exit(EXIT_FAILURE);
 }
 
@@ -58,32 +57,6 @@ bool neq_strings(string a, string b) {
     return memcmp(a.ptr, b.ptr, a.length) != false;
 }
 
-string lower_string(string s) {
-    char* ptr = (char*)malloc(s.length);
-    if (ptr == NULL) error("out of memory");
-    
-    for (int i = 0; i < s.length; i++) {
-        ptr[i] = tolower(s.ptr[i]);
-    }
-    
-    return (string){ptr, s.length, true};
-}
-
-string upper_string(string s) {
-    char* ptr = (char*)malloc(s.length);
-    if (ptr == NULL) error("out of memory");
-    
-    for (int i = 0; i < s.length; i++) {
-        ptr[i] = toupper(s.ptr[i]);
-    }
-    
-    return (string){ptr, s.length, true};
-}
-
-string string_clone(string s) {
-    return string_new(s.ptr, s.length);
-}
-
 int string_to_int(string s) {
     return strtol(s.ptr, NULL, 10);
 }
@@ -98,10 +71,7 @@ void print(string s) {
 
 int main(void) {
     string s = string_new("Hello World", 11);
-    string uppercase = upper_string(s);
     print(s);
-    print(uppercase);
     string_destroy(&s);
-    string_destroy(&uppercase);
     return 0;
 }
