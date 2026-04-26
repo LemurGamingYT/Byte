@@ -1,5 +1,6 @@
 from logging import info
 from typing import Any
+from math import pi, e
 
 from llvmlite import ir
 
@@ -19,6 +20,7 @@ class Intrinsics:
         string_type = self.file.type_map.get('string')
         pointer_type = self.file.type_map.get('pointer')
         any_type = self.file.type_map.get('any')
+        Math_type = self.file.type_map.get('Math')
         System_type = self.file.type_map.get('System')
         
         self.declare_op_function('+', int_type, int_type, int_type)
@@ -89,6 +91,9 @@ class Intrinsics:
         self.declare_attribute_function(string_type, 'ptr', pointer_type, is_method=False)
         self.declare_attribute_function(string_type, 'length', int_type, is_method=False)
         self.declare_attribute_function(string_type, 'is_allocated', bool_type, is_method=False)
+        
+        self.declare_attribute_function(Math_type, 'pi', float_type, is_static=True, is_method=False)
+        self.declare_attribute_function(Math_type, 'e', float_type, is_static=True, is_method=False)
         
         self.declare_attribute_function(System_type, 'os', string_type, is_static=True, is_method=False)
         self.declare_attribute_function(System_type, 'pid', int_type, is_static=True, is_method=False)
@@ -349,5 +354,9 @@ class Intrinsics:
                 else:
                     getpid = module.registry.get('getpid')
                     return builder.call(getpid, [], 'System.pid')
+            case 'Math.pi':
+                return ir.Constant(ir.FloatType(), pi)
+            case 'Math.e':
+                return ir.Constant(ir.FloatType(), e)
             case _:
                 raise NotImplementedError(name)
