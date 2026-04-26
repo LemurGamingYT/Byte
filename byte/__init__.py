@@ -1,9 +1,6 @@
-import sys
-from contextlib import contextmanager
 from importlib import import_module
 from sys import exit as sys_exit
 from subprocess import run
-from io import TextIOBase
 from logging import info
 from pathlib import Path
 from typing import cast
@@ -17,6 +14,7 @@ from byte.passes.preprocessor import Preprocessor
 from byte.passes.type_checker import TypeChecker
 from byte.llvm_extensions import find_linker
 from byte.ast_builder import ByteASTBuilder
+from byte.io_disabler import disable_io
 from byte import ast
 
 
@@ -91,29 +89,6 @@ def compile_to_exe(file: ast.File):
     
     return exe_file
 
-@contextmanager
-def disable_io():
-    stdout = sys.stdout
-    stdin = sys.stdin
-    stderr = sys.stderr
-    
-    sys.stdout = DummyIO()
-    sys.stdin = DummyIO()
-    sys.stderr = DummyIO()
-    
-    yield
-    
-    sys.stdout = stdout
-    sys.stdin = stdin
-    sys.stderr = stderr
-
-
-class DummyIO(TextIOBase):
-    def write(self, _: str, /) -> int:
-        return 0
-    
-    def read(self, _: int | None = -1, /) -> str:
-        return ''
 
 class ArgParser:
     def __init__(self, args: list[str]):
