@@ -9,6 +9,7 @@ from colorama import Fore, Style
 
 from byte.passes.code_generation import CodeGeneration, CompileResult
 from byte.passes.forward_decl import ForwardDeclaration
+# from byte.passes.return_checker import ReturnChecker
 from byte.passes.memory_manager import MemoryManager
 from byte.passes.preprocessor import Preprocessor
 from byte.passes.type_checker import TypeChecker

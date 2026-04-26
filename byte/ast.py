@@ -1,4 +1,4 @@
-from dataclasses import dataclass, field
+from dataclasses import dataclass, field, fields
 from logging import info, error, warning
 from contextlib import contextmanager
 from abc import ABC, abstractmethod
@@ -192,6 +192,18 @@ class File:
 class Node(ABC):
     pos: Position
     type: 'Type'
+    
+    @property
+    def children(self):
+        children = []
+        for f in fields(self):
+            value = getattr(self, f.name)
+            if isinstance(value, Node):
+                children.append(value)
+            elif isinstance(value, list):
+                children.extend(elem for elem in value if isinstance(elem, Node))
+        
+        return children
     
     def to_arg(self):
         return Arg(self.pos, self.type, self)
