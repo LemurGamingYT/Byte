@@ -103,8 +103,10 @@ class CodeGeneration(ByteCompilerPass):
                 self.visit(node.body)
                 
                 if not cast(ir.Block, self.builder.block).is_terminated:
-                    self.builder.ret_void()
-                    info('block is not terminated, returning void as a fallback')
+                    if str(node.ret_type) == 'nil':
+                        self.builder.ret_void()
+                    else:
+                        self.builder.unreachable()
                 
                 self.builder = old_builder
         
