@@ -306,6 +306,17 @@ class Return(Node):
         
         return f'return {self.value}'
 
+@dataclass
+class Class(Node):
+    name: str
+    members: dict[str, Union['Function', 'Variable']] = field(default_factory=dict)
+    
+    def __str__(self) -> str:
+        members_str = '\n'.join(map(str, self.members))
+        return f"""class {self.name} {{
+{members_str}
+}}"""
+
 @dataclass(kw_only=True)
 class FunctionFlags:
     static: bool = False

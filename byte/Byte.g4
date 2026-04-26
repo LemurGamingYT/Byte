@@ -46,6 +46,14 @@ varAssign
     : ID op=(ADD | SUB | MUL | DIV | MOD)? ASSIGN expr
     | MUTABLE? ID ASSIGN expr
     ;
+classAssign
+    : CLASS ID LBRACE classBody* RBRACE
+    ;
+
+classBody
+    : varAssign
+    | funcAssign
+    ;
 
 arg: expr;
 args: arg (COMMA arg)*;
@@ -93,6 +101,7 @@ NEW: 'new';
 USE: 'use';
 FUNC: 'fn';
 ELSE: 'else';
+CLASS: 'class';
 MUTABLE: 'mut';
 DEFER: 'defer';
 RETURN: 'return';

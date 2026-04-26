@@ -99,6 +99,16 @@ class ByteVisitor(ParseTreeVisitor):
         return self.visitChildren(ctx)
 
 
+    # Visit a parse tree produced by ByteParser#classAssign.
+    def visitClassAssign(self, ctx:ByteParser.ClassAssignContext):
+        return self.visitChildren(ctx)
+
+
+    # Visit a parse tree produced by ByteParser#classBody.
+    def visitClassBody(self, ctx:ByteParser.ClassBodyContext):
+        return self.visitChildren(ctx)
+
+
     # Visit a parse tree produced by ByteParser#arg.
     def visitArg(self, ctx:ByteParser.ArgContext):
         return self.visitChildren(ctx)
