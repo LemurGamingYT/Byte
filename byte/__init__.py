@@ -11,6 +11,7 @@ from byte.passes.code_generation import CodeGeneration, CompileResult
 from byte.passes.forward_decl import ForwardDeclaration
 # from byte.passes.return_checker import ReturnChecker
 from byte.passes.memory_manager import MemoryManager
+from byte.passes.code_analysis import CodeAnalysis
 from byte.passes.preprocessor import Preprocessor
 from byte.passes.type_checker import TypeChecker
 from byte.llvm_extensions import find_linker
@@ -23,7 +24,7 @@ BYTE_DIR = Path(__file__).parent
 TESTS_DIR = BYTE_DIR / 'tests'
 CRUNTIME_DIR = BYTE_DIR / 'cruntime'
 VERSION = '0.0.1'
-PASS_CLASSES = [Preprocessor, ForwardDeclaration, TypeChecker, MemoryManager]
+PASS_CLASSES = [Preprocessor, CodeAnalysis, ForwardDeclaration, TypeChecker, MemoryManager]
 
 def parse(file: ast.File):
     builder = ByteASTBuilder(file)
