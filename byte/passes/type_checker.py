@@ -11,6 +11,7 @@ class TypeChecker(ByteCompilerPass):
         super().__init__(file)
         
         self.toplevel_nodes = []
+        self.expanded_generics = {}
     
     def visitProgram(self, node: ast.Program):
         for stmt in node.nodes:
@@ -306,16 +307,22 @@ class TypeChecker(ByteCompilerPass):
             for param in func.params
         ]
         
+        generic_name = f'{func.name}{generic_params_str}'
+        if generic_name in self.expanded_generics:
+            return self.expanded_generics[generic_name]
+        
         generic_func = self.visitFunction(ast.Function(
-            func.pos, generic_map.get(str(func.type), func.type), f'{func.name}{generic_params_str}', params, func.body, func.flags,
+            func.pos, generic_map.get(str(func.type), func.type), generic_name, params, func.body, func.flags,
             func.extend_type, overloads=func.overloads
         ))
+        
+        self.expanded_generics[generic_name] = generic_func
         
         func.overloads.append(generic_func)
         
         try:
             idx = self.toplevel_nodes.index(func)
-        except IndexError:
+        except ValueError:
             idx = 0
         
         self.toplevel_nodes.insert(idx + 1, generic_func)

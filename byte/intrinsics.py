@@ -55,7 +55,7 @@ class Intrinsics:
         self.declare_op_function('==', bool_type, pointer_type, pointer_type)
         self.declare_op_function('!=', bool_type, pointer_type, pointer_type)
         
-        self.declare_empty_function('print', params=[ast.Param(ast.Position(), string_type, 's')], public=True)
+        self.declare_empty_function('print_string', params=[ast.Param(ast.Position(), string_type, 's')], public=True)
         self.declare_empty_function('print_literal', params=[ast.Param(ast.Position(), string_type, 's')], public=True)
         self.declare_empty_function('string_struct', string_type, [
             ast.Param(ast.Position(), pointer_type, 'ptr'), ast.Param(ast.Position(), int_type, 'length'),
@@ -202,7 +202,7 @@ class Intrinsics:
                 return builder.or_(args[0], args[1], '||.bool.bool')
             case '!.bool':
                 return builder.not_(args[0], '!.bool')
-            case 'print':
+            case 'print_string':
                 printf = module.registry.get('printf')
                 
                 fmt = module.try_get_global('string_fmt', lambda: module.global_string('%.*s\n', 'string_fmt'))

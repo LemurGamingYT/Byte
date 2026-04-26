@@ -61,6 +61,10 @@ fn !=(string a, string b) -> bool {
 }
 
 
+fn print<T>(T x) {
+    print_string(x.to_string())
+}
+
 fn input() -> string {
     buf = buffer(512)
     stdin = acrt_iob_func(0)
