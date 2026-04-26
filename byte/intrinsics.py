@@ -255,7 +255,23 @@ class Intrinsics:
                 written = builder.call(snprintf, [float_buf, llint(BUF_SIZE), float_fmt_ptr, f_double], 'written')
                 return builder.struct(string_type, [float_buf, written, llint(0, 1)], 'float.to_string')
             case 'string.to_string':
-                return args[0]
+                malloc = module.registry.get('malloc')
+                memcpy = module.registry.get('memcpy')
+                
+                s = args[0]
+                length = self.call(pos, builder, module, 'string.length', [s])
+                ptr_copy = builder.call(malloc, [length], 'ptr_copy')
+                is_null = self.call(pos, builder, module, '==.pointer.pointer', [ptr_copy, NULL()])
+                with builder.if_then(is_null):
+                    oom_text = 'out of memory'
+                    oom_global = module.global_string(oom_text, 'oom_global')
+                    oom_ptr = builder.first_elem(oom_global, 'oom_ptr')
+                    oom_string = builder.struct(string_type, [oom_ptr, llint(len(oom_text))], 'oom_string')
+                    self.call(pos, builder, module, 'error', [oom_string])
+                
+                ptr = self.call(pos, builder, module, 'string.ptr', [s])
+                builder.call(memcpy, [ptr_copy, ptr, length, llint(0, 1)])
+                return builder.struct(string_type, [ptr_copy, length, llint(0, 1)], 'string.to_string')
             case 'bool.to_string':
                 true_str = module.global_string('true', module.get_unique_name('true_str'))
                 false_str = module.global_string('false', module.get_unique_name('false_str'))

@@ -12,7 +12,7 @@ static fn string.new(pointer ptr, int length) -> string {
         error("out of memory")
     }
     
-    memcpy(ptr_copy, ptr, length)
+    memcpy(ptr_copy, ptr, length, false)
     return string_struct(ptr_copy, length, true)
 }
 
@@ -28,6 +28,15 @@ static fn string.new(int length) -> string {
 
 static fn string.new(pointer ptr, int length, bool is_allocated) -> string {
     return string_struct(ptr, length, is_allocated)
+}
+
+fn string.get(string s, int index) -> string {
+    if index >= s.length {
+        error("string index out of bounds")
+    }
+    
+    ptr_index = gep(s.ptr, index)
+    return new string(ptr_index, 1)
 }
 
 fn string.parse_int(string s) -> int {
@@ -49,8 +58,8 @@ fn +(string a, string b) -> string {
         error("out of memory")
     }
     
-    memcpy(ptr, a.ptr, a.length)
-    memcpy(ptr + a.length, b.ptr, b.length)
+    memcpy(ptr, a.ptr, a.length, false)
+    memcpy(ptr + a.length, b.ptr, b.length, false)
     return new string(ptr, total_length, true)
 }
 

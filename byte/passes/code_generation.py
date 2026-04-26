@@ -228,7 +228,7 @@ class CodeGeneration(ByteCompilerPass):
         
         from byte import compile_to_obj
         
-        file = ast.File(stdlib_path)
+        file = ast.File(stdlib_path, options=self.file.options, target=self.file.target)
         obj_file = compile_to_obj(file)
         for symbol in file.scope.symbol_table.symbols.values():
             func = symbol.value

@@ -15,6 +15,7 @@ from byte.passes.forward_decl import ForwardDeclaration
 from byte.passes.memory_manager import MemoryManager
 from byte.passes.preprocessor import Preprocessor
 from byte.passes.type_checker import TypeChecker
+from byte.llvm_extensions import find_linker
 from byte.ast_builder import ByteASTBuilder
 from byte import ast
 
@@ -35,6 +36,8 @@ def compile_file(file: ast.File):
     program = parse(file)
     if file.options.debug:
         ast_file.write_text(str(program))
+    else:
+        ast_file.unlink(True)
     
     for cls in PASS_CLASSES:
         info(f'running pass {cls.__name__}')
@@ -43,17 +46,21 @@ def compile_file(file: ast.File):
         program = cls.run(file, program)
         if file.options.debug:
             ast_file.write_text(str(program))
+        else:
+            ast_file.unlink(True)
     
     return cast(CompileResult, CodeGeneration.run(file, program))
 
 def compile_to_obj(file: ast.File):
     res = compile_file(file)
+    
     ll_file = file.path.with_suffix('.ll')
     ll_file.write_text(str(res.module))
     
-    obj_file = file.path.with_suffix('.o')
     flags = ['-Wno-override-module', '-Wall', '-Werror', '-Wpedantic', '-Wextra']
     flags_str = ' '.join(flags)
+    
+    obj_file = file.path.with_suffix('.o')
     compile_cmd = f'clang -c -o {obj_file} {ll_file} {flags_str}'
     info(f'running clang compile command \'{compile_cmd}\'')
     run(compile_cmd, shell=True)
@@ -74,7 +81,7 @@ def compile_to_exe(file: ast.File):
     
     exe_file = file.path.with_suffix('.exe')
     obj_files_str = ' '.join(map(str, obj_files))
-    link_cmd = f'clang {obj_files_str} -o {exe_file}'
+    link_cmd = f'{find_linker()} {obj_files_str} -o {exe_file}'
     info(f'running clang link command \'{link_cmd}\'')
     run(link_cmd, shell=True)
     

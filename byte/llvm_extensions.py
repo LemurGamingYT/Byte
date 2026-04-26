@@ -1,4 +1,7 @@
 from typing import Any, Callable, cast
+from subprocess import run
+from pathlib import Path
+from shutil import which
 
 from llvmlite import ir, binding
 
@@ -14,6 +17,12 @@ def NULL(type: ir.Type | None = None):
         type = ir.IntType(8)
     
     return ir.Constant(ir.PointerType(type), None)
+
+def find_linker():
+    """Finds any supported linker"""
+    
+    if which('clang') is not None:
+        return 'clang'
 
 # TODO: support external variable definitions as well as external functions
 class RegistryDefinition:
@@ -41,7 +50,7 @@ class Registry:
             RegistryDefinition('malloc', ir.FunctionType(pointer_type, [ir.IntType(32)])),
             RegistryDefinition('free', ir.FunctionType(ir.VoidType(), [pointer_type])),
             RegistryDefinition('llvm.memcpy.p0.p0.i32', ir.FunctionType(ir.VoidType(), [
-                pointer_type, pointer_type, ir.IntType(32)
+                pointer_type, pointer_type, ir.IntType(32), ir.IntType(1)
             ]), 'memcpy'),
             
             RegistryDefinition('memcmp', ir.FunctionType(ir.IntType(1), [pointer_type, pointer_type, ir.IntType(32)])),

@@ -225,7 +225,7 @@ class TypeChecker(ByteCompilerPass):
         
         from byte import parse
         
-        file = ast.File(stdlib_path)
+        file = ast.File(stdlib_path, options=self.file.options, target=self.file.target)
         program = parse(file)
         program = TypeChecker.run(file, program)
         
