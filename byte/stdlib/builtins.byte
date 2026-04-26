@@ -38,6 +38,10 @@ fn string.parse_float(string s) -> float {
     return strtof(s.ptr, null())
 }
 
+fn string.clone(string s) -> string {
+    return new string(s.ptr, s.length)
+}
+
 fn +(string a, string b) -> string {
     total_length = a.length + b.length
     ptr = malloc(total_length)
