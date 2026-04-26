@@ -262,6 +262,7 @@ class TypeChecker(ByteCompilerPass):
                 continue
             
             if not isinstance(arg.value, ast.Id):
+                # TODO: turn argument into a temporary variable
                 arg.pos.comptime_error(self.file, 'cannot reference non-identifier')
             
             ref_symbol = self.scope.symbol_table.tryget(arg.value.name)
@@ -269,9 +270,9 @@ class TypeChecker(ByteCompilerPass):
                 arg.pos.comptime_error(self.file, 'cannot reference unknown identifier')
             
             if not ref_symbol.is_mutable and param.is_mutable:
-                arg.pos.comptime_error(
-                    self.file, 'argument reference symbol is immutable but is being passed by mutable reference'
-                )
+                arg.pos.comptime_warning(
+                    self.file, f"""argument reference symbol is immutable but is being passed by mutable reference
+make {ref_symbol.name} mutable using the 'mut' keyword to remove this warning""")
             
             args[i] = ast.Ref(arg.pos, arg.type.reference(), arg.value.name).to_arg()
     
@@ -309,6 +310,7 @@ class TypeChecker(ByteCompilerPass):
         
         generic_name = f'{func.name}{generic_params_str}'
         if generic_name in self.expanded_generics:
+            info(f'reusing expanded generic {generic_name}')
             return self.expanded_generics[generic_name]
         
         generic_func = self.visitFunction(ast.Function(

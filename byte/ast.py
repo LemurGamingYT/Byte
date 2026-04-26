@@ -1,8 +1,8 @@
 from dataclasses import dataclass, field
+from logging import info, error, warning
 from contextlib import contextmanager
 from abc import ABC, abstractmethod
 from sys import exit as sys_exit
-from logging import info, error
 from typing import Union, Any
 from platform import system
 from pathlib import Path
@@ -38,6 +38,12 @@ class Position:
         print(f'{Style.BRIGHT}{Fore.RED}error: {message}{Style.RESET_ALL}')
         error(message)
         sys_exit(1)
+    
+    def comptime_warning(self, file: 'File', message: str):
+        print(file.src.splitlines()[self.line - 1])
+        print(' ' * self.column + '^')
+        print(f'{Style.BRIGHT}{Fore.YELLOW}warning: {message}{Style.RESET_ALL}')
+        warning(message)
 
 @dataclass
 class Symbol:
