@@ -11,6 +11,7 @@ from typing import cast
 from colorama import Fore, Style
 
 from byte.passes.code_generation import CodeGeneration, CompileResult
+from byte.passes.forward_decl import ForwardDeclaration
 from byte.passes.memory_manager import MemoryManager
 from byte.passes.preprocessor import Preprocessor
 from byte.passes.type_checker import TypeChecker
@@ -22,7 +23,7 @@ BYTE_DIR = Path(__file__).parent
 TESTS_DIR = BYTE_DIR / 'tests'
 CRUNTIME_DIR = BYTE_DIR / 'cruntime'
 VERSION = '0.0.1'
-PASS_CLASSES = [Preprocessor, TypeChecker, MemoryManager]
+PASS_CLASSES = [Preprocessor, ForwardDeclaration, TypeChecker, MemoryManager]
 
 def parse(file: ast.File):
     builder = ByteASTBuilder(file)

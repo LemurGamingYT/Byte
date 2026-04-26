@@ -333,3 +333,5 @@ class Intrinsics:
                 else:
                     getpid = module.registry.get('getpid')
                     return builder.call(getpid, [], 'System.pid')
+            case _:
+                raise NotImplementedError(name)

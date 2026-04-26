@@ -46,6 +46,7 @@ class Symbol:
     value: Any
     is_mutable: bool = False
     public: bool = True
+    is_forward_decl: bool = False
 
 @dataclass
 class SymbolTable:

@@ -62,6 +62,9 @@ class CodeGeneration(ByteCompilerPass):
         if node.is_generic:
             return node
         
+        if node.name in self.module.globals:
+            return self.module.get_global(node.name)
+        
         info(f'generating IR for function {node.name}')
         
         is_generic_expansion = node.name.endswith('>')
@@ -80,10 +83,11 @@ class CodeGeneration(ByteCompilerPass):
             info(f'generating body for IR function {node.name}')
             with self.file.child_scope():
                 old_builder = self.builder
+                
                 if len(node.params) > 0:
                     info('creating parameter allocation block')
                     param_allocation = func.append_basic_block('param_allocation')
-                    self.builder.position_at_end(param_allocation)
+                    self.builder = IRBuilderExt(param_allocation)
                     for i, param in enumerate(node.params):
                         info(f'allocating {param.name}')
                         ptr = self.builder.allocate_value(func.args[i], f'{param.name}.addr')
@@ -95,7 +99,7 @@ class CodeGeneration(ByteCompilerPass):
                     self.builder.branch(entry_block)
                     info('branching parameter allocation to entry block')
                 
-                self.builder.position_at_end(entry_block)
+                self.builder = IRBuilderExt(entry_block)
                 self.visit(node.body)
                 
                 if not cast(ir.Block, self.builder.block).is_terminated:
@@ -342,7 +346,10 @@ class CodeGeneration(ByteCompilerPass):
                 ir_func = self.module.registry.get(node.callee)
                 return self.builder.call(ir_func, args, node.callee)
             
-            return self.intrinsics.call(node.pos, self.builder, self.module, node.callee, args)
+            if func.body is not None:
+                func = self.visitFunction(func)
+            else:
+                return self.intrinsics.call(node.pos, self.builder, self.module, node.callee, args)
         
         info(f'calling function {node.callee}')
         return self.builder.call(func, args, node.callee)

@@ -107,8 +107,8 @@ class TypeChecker(ByteCompilerPass):
         extend_type = cast(ast.Type, self.visit(node.extend_type)) if node.extend_type is not None else None
         func = ast.Function(node.pos, ret_type, node.name, params, node.body, node.flags, extend_type)
         func.name = self.get_mangled_name(func)
-        if self.scope.symbol_table.has(func.name):
-            symbol = self.scope.symbol_table.get(func.name)
+        symbol = self.scope.symbol_table.tryget(func.name)
+        if symbol is not None and not symbol.is_forward_decl:
             base = cast(ast.Function, symbol.value)
             self.create_overload(base, func)
         
