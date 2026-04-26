@@ -39,8 +39,10 @@ funcName
     | (extend_type=type DOT)? NEW
     ;
 
+genericParams: LT ID (COMMA ID)* GT;
+
 funcAssign
-    : STATIC? FUNC funcName LPAREN params? RPAREN (RETURNS return_type=type)? body
+    : STATIC? FUNC funcName genericParams? LPAREN params? RPAREN (RETURNS return_type=type)? body
     ;
 varAssign
     : ID op=(ADD | SUB | MUL | DIV | MOD)? ASSIGN expr

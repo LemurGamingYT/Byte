@@ -89,6 +89,11 @@ class ByteVisitor(ParseTreeVisitor):
         return self.visitChildren(ctx)
 
 
+    # Visit a parse tree produced by ByteParser#genericParams.
+    def visitGenericParams(self, ctx:ByteParser.GenericParamsContext):
+        return self.visitChildren(ctx)
+
+
     # Visit a parse tree produced by ByteParser#funcAssign.
     def visitFuncAssign(self, ctx:ByteParser.FuncAssignContext):
         return self.visitChildren(ctx)

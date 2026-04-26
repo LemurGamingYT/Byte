@@ -7,6 +7,18 @@ from byte import ast
 
 
 class TypeChecker(ByteCompilerPass):
+    def __init__(self, file: ast.File):
+        super().__init__(file)
+        
+        self.toplevel_nodes = []
+    
+    def visitProgram(self, node: ast.Program):
+        for stmt in node.nodes:
+            stmt = self.visit(stmt)
+            self.toplevel_nodes.append(stmt)
+        
+        return ast.Program(node.pos, self.toplevel_nodes)
+    
     def visitType(self, node: ast.Type):
         typ = self.file.type_map.tryget(node.type)
         if typ is None:
@@ -49,44 +61,55 @@ class TypeChecker(ByteCompilerPass):
         
         return all(type1 == type2 for type1, type2 in zip(list1, list2))
     
+    def get_mangled_name(self, func: ast.Function):
+        name = func.name
+        if name in ('+', '-', '*', '/', '%', '==', '!=', '>', '<', '>=', '<=', '&&', '||'):
+            if len(func.params) != 2:
+                func.pos.comptime_error(self.file, f'operator overload of \'{name}\' must have two parameters')
+            
+            a, b = func.params
+            name = f'{name}.{a.type}.{b.type}'
+        elif name == '!':
+            if len(func.params) != 1:
+                func.pos.comptime_error(self.file, f'operator overload of \'{name}\' must have one parameter')
+            
+            a = func.params[0]
+            name = f'{name}.{a.type}'
+        
+        if func.extend_type is not None:
+            name = f'{func.extend_type}.{name}'
+        
+        return name
+    
+    def create_overload(self, base: ast.Function, func: ast.Function):
+        base.overloads.append(func)
+        info(f'adding new overload to {base.name}')
+        
+        base_param_types = [param.type for param in base.params]
+        param_types = [param.type for param in func.params]
+        if self.have_same_types(base_param_types, param_types):
+            func.pos.comptime_error(self.file, f'an overload of {func.name} has the same types as this overload')
+        
+        params_mangling = '.'.join(map(str, param_types))
+        mangled_name = f'{func.name}.{params_mangling}'
+        info(f'mangled overload function name \'{func.name}\' to \'{mangled_name}\'')
+        
+        func.name = mangled_name
+    
     def visitFunction(self, node: ast.Function):
+        if node.is_generic:
+            self.scope.symbol_table.add(ast.Symbol(node.name, self.file.type_map.get('function'), node))
+            return node
+        
         params = [cast(ast.Param, self.visit(param)) for param in node.params]
         ret_type = cast(ast.Type, self.visit(node.ret_type))
         extend_type = cast(ast.Type, self.visit(node.extend_type)) if node.extend_type is not None else None
-        name = node.name
-        if name in ('+', '-', '*', '/', '%', '==', '!=', '>', '<', '>=', '<=', '&&', '||'):
-            if len(params) != 2:
-                node.pos.comptime_error(self.file, f'operator overload of \'{name}\' must have two parameters')
-            
-            a, b = params
-            name = f'{name}.{a.type}.{b.type}'
-        elif name == '!':
-            if len(params) != 1:
-                node.pos.comptime_error(self.file, f'operator overload of \'{name}\' must have one parameter')
-            
-            a = params[0]
-            name = f'{name}.{a.type}'
-        
-        if extend_type is not None:
-            name = f'{extend_type}.{name}'
-        
-        func = ast.Function(node.pos, ret_type, name, params, node.body, node.flags)
+        func = ast.Function(node.pos, ret_type, node.name, params, node.body, node.flags, extend_type)
+        func.name = self.get_mangled_name(func)
         if self.scope.symbol_table.has(func.name):
             symbol = self.scope.symbol_table.get(func.name)
             base = cast(ast.Function, symbol.value)
-            base.overloads.append(func)
-            info(f'adding new overload to {base.name}')
-            
-            base_param_types = [param.type for param in base.params]
-            param_types = [param.type for param in params]
-            if self.have_same_types(base_param_types, param_types):
-                node.pos.comptime_error(self.file, f'an overload of {func.name} has the same types as this overload')
-            
-            params_mangling = '.'.join(map(str, param_types))
-            mangled_name = f'{func.name}.{params_mangling}'
-            info(f'mangled overload function name \'{func.name}\' to \'{mangled_name}\'')
-            
-            func.name = mangled_name
+            self.create_overload(base, func)
         
         self.scope.symbol_table.add(ast.Symbol(func.name, self.file.type_map.get('function'), func))
         if func.body is not None:
@@ -225,14 +248,80 @@ class TypeChecker(ByteCompilerPass):
             return False
         
         for arg, param in zip(args, params):
-            arg_type = arg.type
-            param_type = param.type
-            if arg_type == param_type or str(param_type) == 'any':
+            if arg.type == param.type or str(param.type) == 'any' or str(param.type) in func.generic_params:
                 continue
             
             return False
         
         return True
+    
+    def fix_args(self, overload: ast.Function, args: list[ast.Arg]):
+        for i, (arg, param) in enumerate(zip(args, overload.params)):
+            if not param.type.is_reference():
+                continue
+            
+            if not isinstance(arg.value, ast.Id):
+                arg.pos.comptime_error(self.file, 'cannot reference non-identifier')
+            
+            ref_symbol = self.scope.symbol_table.tryget(arg.value.name)
+            if ref_symbol is None:
+                arg.pos.comptime_error(self.file, 'cannot reference unknown identifier')
+            
+            if not ref_symbol.is_mutable and param.is_mutable:
+                arg.pos.comptime_error(
+                    self.file, 'argument reference symbol is immutable but is being passed by mutable reference'
+                )
+            
+            args[i] = ast.Ref(arg.pos, arg.type.reference(), arg.value.name).to_arg()
+    
+    def create_generic_map(self, func: ast.Function, args: list[ast.Arg]):
+        generic_map = {}
+        for arg, param in zip(args, func.params):
+            generic_param = str(param.type)
+            if generic_param not in func.generic_params:
+                continue
+            
+            if generic_param in generic_map:
+                generic_type = generic_map[generic_param]
+                if generic_type != arg.type:
+                    arg.pos.comptime_error(self.file, 'mismatched generic types in call')
+                
+                continue
+            
+            generic_map[generic_param] = arg.type
+        
+        return generic_map
+    
+    def instantiate_generics(self, func: ast.Function, args: list[ast.Arg]):
+        if not func.is_generic:
+            return func
+        
+        arg_types = [str(arg.type) for arg in args]
+        info(f'instantiating new generic function {func.name} with types {arg_types}')
+        generic_map = self.create_generic_map(func, args)
+        generic_params_str = '<' + ', '.join(str(generic_type) for generic_type in generic_map.values()) + '>'
+        
+        params = [
+            ast.Param(param.pos, generic_map.get(str(param.type), param.type), param.name, param.is_mutable)
+            for param in func.params
+        ]
+        
+        generic_func = self.visitFunction(ast.Function(
+            func.pos, generic_map.get(str(func.type), func.type), f'{func.name}{generic_params_str}', params, func.body, func.flags,
+            func.extend_type, overloads=func.overloads
+        ))
+        
+        func.overloads.append(generic_func)
+        
+        try:
+            idx = self.toplevel_nodes.index(func)
+        except IndexError:
+            idx = 0
+        
+        self.toplevel_nodes.insert(idx + 1, generic_func)
+        info(f'inserted new instantiated generic at index {idx} in top-level node list')
+        info(f'created new generic function with signature \'{generic_func.signature}\'')
+        return generic_func
     
     def visitCall(self, node: ast.Call):
         symbol = self.scope.symbol_table.tryget(node.callee)
@@ -249,24 +338,8 @@ class TypeChecker(ByteCompilerPass):
                 continue
             
             info(f'calling overload {overload.name}')
-            for i, (arg, param) in enumerate(zip(args, overload.params)):
-                if not param.type.is_reference():
-                    continue
-                
-                if not isinstance(arg.value, ast.Id):
-                    arg.pos.comptime_error(self.file, 'cannot reference non-identifier')
-                
-                ref_symbol = self.scope.symbol_table.tryget(arg.value.name)
-                if ref_symbol is None:
-                    arg.pos.comptime_error(self.file, 'cannot reference unknown identifier')
-                
-                if not ref_symbol.is_mutable and param.is_mutable:
-                    arg.pos.comptime_error(
-                        self.file, 'argument reference symbol is immutable but is being passed by mutable reference'
-                    )
-                
-                args[i] = ast.Ref(node.pos, arg.type.reference(), arg.value.name).to_arg()
-            
+            self.fix_args(overload, args)
+            overload = self.instantiate_generics(overload, args)
             return ast.Call(node.pos, overload.ret_type, overload.name, args)
         
         node.pos.comptime_error(self.file, f'no matching overloads for call to \'{node.callee}\'')
@@ -274,9 +347,7 @@ class TypeChecker(ByteCompilerPass):
     def visitOperation(self, node: ast.Operation):
         left = self.visit(node.left)
         right = self.visit(node.right)
-        left_type = left.type.basic_type
-        right_type = right.type.basic_type
-        callee = f'{node.op}.{left_type}.{right_type}'
+        callee = f'{node.op}.{left.type.basic_type}.{right.type.basic_type}'
         symbol = self.scope.symbol_table.tryget(callee)
         if symbol is None:
             node.pos.comptime_error(self.file, f'invalid operation \'{node.op}\' between types \'{left.type}\' and \'{right.type}\'')
@@ -286,8 +357,7 @@ class TypeChecker(ByteCompilerPass):
     
     def visitUnaryOperation(self, node: ast.UnaryOperation):
         value = self.visit(node.value)
-        value_type = value.type.basic_type
-        callee = f'{node.op}.{value_type}'
+        callee = f'{node.op}.{value.type.basic_type}'
         symbol = self.scope.symbol_table.tryget(callee)
         if symbol is None:
             node.pos.comptime_error(self.file, f'invalid operation \'{node.op}\' on type \'{value.type}\'')
@@ -297,8 +367,7 @@ class TypeChecker(ByteCompilerPass):
     
     def visitAttribute(self, node: ast.Attribute):
         value = self.visit(node.value)
-        value_type = value.type.basic_type
-        callee = f'{value_type}.{node.attr}'
+        callee = f'{value.type.basic_type}.{node.attr}'
         symbol = self.scope.symbol_table.tryget(callee)
         if symbol is None:
             node.pos.comptime_error(self.file, f'unknown attribute \'{node.attr}\' on type \'{value.type}\'')
@@ -329,7 +398,7 @@ class TypeChecker(ByteCompilerPass):
         if true.type != false.type:
             node.pos.comptime_error(self.file, f'expected branch types to match (\'{true.type}\' and \'{false.type}\')')
         
-        if cond.type.type != 'bool':
+        if str(cond.type) != 'bool':
             node.pos.comptime_error(self.file, 'expected condition type to be type \'bool\'')
         
         return ast.Ternary(node.pos, true.type, cond, true, false)

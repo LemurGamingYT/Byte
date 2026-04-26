@@ -90,6 +90,9 @@ class ByteASTBuilder(ByteVisitor):
         
         return FuncName(identifier, extend_type, op)
     
+    def visitGenericParams(self, ctx):
+        return [id.getText() for id in ctx.ID()]
+    
     def visitFuncAssign(self, ctx):
         func_name = self.visitFuncName(ctx.funcName())
         flags = ast.FunctionFlags(static=ctx.STATIC() is not None or func_name.identifier == 'new')
@@ -97,7 +100,7 @@ class ByteASTBuilder(ByteVisitor):
             self.pos(ctx), self.visitType(ctx.return_type) if ctx.return_type is not None else
                 self.file.type_map.get('nil'), func_name.identifier or func_name.op,
             self.visitParams(ctx.params()), self.visitBody(ctx.body()),
-            flags, func_name.extend_type
+            flags, func_name.extend_type, self.visit(ctx.genericParams()) if ctx.genericParams() is not None else []
         )
     
     def visitVarAssign(self, ctx):

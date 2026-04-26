@@ -343,6 +343,7 @@ class Function(Node):
     body: Body | None = None
     flags: FunctionFlags = field(default_factory=FunctionFlags)
     extend_type: Type | None = None
+    generic_params: list[str] = field(default_factory=list)
     overloads: list['Function'] = field(default_factory=list)
     
     @property
@@ -350,10 +351,15 @@ class Function(Node):
         return self.type
     
     @property
+    def is_generic(self):
+        return len(self.generic_params) > 0
+    
+    @property
     def signature(self):
         params_str = ', '.join(map(str, self.params))
         extend_type = f'{self.extend_type}.' if self.extend_type is not None else ''
-        return f'{self.flags}fn {extend_type}{self.name}({params_str}) -> {self.ret_type}'
+        generic_params = ('<' + ', '.join(self.generic_params) + '>') if self.is_generic else ''
+        return f'{self.flags}fn {extend_type}{self.name}{generic_params}({params_str}) -> {self.ret_type}'
     
     def __str__(self) -> str:
         signature = self.signature

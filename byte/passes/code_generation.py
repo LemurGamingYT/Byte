@@ -59,6 +59,9 @@ class CodeGeneration(ByteCompilerPass):
         return self.visit(node.value)
     
     def visitFunction(self, node: ast.Function):
+        if node.is_generic:
+            return node
+        
         info(f'generating IR for function {node.name}')
         
         param_types = [self.visit(param.type) for param in node.params]

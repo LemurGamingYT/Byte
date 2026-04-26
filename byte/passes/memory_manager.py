@@ -95,6 +95,9 @@ class MemoryManager(ByteCompilerPass):
         return ast.Body(node.pos, node.type, nodes)
     
     def visitFunction(self, node: ast.Function):
+        if node.is_generic:
+            return node
+        
         info(f'managing memory of function body {node.name}')
         
         body = node.body
@@ -107,7 +110,9 @@ class MemoryManager(ByteCompilerPass):
                 
                 body = cast(ast.Body, self.visit(body))
         
-        return ast.Function(node.pos, node.type, node.name, node.params, body, node.flags, node.extend_type, node.overloads)
+        return ast.Function(
+            node.pos, node.type, node.name, node.params, body, node.flags, node.extend_type, node.generic_params, node.overloads
+        )
     
     def visitVariable(self, node: ast.Variable):
         value = self.visit(node.value)
