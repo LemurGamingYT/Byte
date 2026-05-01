@@ -1,3 +1,4 @@
+from dataclasses import dataclass, field
 from logging import info
 from typing import Any
 from math import pi, e
@@ -7,6 +8,14 @@ from llvmlite import ir
 from byte.llvm_extensions import llint, NULL, IRBuilderExt, ModuleExt, Registry
 from byte import ast
 
+
+@dataclass
+class IntrinsicCallContext:
+    pos: ast.Position
+    builder: IRBuilderExt
+    module: ModuleExt
+    name: str
+    args: list[Any] = field(default_factory=list)
 
 class Intrinsics:
     def __init__(self, file: ast.File):
@@ -148,7 +157,12 @@ class Intrinsics:
         self.file.scope.symbol_table.add(ast.Symbol(func.name, self.file.type_map.get('function'), func, public=public))
         self.registered[name] = func
     
-    def call(self, pos: ast.Position, builder: IRBuilderExt, module: ModuleExt, name: str, args: list[Any]):
+    def call(self, ctx: IntrinsicCallContext):
+        name = ctx.name
+        module = ctx.module
+        builder = ctx.builder
+        args = ctx.args
+        pos = ctx.pos
         string_type = module.context.get_identified_type('string')
         
         info(f'calling intrinsic function {name} with {len(args)} arguments')
@@ -264,17 +278,19 @@ class Intrinsics:
                 memcpy = module.registry.get('memcpy')
                 
                 s = args[0]
-                length = self.call(pos, builder, module, 'string.length', [s])
+                length = self.call(IntrinsicCallContext(pos, builder, module, 'string.length', [s]))
                 ptr_copy = builder.call(malloc, [length], 'ptr_copy')
-                is_null = self.call(pos, builder, module, '==.pointer.pointer', [ptr_copy, NULL()])
+                is_null = self.call(IntrinsicCallContext(pos, builder, module, '==.pointer.pointer', [ptr_copy, NULL()]))
                 with builder.if_then(is_null):
                     oom_text = 'out of memory'
                     oom_global = module.global_string(oom_text, 'oom_global')
                     oom_ptr = builder.first_elem(oom_global, 'oom_ptr')
                     oom_string = builder.struct(string_type, [oom_ptr, llint(len(oom_text))], 'oom_string')
-                    self.call(pos, builder, module, 'error', [oom_string])
-                
-                ptr = self.call(pos, builder, module, 'string.ptr', [s])
+                    ctx = IntrinsicCallContext(pos, builder, module, 'error', [oom_string])
+                    self.call(ctx)
+
+                ctx = IntrinsicCallContext(pos, builder, module, 'string.ptr', [s])
+                ptr = self.call(ctx)
                 builder.call(memcpy, [ptr_copy, ptr, length, llint(0, 1)])
                 return builder.struct(string_type, [ptr_copy, length, llint(0, 1)], 'string.to_string')
             case 'bool.to_string':

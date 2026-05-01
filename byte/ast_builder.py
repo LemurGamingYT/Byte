@@ -110,6 +110,17 @@ class ByteASTBuilder(ByteVisitor):
             ctx.MUTABLE() is not None, ctx.op.text if ctx.op is not None else None
         )
     
+    def visitPropertyDecl(self, ctx):
+        return ast.Property(self.pos(ctx), self.visit(ctx.type_()), ctx.ID().getText())
+    
+    def visitClassAssign(self, ctx):
+        members = []
+        name = ctx.ID().getText()
+        for decl in ctx.classDecl():
+            members.append(self.visit(decl))
+        
+        return ast.Class(self.pos(ctx), name, members)
+    
     def visitIfStmt(self, ctx):
         return ast.If(
             self.pos(ctx), self.visit(ctx.expr()),

@@ -1,14 +1,16 @@
 from logging import info
 from typing import cast
 
+from byte.intrinsics import Intrinsics, IntrinsicCallContext
 from byte.passes import ByteCompilerPass
-from byte.intrinsics import Intrinsics
 from byte import ast
 
 
 class TypeChecker(ByteCompilerPass):
     def __init__(self, file: ast.File):
         super().__init__(file)
+
+        self.intrinsics = Intrinsics(file)
         
         self.toplevel_nodes = []
         self.expanded_generics = {}
@@ -122,6 +124,46 @@ class TypeChecker(ByteCompilerPass):
         
         return func
     
+    def visitProperty(self, node: ast.Property):
+        return ast.Property(node.pos, cast(ast.Type, self.visit(node.type)), node.name)
+    
+    def visitClass(self, node: ast.Class):
+        self.file.type_map.add(node.name)
+        cls_type = self.file.type_map.get(node.name)
+        
+        fields = [member for member in node.members if isinstance(member, ast.Property)]
+        params = [ast.Param(node.pos, member.type, member.name) for member in fields]
+        new_constructor = self.visit(ast.Function(
+            node.pos, cls_type, 'new', params, ast.Body(node.pos, cls_type, [
+                ast.Return(node.pos, cls_type, ast.StructLiteral(node.pos, cls_type, node.name, [
+                    ast.Id(node.pos, param.type, param.name)
+                    for param in params
+                ]))
+            ]), flags=ast.FunctionFlags(static=True, method=True), extend_type=cls_type
+        ))
+        
+        field_properties = []
+        for field in fields:
+            self_param = ast.Param(node.pos, cls_type, 'self')
+            field_property = self.visit(ast.Function(
+                node.pos, field.type, field.name, [self_param], ast.Body(node.pos, field.type, [
+                    ast.Return(node.pos, field.type, ast.StructPropertyGetter(
+                        node.pos, field.type, ast.Id(node.pos, cls_type, 'self'), field.name
+                    ))
+                ]), flags=ast.FunctionFlags(property=True), extend_type=cls_type
+            ))
+            
+            field_properties.append(cast(ast.Property, field_property))
+        
+        members = [new_constructor] + field_properties
+        for member in node.members:
+            if isinstance(member, ast.Function):
+                member.extend_type = self.file.type_map.get(node.name)
+            
+            members.append(self.visit(member))
+        
+        return ast.Class(node.pos, node.name, cast(list[ast.Function | ast.Property], members))
+    
     def visitVariable(self, node: ast.Variable):
         value = self.visit(node.value)
         if self.scope.symbol_table.has(node.name):
@@ -215,8 +257,7 @@ class TypeChecker(ByteCompilerPass):
     def visitUse(self, node: ast.Use):
         lib_name = node.path
         if lib_name == 'intrinsics':
-            intrinsics = Intrinsics(self.file)
-            intrinsics.register()
+            self.intrinsics.register()
             return node
         
         stdlib_path = ast.STDLIB_PATH / f'{lib_name}.byte'
@@ -325,7 +366,7 @@ make {ref_symbol.name} mutable using the 'mut' keyword to remove this warning"""
         try:
             idx = self.toplevel_nodes.index(func)
         except ValueError:
-            idx = 0
+            idx = len(self.toplevel_nodes) - 1
         
         self.toplevel_nodes.insert(idx + 1, generic_func)
         info(f'inserted new instantiated generic at index {idx} in top-level node list')
@@ -350,7 +391,7 @@ make {ref_symbol.name} mutable using the 'mut' keyword to remove this warning"""
             self.fix_args(overload, args)
             overload = self.instantiate_generics(overload, args)
             return ast.Call(node.pos, overload.ret_type, overload.name, args)
-        
+
         node.pos.comptime_error(self.file, f'no matching overloads for call to \'{node.callee}\'')
     
     def visitOperation(self, node: ast.Operation):
@@ -385,7 +426,7 @@ make {ref_symbol.name} mutable using the 'mut' keyword to remove this warning"""
         args = [cast(ast.Arg, self.visit(arg)) for arg in node.args] if node.args is not None else []
         if not func.flags.static:
             args.insert(0, value.to_arg())
-        
+
         return self.visit(ast.Call(node.pos, func.ret_type, callee, args))
     
     def visitNew(self, node: ast.New):

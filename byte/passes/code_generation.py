@@ -5,8 +5,8 @@ from logging import info
 from llvmlite import ir, binding
 
 from byte.llvm_extensions import ModuleExt, IRBuilderExt, llint
+from byte.intrinsics import Intrinsics, IntrinsicCallContext
 from byte.passes import ByteCompilerPass
-from byte.intrinsics import Intrinsics
 from byte import ast
 
 
@@ -28,6 +28,9 @@ class CodeGeneration(ByteCompilerPass):
         self.string_type = self.module.declare_identified_type(
             'string', ir.PointerType(ir.IntType(8)), ir.IntType(32), ir.IntType(1)
         )
+        
+        self.class_types = {}
+        self.class_field_names = {}
         
         info('successfully created builder and module')
     
@@ -51,6 +54,11 @@ class CodeGeneration(ByteCompilerPass):
                 return ir.VoidType()
             case 'any' | 'pointer' | 'function':
                 return ir.PointerType(ir.IntType(8))
+            case _:
+                if node.type in self.class_types:
+                    return self.class_types[node.type]
+                
+                raise NotImplementedError(node.type)
     
     def visitReferenceType(self, node: ast.ReferenceType):
         return ir.PointerType(self.visit(node.type))
@@ -111,6 +119,22 @@ class CodeGeneration(ByteCompilerPass):
                 self.builder = old_builder
         
         return func
+    
+    def visitClass(self, node: ast.Class):
+        info(f'generating IR for class {node.name}')
+        fields = [member for member in node.members if isinstance(member, ast.Property)]
+        field_types = [cast(ir.Type, self.visit(field.type)) for field in fields]
+        cls_type = self.module.declare_identified_type(node.name, *field_types)
+        self.class_types[node.name] = cls_type
+        self.class_field_names[node.name] = [field.name for field in fields]
+        
+        for member in node.members:
+            if isinstance(member, ast.Property):
+                continue
+            
+            self.visit(member)
+        
+        return node
     
     def visitBody(self, node: ast.Body):
         for stmt in node.nodes:
@@ -287,7 +311,9 @@ class CodeGeneration(ByteCompilerPass):
             err_msg_global = self.module.global_string(err_msg, 'loop_error')
             err_msg_ptr = self.builder.first_elem(err_msg_global, 'err_msg_ptr')
             err_msg_string = self.builder.struct(self.string_type, [err_msg_ptr, llint(len(err_msg))], 'err_msg_string')
-            self.intrinsics.call(node.pos, self.builder, self.module, 'error', [err_msg_string])
+
+            ctx = IntrinsicCallContext(node.pos, self.builder, self.module, 'error', [err_msg_string])
+            self.intrinsics.call(ctx)
         
         var_ptr = self.builder.allocate_value(start, name=f'{node.iter_name}.addr')
         self.builder.branch(cond_block)
@@ -351,7 +377,8 @@ class CodeGeneration(ByteCompilerPass):
             if func.body is not None:
                 func = self.visitFunction(func)
             else:
-                return self.intrinsics.call(node.pos, self.builder, self.module, node.callee, args)
+                ctx = IntrinsicCallContext(node.pos, self.builder, self.module, node.callee, args)
+                return self.intrinsics.call(ctx)
         
         info(f'calling function {node.callee}')
         return self.builder.call(func, args, node.callee)
@@ -365,3 +392,22 @@ class CodeGeneration(ByteCompilerPass):
     def visitRef(self, node: ast.Ref):
         symbol = self.scope.symbol_table.get(node.name)
         return symbol.value
+    
+    def visitStructLiteral(self, node: ast.StructLiteral):
+        struct_type = self.module.get_identified_types().get(node.name)
+        assert struct_type is not None
+        
+        args = [self.visit(arg) for arg in node.args]
+        return self.builder.struct(struct_type, args, node.name)
+    
+    def visitStructPropertyGetter(self, node: ast.StructPropertyGetter):
+        struct = self.visit(node.struct)
+        assert isinstance(struct, ir.LoadInstr)
+        
+        cls_type = struct.type
+        assert isinstance(cls_type, ir.IdentifiedStructType)
+        
+        cls_name = cls_type.name
+        field_order = self.class_field_names[cls_name]
+        idx = field_order.index(node.property_name)
+        return self.builder.extract_value(struct, idx, node.property_name)

@@ -25,7 +25,7 @@ Process Process_new(int pid) {
 }
 
 Process Process_current(void) {
-    HANDLE hProcess = OpenProcess(PROCESS_ALL_ACCESS, FALSE, GetCurrentProcessId());
+    HANDLE hProcess = GetCurrentProcess();
     if (!hProcess)
         error("failed to open process");
     

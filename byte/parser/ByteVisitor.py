@@ -104,13 +104,23 @@ class ByteVisitor(ParseTreeVisitor):
         return self.visitChildren(ctx)
 
 
+    # Visit a parse tree produced by ByteParser#propertyDecl.
+    def visitPropertyDecl(self, ctx:ByteParser.PropertyDeclContext):
+        return self.visitChildren(ctx)
+
+
+    # Visit a parse tree produced by ByteParser#methodDecl.
+    def visitMethodDecl(self, ctx:ByteParser.MethodDeclContext):
+        return self.visitChildren(ctx)
+
+
     # Visit a parse tree produced by ByteParser#classAssign.
     def visitClassAssign(self, ctx:ByteParser.ClassAssignContext):
         return self.visitChildren(ctx)
 
 
-    # Visit a parse tree produced by ByteParser#classBody.
-    def visitClassBody(self, ctx:ByteParser.ClassBodyContext):
+    # Visit a parse tree produced by ByteParser#classDecl.
+    def visitClassDecl(self, ctx:ByteParser.ClassDeclContext):
         return self.visitChildren(ctx)
 
 

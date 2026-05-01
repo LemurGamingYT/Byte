@@ -33,8 +33,11 @@ class Position:
     column: int = 0
 
     def comptime_error(self, file: 'File', message: str):
-        print(file.src.splitlines()[self.line - 1])
-        print(' ' * self.column + '^')
+        lines = file.src.splitlines()
+        if len(lines) >= self.line:
+            print(file.src.splitlines()[self.line - 1])
+            print(' ' * self.column + '^')
+        
         print(f'{Style.BRIGHT}{Fore.RED}error: {message}{Style.RESET_ALL}')
         error(message)
         sys_exit(1)
@@ -326,9 +329,16 @@ class Return(Node):
         return f'return {self.value}'
 
 @dataclass
-class Class(Node):
+class Property(Node):
     name: str
-    members: dict[str, Union['Function', 'Variable']] = field(default_factory=dict)
+    
+    def __str__(self) -> str:
+        return f'{self.type} {self.name}'
+
+@dataclass
+class Class(TypelessNode):
+    name: str
+    members: list[Union['Function', 'Property']] = field(default_factory=list)
     
     def __str__(self) -> str:
         members_str = '\n'.join(map(str, self.members))
@@ -597,3 +607,26 @@ class Ref(Node):
     
     def __str__(self) -> str:
         return f'&{self.name}'
+
+
+@dataclass
+class StructLiteral(Node):
+    name: str
+    args: list[Node] = field(default_factory=list)
+    
+    def __str__(self) -> str:
+        args_str = ', '.join(map(str, self.args))
+        return f'struct<{self.name}>({args_str})'
+
+@dataclass
+class StructPropertyGetter(Node):
+    struct: Node
+    property_name: str
+    
+    def __str__(self) -> str:
+        return f'{self.struct}.{self.property_name}'
+
+@dataclass
+class Null(Node):
+    def __str__(self) -> str:
+        return 'null'

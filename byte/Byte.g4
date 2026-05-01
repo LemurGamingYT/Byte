@@ -8,7 +8,7 @@ type
     ;
 
 stmt
-    : varAssign | funcAssign
+    : varAssign | funcAssign | classAssign
     | whileStmt | ifStmt | useStmt | forRangeStmt// | deferStmt
     | expr
     ;
@@ -48,13 +48,17 @@ varAssign
     : ID op=(ADD | SUB | MUL | DIV | MOD)? ASSIGN expr
     | MUTABLE? ID ASSIGN expr
     ;
+
+propertyDecl: type ID;
+methodDecl: funcAssign;
+
 classAssign
-    : CLASS ID LBRACE classBody* RBRACE
+    : CLASS ID LBRACE classDecl* RBRACE
     ;
 
-classBody
-    : varAssign
-    | funcAssign
+classDecl
+    : propertyDecl
+    | methodDecl
     ;
 
 arg: expr;
