@@ -126,18 +126,17 @@ class TypeChecker(ByteCompilerPass):
     
     def visitProperty(self, node: ast.Property):
         return ast.Property(node.pos, cast(ast.Type, self.visit(node.type)), node.name)
-    
-    def visitClass(self, node: ast.Class):
-        self.file.type_map.add(node.name)
+
+    def init_class(self, node: ast.Class):
         cls_type = self.file.type_map.get(node.name)
-        
+
         fields = [member for member in node.members if isinstance(member, ast.Property)]
-        params = [ast.Param(node.pos, member.type, member.name) for member in fields]
+        constructor_params = [ast.Param(node.pos, member.type, member.name) for member in fields]
         new_constructor = self.visit(ast.Function(
-            node.pos, cls_type, 'new', params, ast.Body(node.pos, cls_type, [
+            node.pos, cls_type, 'new', constructor_params, ast.Body(node.pos, cls_type, [
                 ast.Return(node.pos, cls_type, ast.StructLiteral(node.pos, cls_type, node.name, [
                     ast.Id(node.pos, param.type, param.name)
-                    for param in params
+                    for param in constructor_params
                 ]))
             ]), flags=ast.FunctionFlags(static=True, method=True), extend_type=cls_type
         ))
@@ -154,8 +153,43 @@ class TypeChecker(ByteCompilerPass):
             ))
             
             field_properties.append(cast(ast.Property, field_property))
+
+        string_type = self.file.type_map.get('string')
+        def new_string(text: str):
+            return ast.Attribute(node.pos, string_type, ast.Id(node.pos, string_type, 'string'), 'new', [
+                ast.String(node.pos, self.file.type_map.get('pointer'), text).to_arg(),
+                ast.Int(node.pos, self.file.type_map.get('int'), len(text)).to_arg()
+            ])
+
+        operation = new_string(f'{node.name}(')
+        cls_self = ast.Id(node.pos, cls_type, 'self')
+        for i, field in enumerate(fields):
+            field_str = ''
+            if i != 0:
+                field_str += ', '
+
+            field_str += f'{field.name}='
+            field_str_node = new_string(field_str)
+            operation = ast.Operation(node.pos, string_type, '+', operation, field_str_node)
+
+            field_get = ast.Attribute(node.pos, field.type, cls_self, field.name)
+            field_to_string = ast.Attribute(node.pos, string_type, field_get, 'to_string', [])
+            operation = ast.Operation(node.pos, string_type, '+', operation, field_to_string)
+
+        closing_bracket = new_string(')')
+        operation = ast.Operation(node.pos, string_type, '+', operation, closing_bracket)
+        to_string = self.visit(ast.Function(
+            node.pos, string_type, 'to_string', [ast.Param(node.pos, cls_type, 'self')], ast.Body(node.pos, string_type, [
+                ast.Return(node.pos, string_type, operation)
+            ]), flags=ast.FunctionFlags(method=True), extend_type=cls_type
+        ))
+
+        return [new_constructor, to_string] + field_properties
+    
+    def visitClass(self, node: ast.Class):
+        self.file.type_map.add(node.name)
         
-        members = [new_constructor] + field_properties
+        members = self.init_class(node)
         for member in node.members:
             if isinstance(member, ast.Function):
                 member.extend_type = self.file.type_map.get(node.name)

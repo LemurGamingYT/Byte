@@ -9,7 +9,7 @@ from byte import ast
 
 DONT_EXTRACT = (
     ast.Type, ast.Variable, ast.Assignment, ast.If, ast.Elseif, ast.While, ast.Break, ast.Continue, ast.Id, ast.Param,
-    ast.Return, ast.Function, ast.Arg
+    ast.Return, ast.Function, ast.Arg, ast.Body
 )
 
 @dataclass
