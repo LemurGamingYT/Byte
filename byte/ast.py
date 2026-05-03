@@ -627,6 +627,15 @@ class StructPropertyGetter(Node):
         return f'{self.struct}.{self.property_name}'
 
 @dataclass
+class StructPropertySetter(Node):
+    struct: Node
+    property_name: str
+    value: Node
+
+    def __str__(self) -> str:
+        return f'{self.struct}.{self.property_name} = {self.value}'
+
+@dataclass
 class Null(Node):
     def __str__(self) -> str:
         return 'null'

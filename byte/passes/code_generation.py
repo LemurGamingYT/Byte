@@ -411,3 +411,16 @@ class CodeGeneration(ByteCompilerPass):
         field_order = self.class_field_names[cls_name]
         idx = field_order.index(node.property_name)
         return self.builder.extract_value(struct, idx, node.property_name)
+
+    def visitStructPropertySetter(self, node: ast.StructPropertySetter):
+        struct = self.visit(node.struct)
+        assert isinstance(struct, ir.LoadInstr)
+        
+        cls_type = struct.type
+        assert isinstance(cls_type, ir.IdentifiedStructType)
+        
+        cls_name = cls_type.name
+        field_order = self.class_field_names[cls_name]
+        idx = field_order.index(node.property_name)
+        value = self.visit(node.value)
+        self.builder.insert_value(struct, value, idx, f'set.{node.property_name}')

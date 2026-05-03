@@ -1,8 +1,8 @@
 from logging import info
 from typing import cast
 
-from byte.intrinsics import Intrinsics, IntrinsicCallContext
 from byte.passes import ByteCompilerPass
+from byte.intrinsics import Intrinsics
 from byte import ast
 
 
@@ -144,15 +144,23 @@ class TypeChecker(ByteCompilerPass):
         field_properties = []
         for field in fields:
             self_param = ast.Param(node.pos, cls_type, 'self')
-            field_property = self.visit(ast.Function(
+            self_id = ast.Id(node.pos, cls_type, 'self')
+            field_get = self.visit(ast.Function(
                 node.pos, field.type, field.name, [self_param], ast.Body(node.pos, field.type, [
-                    ast.Return(node.pos, field.type, ast.StructPropertyGetter(
-                        node.pos, field.type, ast.Id(node.pos, cls_type, 'self'), field.name
-                    ))
+                    ast.Return(node.pos, field.type, ast.StructPropertyGetter(node.pos, field.type, self_id, field.name))
                 ]), flags=ast.FunctionFlags(property=True), extend_type=cls_type
             ))
-            
-            field_properties.append(cast(ast.Property, field_property))
+
+            self_ref_param = ast.Param(node.pos, cls_type.reference(), 'self')
+            set_params = [self_ref_param, ast.Param(node.pos, field.type, 'value')]
+            field_set = self.visit(ast.Function(
+                node.pos, self.file.type_map.get('nil'), f'set.{field.name}', set_params, ast.Body(node.pos, field.type, [
+                    ast.StructPropertySetter(node.pos, field.type, self_id, field.name, ast.Id(node.pos, field.type, 'value'))
+                ]), flags=ast.FunctionFlags(method=True), extend_type=cls_type
+            ))
+
+            field_properties.append(field_get)
+            field_properties.append(field_set)
 
         string_type = self.file.type_map.get('string')
         def new_string(text: str):
@@ -410,6 +418,13 @@ make {ref_symbol.name} mutable using the 'mut' keyword to remove this warning"""
     def visitCall(self, node: ast.Call):
         symbol = self.scope.symbol_table.tryget(node.callee)
         if symbol is None:
+            if self.file.type_map.has(node.callee):
+                node.pos.comptime_error(
+                    self.file,
+                    f'unknown callee \'{node.callee}\' ({node.callee} is a type, '\
+                    'did you mean to create it with \'new\'?)'
+                )
+            
             node.pos.comptime_error(self.file, f'unknown callee \'{node.callee}\'')
         
         args = [cast(ast.Arg, self.visit(arg)) for arg in node.args]

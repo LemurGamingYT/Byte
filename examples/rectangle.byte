@@ -1,0 +1,16 @@
+class Rectangle {
+    int width
+    int height
+
+    fn area(Rectangle& self) -> int {
+        return self.width + self.height
+    }
+}
+
+
+fn main() -> int {
+    rect = new Rectangle(4, 6)
+    print(rect)
+    print(rect.area())
+    return 0
+}

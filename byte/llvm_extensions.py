@@ -1,6 +1,4 @@
 from typing import Any, Callable, cast
-from subprocess import run
-from pathlib import Path
 from shutil import which
 
 from llvmlite import ir, binding
