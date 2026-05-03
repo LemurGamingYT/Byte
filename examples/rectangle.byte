@@ -3,7 +3,7 @@ class Rectangle {
     int height
 
     fn area(Rectangle& self) -> int {
-        return self.width + self.height
+        return self.width * self.height
     }
 }
 
