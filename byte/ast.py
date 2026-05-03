@@ -145,11 +145,16 @@ class Scope:
     def clone(self):
         return Scope(self, SymbolTable(self.symbol_table), self.in_loop, self.data.clone())
 
-@dataclass
+@dataclass(slots=True)
 class CompileOptions:
     debug: bool = False
     optimise: bool = False
-    clean: bool = False
+    emit_llvm: bool = False
+    emit_asm: bool = False
+
+    @staticmethod
+    def from_arg_parser(parser):
+        return CompileOptions(parser.flag('debug'), parser.flag('opt'), parser.flag('emit-llvm'), parser.flag('emit-asm'))
 
 @dataclass
 class File:

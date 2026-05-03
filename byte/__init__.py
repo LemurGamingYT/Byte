@@ -11,6 +11,7 @@ from byte.passes.code_generation import CodeGeneration, CompileResult
 from byte.passes.forward_decl import ForwardDeclaration
 # from byte.passes.return_checker import ReturnChecker
 from byte.passes.memory_manager import MemoryManager
+from byte.passes.name_resolver import NameResolver
 from byte.passes.code_analysis import CodeAnalysis
 from byte.passes.preprocessor import Preprocessor
 from byte.passes.type_checker import TypeChecker
@@ -24,11 +25,21 @@ BYTE_DIR = Path(__file__).parent
 TESTS_DIR = BYTE_DIR / 'tests'
 CRUNTIME_DIR = BYTE_DIR / 'cruntime'
 VERSION = '0.0.1'
-PASS_CLASSES = [Preprocessor, CodeAnalysis, ForwardDeclaration, TypeChecker, MemoryManager]
+PASS_CLASSES = [Preprocessor, CodeAnalysis, ForwardDeclaration, NameResolver, TypeChecker, MemoryManager]
 
 def parse(file: ast.File):
     builder = ByteASTBuilder(file)
     return builder.build()
+
+def run_passes(file: ast.File, stop_idx: int = -1):
+    program = parse(file)
+    for i, cls in enumerate(PASS_CLASSES):
+        if i == stop_idx:
+            break
+
+        program = cls.run(file, program)
+
+    return program
 
 def compile_file(file: ast.File):
     ast_file = file.path.with_suffix('.byteast')
@@ -53,19 +64,28 @@ def compile_file(file: ast.File):
 
 def compile_to_obj(file: ast.File):
     res = compile_file(file)
-    
+
     ll_file = file.path.with_suffix('.ll')
     ll_file.write_text(str(res.module))
-    
+
     flags = ['-Wno-override-module', '-Wall', '-Werror', '-Wpedantic', '-Wextra']
-    flags_str = ' '.join(flags)
+    if file.options.optimise:
+        flags.append('-O3')
     
+    flags_str = ' '.join(flags)
+
     obj_file = file.path.with_suffix('.o')
     compile_cmd = f'clang -c -o {obj_file} {ll_file} {flags_str}'
     info(f'running clang compile command \'{compile_cmd}\'')
     run(compile_cmd, shell=True)
-    
-    if file.options.clean:
+
+    if file.options.emit_asm:
+        asm_file = file.path.with_suffix('.asm')
+        asm_compile_cmd = f'clang -S -o {asm_file} {ll_file} {flags_str}'
+        info(f'running clang compile (to assembly) command \'{asm_compile_cmd}\'')
+        run(asm_compile_cmd, shell=True)
+
+    if not file.options.emit_llvm:
         ll_file.unlink()
     
     return obj_file
@@ -81,13 +101,17 @@ def compile_to_exe(file: ast.File):
     
     exe_file = file.path.with_suffix('.exe')
     obj_files_str = ' '.join(map(str, obj_files))
-    link_cmd = f'{find_linker()} {obj_files_str} -o {exe_file}'
+    flags = []
+    if file.options.optimise:
+        flags.append('-O3')
+
+    flags_str = ' '.join(flags)
+    link_cmd = f'{find_linker()} {obj_files_str} -o {exe_file} {flags_str}'
     info(f'running clang link command \'{link_cmd}\'')
     run(link_cmd, shell=True)
     
-    if file.options.clean:
-        for obj in obj_files:
-            obj.unlink()
+    for obj in obj_files:
+        obj.unlink()
     
     return exe_file
 
@@ -234,6 +258,6 @@ class ArgParser:
             print(f'File \'{file_path}\' is not a file')
             sys_exit(1)
         
-        options = ast.CompileOptions(self.flag('debug'), self.flag('opt') or self.flag('optimise'), self.flag('clean'))
+        options = ast.CompileOptions.from_arg_parser(self)
         file = ast.File(path, options=options)
         compile_to_exe(file)

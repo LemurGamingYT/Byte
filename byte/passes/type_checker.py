@@ -17,8 +17,7 @@ class TypeChecker(ByteCompilerPass):
     
     def visitProgram(self, node: ast.Program):
         for stmt in node.nodes:
-            stmt = self.visit(stmt)
-            self.toplevel_nodes.append(stmt)
+            self.toplevel_nodes.append(self.visit(stmt))
         
         return ast.Program(node.pos, self.toplevel_nodes)
     
@@ -38,18 +37,6 @@ class TypeChecker(ByteCompilerPass):
     
     def visitBody(self, node: ast.Body):
         return ast.Body(node.pos, cast(ast.Type, self.visit(node.type)), [self.visit(stmt) for stmt in node.nodes])
-    
-    def visitBreak(self, node: ast.Break):
-        if not self.scope.in_loop:
-            node.pos.comptime_error(self.file, 'break statement used outside loop')
-        
-        return node
-    
-    def visitContinue(self, node: ast.Continue):
-        if not self.scope.in_loop:
-            node.pos.comptime_error(self.file, 'continue statement used outside loop')
-        
-        return node
     
     def visitReturn(self, node: ast.Return):
         if node.value is None:
@@ -263,8 +250,6 @@ class TypeChecker(ByteCompilerPass):
     
     def visitWhile(self, node: ast.While):
         with self.file.child_scope():
-            self.scope.in_loop = True
-            
             body = cast(ast.Body, self.visit(node.body))
         
         return ast.While(node.pos, self.visit(node.cond), body)
@@ -281,9 +266,6 @@ class TypeChecker(ByteCompilerPass):
         raise NotImplementedError(str(type))
     
     def visitForRange(self, node: ast.ForRange):
-        if self.scope.symbol_table.has(node.iter_name):
-            node.pos.comptime_error(self.file, f'name \'{node.iter_name}\' already in use')
-        
         start = self.visit(node.start)
         end = self.visit(node.end)
         step = self.visit(node.step) if node.step is not None else None
@@ -303,7 +285,6 @@ class TypeChecker(ByteCompilerPass):
             step = self.determine_step_value(node.pos, start.type)
         
         with self.file.child_scope():
-            self.scope.in_loop = True
             self.scope.symbol_table.add(ast.Symbol(node.iter_name, start.type, step))
             
             body = cast(ast.Body, self.visit(node.body))
@@ -320,11 +301,10 @@ class TypeChecker(ByteCompilerPass):
         if not stdlib_path.exists():
             node.pos.comptime_error(self.file, f'unknown library \'{lib_name}\'')
         
-        from byte import parse
+        from byte import run_passes, PASS_CLASSES
         
         file = ast.File(stdlib_path, options=self.file.options, target=self.file.target)
-        program = parse(file)
-        program = TypeChecker.run(file, program)
+        run_passes(file, PASS_CLASSES.index(TypeChecker) + 1)
         
         self.scope.symbol_table.merge(file.scope.symbol_table)
         self.file.type_map.merge(file.type_map)
@@ -335,9 +315,6 @@ class TypeChecker(ByteCompilerPass):
     def visitId(self, node: ast.Id):
         symbol = self.scope.symbol_table.tryget(node.name)
         typ = self.file.type_map.tryget(node.name)
-        if symbol is None and typ is None:
-            node.pos.comptime_error(self.file, f'unknown identifier \'{node.name}\'')
-        
         return ast.Id(node.pos, symbol.type if symbol is not None else cast(ast.Type, typ), node.name)
     
     def check_args(self, args: list[ast.Arg], func: ast.Function):
@@ -433,17 +410,7 @@ make {ref_symbol.name} mutable using the 'mut' keyword to remove this warning"""
         return generic_func
     
     def visitCall(self, node: ast.Call):
-        symbol = self.scope.symbol_table.tryget(node.callee)
-        if symbol is None:
-            if self.file.type_map.has(node.callee):
-                node.pos.comptime_error(
-                    self.file,
-                    f'unknown callee \'{node.callee}\' ({node.callee} is a type, '\
-                    'did you mean to create it with \'new\'?)'
-                )
-            
-            node.pos.comptime_error(self.file, f'unknown callee \'{node.callee}\'')
-        
+        symbol = self.scope.symbol_table.get(node.callee)
         args = [cast(ast.Arg, self.visit(arg)) for arg in node.args]
         func = cast(ast.Function, symbol.value)
         arg_types = [str(arg.type) for arg in args]
