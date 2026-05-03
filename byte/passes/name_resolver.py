@@ -54,6 +54,26 @@ class NameResolver(ByteCompilerPass):
 
         return node
 
+    def visitUse(self, node: ast.Use):
+        lib_name = node.path
+        if lib_name == 'intrinsics':
+            self.intrinsics.register()
+            return node
+
+        stdlib_path = ast.STDLIB_PATH / f'{lib_name}.byte'
+        if not stdlib_path.exists():
+            node.pos.comptime_error(self.file, f'unknown library \'{lib_name}\'')
+
+        from byte import run_passes, PASS_CLASSES
+        
+        file = ast.File(stdlib_path, options=self.file.options, target=self.file.target)
+        run_passes(file, PASS_CLASSES.index(NameResolver) + 1)
+        
+        self.scope.symbol_table.merge(file.scope.symbol_table)
+        self.file.type_map.merge(file.type_map)
+        
+        return node
+
     def visitId(self, node: ast.Id):
         symbol = self.scope.symbol_table.tryget(node.name)
         typ = self.file.type_map.tryget(node.name)
