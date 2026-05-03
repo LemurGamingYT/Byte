@@ -309,7 +309,8 @@ class Param(Node):
         return Symbol(self.name, self.type, self, self.is_mutable)
     
     def __str__(self) -> str:
-        return f'{self.type} {self.name}'
+        mut = 'mut ' if self.is_mutable else ''
+        return f'{mut}{self.type} {self.name}'
 
 @dataclass
 class Body(Node):
@@ -418,10 +419,12 @@ class Assignment(Node):
     name: str
     value: Node
     op: str | None = None
+    attr: str | None = None
     
     def __str__(self) -> str:
         op = self.op or ''
-        return f'{self.name} {op}= {self.value}'
+        attr = f'.{self.attr}' or ''
+        return f'{self.name}{attr} {op}= {self.value}'
 
 @dataclass
 class Elseif(TypelessNode):

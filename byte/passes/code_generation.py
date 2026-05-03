@@ -381,7 +381,10 @@ class CodeGeneration(ByteCompilerPass):
                 return self.intrinsics.call(ctx)
         
         info(f'calling function {node.callee}')
-        return self.builder.call(func, args, node.callee)
+        try:
+            return self.builder.call(func, args, node.callee)
+        except TypeError:
+            print(func, args)
     
     def visitTernary(self, node: ast.Ternary):
         return self.builder.select(self.visit(node.cond), self.visit(node.true), self.visit(node.false), 'ternary')
@@ -423,4 +426,6 @@ class CodeGeneration(ByteCompilerPass):
         field_order = self.class_field_names[cls_name]
         idx = field_order.index(node.property_name)
         value = self.visit(node.value)
-        self.builder.insert_value(struct, value, idx, f'set.{node.property_name}')
+        struct_ptr = struct.operands[0]
+        field_ptr = self.builder.gep(struct_ptr, [llint(0), llint(idx)], True, f'load_{node.property_name}')
+        self.builder.store(value, field_ptr)

@@ -105,9 +105,13 @@ class ByteASTBuilder(ByteVisitor):
     
     def visitVarAssign(self, ctx):
         value = self.visit(ctx.expr())
+        op = ctx.op.text if ctx.op is not None else None
+        if ctx.DOT():
+            return ast.Assignment(self.pos(ctx), value.type, ctx.ID(0).getText(), value, op, ctx.ID(1).getText())
+        
         return ast.Variable(
-            self.pos(ctx), value.type, ctx.ID().getText(), value,
-            ctx.MUTABLE() is not None, ctx.op.text if ctx.op is not None else None
+            self.pos(ctx), value.type, ctx.ID(0).getText(), value,
+            ctx.MUTABLE() is not None, op
         )
     
     def visitPropertyDecl(self, ctx):

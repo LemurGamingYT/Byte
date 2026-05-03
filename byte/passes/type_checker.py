@@ -215,8 +215,16 @@ class TypeChecker(ByteCompilerPass):
         return ast.Variable(node.pos, value.type, node.name, value, node.is_mutable)
     
     def visitAssignment(self, node: ast.Assignment):
-        symbol = self.scope.symbol_table.get(node.name)
+        symbol = self.scope.symbol_table.tryget(node.name)
+        if symbol is None:
+            node.pos.comptime_error(self.file, f'unknown symbol \'{node.name}\'')
+
         if not symbol.is_mutable:
+            if node.attr is not None:
+                node.pos.comptime_error(
+                    self.file, f'cannot change attribute \'{node.attr}\' because \'{node.name}\' is immutable'
+                )
+            
             node.pos.comptime_error(self.file, f'\'{node.name}\' is immutable')
         
         value = node.value
@@ -224,8 +232,14 @@ class TypeChecker(ByteCompilerPass):
             value = self.visit(ast.Operation(
                 node.value.pos, node.type, node.op, ast.Id(node.pos, node.type, node.name), node.value
             ))
+
+        if node.attr is not None:
+            var_id = ast.Id(node.pos, value.type, node.name)
+            return self.visit(ast.Attribute(
+                node.pos, self.file.type_map.get('nil'), var_id, f'set.{node.attr}', [value.to_arg()]
+            ))
         
-        return ast.Assignment(node.pos, node.type, node.name, value)
+        return ast.Assignment(node.pos, value.type, node.name, value)
     
     def visitElseif(self, node: ast.Elseif):
         with self.file.child_scope():
@@ -356,6 +370,9 @@ class TypeChecker(ByteCompilerPass):
                 arg.pos.comptime_warning(
                     self.file, f"""argument reference symbol is immutable but is being passed by mutable reference
 make {ref_symbol.name} mutable using the 'mut' keyword to remove this warning""")
+
+            if ref_symbol.type.is_reference():
+                continue
             
             args[i] = ast.Ref(arg.pos, arg.type.reference(), arg.value.name).to_arg()
     

@@ -45,7 +45,7 @@ funcAssign
     : STATIC? FUNC funcName genericParams? LPAREN params? RPAREN (RETURNS return_type=type)? body
     ;
 varAssign
-    : ID op=(ADD | SUB | MUL | DIV | MOD)? ASSIGN expr
+    : ID (DOT ID)? op=(ADD | SUB | MUL | DIV | MOD)? ASSIGN expr
     | MUTABLE? ID ASSIGN expr
     ;
 
