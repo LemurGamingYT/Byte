@@ -106,7 +106,6 @@ class Intrinsics:
             params = [ast.Param(ast.Position(), type, str(i)) for i, type in enumerate(param_types)]
             ret_type = ast.Type.from_llvm(self.file, definition.type.return_type)
             self.declare_empty_function(name, ret_type, params)
-            info(f'declared C registry function {name}')
     
     def declare_op_function(
         self, op: str, ret_type: ast.Type, a_type: ast.Type, b_type: ast.Type | None = None, public: bool = True

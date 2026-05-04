@@ -194,7 +194,6 @@ class File:
     def child_scope(self):
         outer_scope = self.scope
         self.scope = self.scope.clone()
-        info('entering child scope')
         yield
         self.scope = outer_scope
 

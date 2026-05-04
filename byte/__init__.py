@@ -51,7 +51,7 @@ def compile_file(file: ast.File):
         ast_file.unlink(True)
     
     for cls in PASS_CLASSES:
-        info(f'running pass {cls.__name__}')
+        info(f'running pass {cls.__name__} on file {file.path}')
         ast_file = ast_file.with_stem(f'{file.path.stem}_{cls.__name__.lower()}')
         
         program = cls.run(file, program)
