@@ -157,8 +157,6 @@ class Intrinsics:
         
         info(f'calling intrinsic function {name} with {len(args)} arguments')
         match name:
-            case 'string_struct':
-                return builder.struct(string_type, args, 'string_struct')
             case 'string.ptr':
                 return builder.extract_value(args[0], 0, 'string.ptr')
             case 'int.to_string':
@@ -224,40 +222,8 @@ class Intrinsics:
                 return builder.struct(string_type, [ptr, length, llint(0, 1)], 'bool.to_string')
             case 'string.length':
                 return builder.extract_value(args[0], 1, 'string.length')
-            case 'store':
-                builder.store(args[1], args[0])
-            case 'error':
-                acrt_iob_func = module.registry.get('acrt_iob_func')
-                fprintf = module.registry.get('fprintf')
-                exit = module.registry.get('exit')
-                
-                stderr = builder.call(acrt_iob_func, [llint(2)], 'stderr')
-                fmt = module.try_get_global('error_fmt', lambda: module.global_string('error: %.*s\n', 'error_fmt'))
-                ptr = builder.first_elem(fmt, 'error_fmt_ptr')
-                s_ptr = builder.extract_value(args[0], 0, 's_ptr')
-                s_length = builder.extract_value(args[0], 1, 's_length')
-                builder.call(fprintf, [stderr, ptr, s_length, s_ptr])
-                builder.call(exit, [llint(1)])
-                builder.unreachable()
-            case '+.pointer.int':
-                a, b = args
-                return builder.gep(a, [b], True, '+.pointer.int')
             case 'string.is_allocated':
                 return builder.extract_value(args[0], 2, 'string.is_allocated')
-            case 'null':
-                return NULL()
-            case '==.pointer.pointer':
-                a, b = args
-                return builder.icmp_signed('==', a, b, '==.pointer.pointer')
-            case '!=.pointer.pointer':
-                a, b = args
-                return builder.icmp_signed('!=', a, b, '!=.pointer.pointer')
-            case 'buffer':
-                if not isinstance(args[0], ir.Constant):
-                    pos.comptime_error(self.file, 'expected literal integer')
-                
-                buf = module.global_buffer(ir.IntType(8), args[0].constant, module.get_unique_name('buffer'))
-                return builder.first_elem(buf, f'{buf.name}.ptr')
             case 'int.min':
                 return llint(-2147483648)
             case 'int.max':
