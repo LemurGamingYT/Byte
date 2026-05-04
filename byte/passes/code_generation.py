@@ -255,6 +255,9 @@ class CodeGeneration(ByteCompilerPass):
         from byte import compile_to_obj
         
         file = ast.File(stdlib_path, options=self.file.options, target=self.file.target)
+        if file.path.stem == self.file.path.stem:
+            return node
+        
         obj_file = compile_to_obj(file)
         for symbol in file.scope.symbol_table.symbols.values():
             func = symbol.value
@@ -373,11 +376,14 @@ class CodeGeneration(ByteCompilerPass):
             if node.callee in self.module.registry.functions:
                 ir_func = self.module.registry.get(node.callee)
                 return self.builder.call(ir_func, args, node.callee)
-            
-            if func.body is not None:
+
+            if isinstance(func.body, ast.Body):
                 func = self.visitFunction(func)
             else:
                 ctx = IntrinsicCallContext(node.pos, self.builder, self.module, node.callee, args)
+                if callable(func.body):
+                    return func.body(ctx)
+                
                 return self.intrinsics.call(ctx)
         
         info(f'calling function {node.callee}')

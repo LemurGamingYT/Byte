@@ -1,3 +1,4 @@
+from importlib import import_module
 from logging import info
 from typing import cast
 
@@ -102,7 +103,7 @@ class TypeChecker(ByteCompilerPass):
             self.create_overload(base, func)
         
         self.scope.symbol_table.add(ast.Symbol(func.name, self.file.type_map.get('function'), func))
-        if func.body is not None:
+        if isinstance(func.body, ast.Body):
             with self.file.child_scope():
                 for param in params:
                     self.scope.symbol_table.add(param.to_symbol())
@@ -291,25 +292,50 @@ class TypeChecker(ByteCompilerPass):
         
         return ast.ForRange(node.pos, node.iter_name, start, end, body, step)
     
-    def visitUse(self, node: ast.Use):
-        lib_name = node.path
-        if lib_name == 'intrinsics':
-            self.intrinsics.register()
-            return node
-        
-        stdlib_path = ast.STDLIB_PATH / f'{lib_name}.byte'
+    def use_py(self, file: ast.File, path: str):
+        stdlib_path = ast.STDLIB_PATH / f'{path}.py'
         if not stdlib_path.exists():
-            node.pos.comptime_error(self.file, f'unknown library \'{lib_name}\'')
+            return False
+
+        module = import_module(f'byte.stdlib.{path}')
+        cls = getattr(module, path)
+        instance = cls(file)
+        instance.init()
+        for k, v in instance.intrinsics.items():
+            ast_func = v.ast_func
+            file.scope.symbol_table.add(ast.Symbol(k, self.file.type_map.get('function'), ast_func))
+            self.scope.symbol_table.add(ast.Symbol(k, self.file.type_map.get('function'), ast_func))
         
+        return True
+
+    def use_byte(self, file: ast.File, path: str):
         from byte import run_passes, PASS_CLASSES
-        
-        file = ast.File(stdlib_path, options=self.file.options, target=self.file.target)
+
+        if self.file.path.stem == file.path.stem:
+            return True
+
+        stdlib_path = ast.STDLIB_PATH / f'{path}.byte'
+        if not stdlib_path.exists():
+            return False
+
+        file.path = stdlib_path
         run_passes(file, PASS_CLASSES.index(TypeChecker) + 1)
         
         self.scope.symbol_table.merge(file.scope.symbol_table)
         self.file.type_map.merge(file.type_map)
+        return True
+
+    def visitUse(self, node: ast.Use):
+        if node.path == 'intrinsics':
+            self.intrinsics.register()
+            return node
+
+        file = ast.File(ast.STDLIB_PATH / node.path, options=self.file.options, target=self.file.target)
+        used_py = self.use_py(file, node.path)
+        used_byte = self.use_byte(file, node.path)
+        if not used_py and not used_byte:
+            node.pos.comptime_error(self.file, f'unknown library \'{node.path}\'')
         
-        info(f'used library {node.path} at {stdlib_path}')
         return node
     
     def visitId(self, node: ast.Id):

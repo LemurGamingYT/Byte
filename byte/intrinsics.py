@@ -1,6 +1,7 @@
 from dataclasses import dataclass, field
+from typing import Any, Callable, cast
+from abc import ABC, abstractmethod
 from logging import info
-from typing import Any
 from math import pi, e
 
 from llvmlite import ir
@@ -16,6 +17,37 @@ class IntrinsicCallContext:
     module: ModuleExt
     name: str
     args: list[Any] = field(default_factory=list)
+
+def intrinsic(
+    self, ret_type: ast.Type | None = None, params: list[ast.Param] | None = None, flags: ast.FunctionFlags | None = None
+):
+    if ret_type is None:
+        ret_type = self.file.type_map.get('nil')
+
+    if params is None:
+        params = []
+
+    if flags is None:
+        flags = ast.FunctionFlags()
+
+    def decorator(func: Callable[[IntrinsicCallContext], Any]):
+        name = func.__name__[1:]
+        ast_func = ast.Function(ast.Position(), cast(ast.Type, ret_type), name, params, func, flags)
+        setattr(func, 'ast_func', ast_func)
+
+        self.intrinsics[name] = func
+        return func
+
+    return decorator
+
+class IntrinsicLib(ABC):
+    def __init__(self, file: ast.File):
+        self.intrinsics = {}
+        self.file = file
+
+    @abstractmethod
+    def init(self):
+        ...
 
 class Intrinsics:
     def __init__(self, file: ast.File):
@@ -84,7 +116,7 @@ class Intrinsics:
         ])
         
         self.declare_empty_function('error', params=[ast.Param(ast.Position(), string_type, 'message')], public=True)
-        self.declare_empty_function('null', pointer_type)
+        # self.declare_empty_function('null', pointer_type)
         
         self.declare_attribute_function(int_type, 'min', int_type, is_static=True, is_method=False)
         self.declare_attribute_function(int_type, 'max', int_type, is_static=True, is_method=False)

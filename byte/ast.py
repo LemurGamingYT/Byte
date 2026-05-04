@@ -1,9 +1,9 @@
 from dataclasses import dataclass, field, fields
 from logging import info, error, warning
+from typing import Callable, Union, Any
 from contextlib import contextmanager
 from abc import ABC, abstractmethod
 from sys import exit as sys_exit
-from typing import Union, Any
 from platform import system
 from pathlib import Path
 from enum import Enum
@@ -169,10 +169,13 @@ class File:
     def unique_name(self):
         self._unique_name_idx += 1
         return f'_{self._unique_name_idx}'
+
+    @property
+    def src(self):
+        return self.path.read_text()
     
     def __post_init__(self):
         self._unique_name_idx = -1
-        self.src = self.path.read_text()
         
         self.type_map.add('int')
         self.type_map.add('float')
@@ -375,7 +378,7 @@ class FunctionFlags:
 class Function(Node):
     name: str
     params: list[Param] = field(default_factory=list)
-    body: Body | None = None
+    body: Body | Callable | None = None
     flags: FunctionFlags = field(default_factory=FunctionFlags)
     extend_type: Type | None = None
     generic_params: list[str] = field(default_factory=list)

@@ -5,9 +5,7 @@ from byte import ast
 class Preprocessor(ByteCompilerPass):
     def visitProgram(self, node: ast.Program):
         nodes = [self.visit(stmt) for stmt in node.nodes]
-        if self.file.path.stem != 'builtins':
-            nodes.insert(0, ast.Use(node.pos, 'builtins'))
-        
+        nodes.insert(0, ast.Use(node.pos, 'builtins'))
         return ast.Program(node.pos, nodes)
     
     def visitString(self, node: ast.String):
