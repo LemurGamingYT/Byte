@@ -35,7 +35,7 @@ fn string.get(string s, int index) -> string {
         error("string index out of bounds")
     }
     
-    ptr_index = gep(s.ptr, index)
+    ptr_index = s.ptr + index
     return new string(ptr_index, 1)
 }
 

@@ -1,5 +1,5 @@
+from typing import Any, Callable, cast, TypeAlias
 from dataclasses import dataclass, field
-from typing import Any, Callable, cast
 from abc import ABC, abstractmethod
 from logging import info
 from math import pi, e
@@ -10,6 +10,8 @@ from byte.llvm_extensions import llint, NULL, IRBuilderExt, ModuleExt, Registry
 from byte import ast
 
 
+IntrinsicPyFunc: TypeAlias = Callable[['IntrinsicCallContext'], Any]
+
 @dataclass
 class IntrinsicCallContext:
     pos: ast.Position
@@ -19,7 +21,8 @@ class IntrinsicCallContext:
     args: list[Any] = field(default_factory=list)
 
 def intrinsic(
-    self, ret_type: ast.Type | None = None, params: list[ast.Param] | None = None, flags: ast.FunctionFlags | None = None
+    self, ret_type: ast.Type | None = None, params: list[ast.Param] | None = None, flags: ast.FunctionFlags | None = None,
+    override_name: str | None = None
 ):
     if ret_type is None:
         ret_type = self.file.type_map.get('nil')
@@ -30,8 +33,8 @@ def intrinsic(
     if flags is None:
         flags = ast.FunctionFlags()
 
-    def decorator(func: Callable[[IntrinsicCallContext], Any]):
-        name = func.__name__[1:]
+    def decorator(func: IntrinsicPyFunc):
+        name = override_name or func.__name__[1:]
         ast_func = ast.Function(ast.Position(), cast(ast.Type, ret_type), name, params, func, flags)
         setattr(func, 'ast_func', ast_func)
 
@@ -39,6 +42,16 @@ def intrinsic(
         return func
 
     return decorator
+
+def intrinsic_op(self, op: str, ret_type: ast.Type, a_type: ast.Type, b_type: ast.Type | None = None):
+    if b_type is None:
+        name = f'{op}.{a_type}'
+        params = [ast.Param(ast.Position(), a_type, 'a')]
+    else:
+        name = f'{op}.{a_type}.{b_type}'
+        params = [ast.Param(ast.Position(), a_type, 'a'), ast.Param(ast.Position(), b_type, 'b')]
+
+    return intrinsic(self, ret_type, params, override_name=name)
 
 class IntrinsicLib(ABC):
     def __init__(self, file: ast.File):
@@ -60,63 +73,8 @@ class Intrinsics:
         bool_type = self.file.type_map.get('bool')
         string_type = self.file.type_map.get('string')
         pointer_type = self.file.type_map.get('pointer')
-        any_type = self.file.type_map.get('any')
         Math_type = self.file.type_map.get('Math')
         System_type = self.file.type_map.get('System')
-        
-        self.declare_op_function('+', int_type, int_type, int_type)
-        self.declare_op_function('-', int_type, int_type, int_type)
-        self.declare_op_function('*', int_type, int_type, int_type)
-        self.declare_op_function('/', int_type, int_type, int_type)
-        self.declare_op_function('%', int_type, int_type, int_type)
-        self.declare_op_function('==', bool_type, int_type, int_type)
-        self.declare_op_function('!=', bool_type, int_type, int_type)
-        self.declare_op_function('>', bool_type, int_type, int_type)
-        self.declare_op_function('<', bool_type, int_type, int_type)
-        self.declare_op_function('>=', bool_type, int_type, int_type)
-        self.declare_op_function('<=', bool_type, int_type, int_type)
-        
-        self.declare_op_function('+', float_type, float_type, float_type)
-        self.declare_op_function('-', float_type, float_type, float_type)
-        self.declare_op_function('*', float_type, float_type, float_type)
-        self.declare_op_function('/', float_type, float_type, float_type)
-        self.declare_op_function('%', float_type, float_type, float_type)
-        self.declare_op_function('==', bool_type, float_type, float_type)
-        self.declare_op_function('!=', bool_type, float_type, float_type)
-        self.declare_op_function('>', bool_type, float_type, float_type)
-        self.declare_op_function('<', bool_type, float_type, float_type)
-        self.declare_op_function('>=', bool_type, float_type, float_type)
-        self.declare_op_function('<=', bool_type, float_type, float_type)
-        
-        self.declare_op_function('==', bool_type, bool_type, bool_type)
-        self.declare_op_function('!=', bool_type, bool_type, bool_type)
-        self.declare_op_function('&&', bool_type, bool_type, bool_type)
-        self.declare_op_function('||', bool_type, bool_type, bool_type)
-        self.declare_op_function('!', bool_type, bool_type)
-        
-        self.declare_op_function('+', pointer_type, pointer_type, int_type)
-        self.declare_op_function('==', bool_type, pointer_type, pointer_type)
-        self.declare_op_function('!=', bool_type, pointer_type, pointer_type)
-        
-        self.declare_empty_function('print_string', params=[ast.Param(ast.Position(), string_type, 's')], public=True)
-        self.declare_empty_function('print_literal', params=[ast.Param(ast.Position(), string_type, 's')], public=True)
-        self.declare_empty_function('string_struct', string_type, [
-            ast.Param(ast.Position(), pointer_type, 'ptr'), ast.Param(ast.Position(), int_type, 'length'),
-            ast.Param(ast.Position(), bool_type, 'is_allocated')
-        ])
-        
-        self.declare_empty_function('buffer', pointer_type, [ast.Param(ast.Position(), int_type, 'size')])
-        self.declare_empty_function('gep', pointer_type, [
-            ast.Param(ast.Position(), pointer_type, 'ptr'),
-            ast.Param(ast.Position(), int_type, 'offset')
-        ])
-        
-        self.declare_empty_function('store', params=[
-            ast.Param(ast.Position(), pointer_type, 'ptr'), ast.Param(ast.Position(), any_type, 'value')
-        ])
-        
-        self.declare_empty_function('error', params=[ast.Param(ast.Position(), string_type, 'message')], public=True)
-        # self.declare_empty_function('null', pointer_type)
         
         self.declare_attribute_function(int_type, 'min', int_type, is_static=True, is_method=False)
         self.declare_attribute_function(int_type, 'max', int_type, is_static=True, is_method=False)
@@ -199,76 +157,6 @@ class Intrinsics:
         
         info(f'calling intrinsic function {name} with {len(args)} arguments')
         match name:
-            case '+.int.int':
-                return builder.add(args[0], args[1], '+.int.int')
-            case '-.int.int':
-                return builder.sub(args[0], args[1], '-.int.int')
-            case '*.int.int':
-                return builder.mul(args[0], args[1], '*.int.int')
-            case '/.int.int':
-                return builder.sdiv(args[0], args[1], '/.int.int')
-            case '%.int.int':
-                return builder.srem(args[0], args[1], '%.int.int')
-            case '==.int.int':
-                return builder.icmp_signed('==', args[0], args[1], '==.int.int')
-            case '!=.int.int':
-                return builder.icmp_signed('!=', args[0], args[1], '!=.int.int')
-            case '>.int.int':
-                return builder.icmp_signed('>', args[0], args[1], '>.int.int')
-            case '<.int.int':
-                return builder.icmp_signed('<', args[0], args[1], '<.int.int')
-            case '>=.int.int':
-                return builder.icmp_signed('>=', args[0], args[1], '>=.int.int')
-            case '<=.int.int':
-                return builder.icmp_signed('<=', args[0], args[1], '<=.int.int')
-            case '+.float.float':
-                return builder.fadd(args[0], args[1], '+.float.float')
-            case '-.float.float':
-                return builder.fsub(args[0], args[1], '-.float.float')
-            case '*.float.float':
-                return builder.fmul(args[0], args[1], '*.float.float')
-            case '/.float.float':
-                return builder.fdiv(args[0], args[1], '/.float.float')
-            case '%.float.float':
-                return builder.frem(args[0], args[1], '%.float.float')
-            case '==.float.float':
-                return builder.fcmp_ordered('==', args[0], args[1], '==.float.float')
-            case '!=.float.float':
-                return builder.fcmp_ordered('!=', args[0], args[1], '!=.float.float')
-            case '>.float.float':
-                return builder.fcmp_ordered('>', args[0], args[1], '>.float.float')
-            case '<.float.float':
-                return builder.fcmp_ordered('<', args[0], args[1], '<.float.float')
-            case '>=.float.float':
-                return builder.fcmp_ordered('>=', args[0], args[1], '>=.float.float')
-            case '<=.float.float':
-                return builder.fcmp_ordered('<=', args[0], args[1], '<=.float.float')
-            case '==.bool.bool':
-                return builder.icmp_signed('==', args[0], args[1], '==.bool.bool')
-            case '!=.bool.bool':
-                return builder.icmp_signed('!=', args[0], args[1], '!=.bool.bool')
-            case '&&.bool.bool':
-                return builder.and_(args[0], args[1], '&&.bool.bool')
-            case '||.bool.bool':
-                return builder.or_(args[0], args[1], '||.bool.bool')
-            case '!.bool':
-                return builder.not_(args[0], '!.bool')
-            case 'print_string':
-                printf = module.registry.get('printf')
-                
-                fmt = module.try_get_global('string_fmt', lambda: module.global_string('%.*s\n', 'string_fmt'))
-                ptr = builder.first_elem(fmt, 'string_fmt_ptr')
-                s_ptr = builder.extract_value(args[0], 0, 's_ptr')
-                s_length = builder.extract_value(args[0], 1, 's_length')
-                builder.call(printf, [ptr, s_length, s_ptr])
-            case 'print_literal':
-                printf = module.registry.get('printf')
-                
-                fmt = module.try_get_global('string_lit_fmt', lambda: module.global_string('%.*s', 'string_lit_fmt'))
-                ptr = builder.first_elem(fmt, 'string_lit_fmt_ptr')
-                s_ptr = builder.extract_value(args[0], 0, 's_ptr')
-                s_length = builder.extract_value(args[0], 1, 's_length')
-                builder.call(printf, [ptr, s_length, s_ptr])
             case 'string_struct':
                 return builder.struct(string_type, args, 'string_struct')
             case 'string.ptr':
@@ -334,8 +222,6 @@ class Intrinsics:
                 ptr = builder.select(args[0], true_ptr, false_ptr, 'b_ptr')
                 length = builder.select(args[0], llint(4), llint(5), 'b_length')
                 return builder.struct(string_type, [ptr, length, llint(0, 1)], 'bool.to_string')
-            case 'gep':
-                return builder.gep(args[0], [args[1]], True, 'gep')
             case 'string.length':
                 return builder.extract_value(args[0], 1, 'string.length')
             case 'store':
