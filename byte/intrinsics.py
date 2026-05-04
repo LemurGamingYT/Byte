@@ -2,9 +2,6 @@ from typing import Any, Callable, cast, TypeAlias
 from dataclasses import dataclass, field
 from abc import ABC, abstractmethod
 from logging import info
-from math import pi, e
-
-from llvmlite import ir
 
 from byte.llvm_extensions import llint, NULL, IRBuilderExt, ModuleExt, Registry
 from byte import ast
