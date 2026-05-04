@@ -65,13 +65,24 @@ float string_to_float(string s) {
     return strtof(s.ptr, NULL);
 }
 
+string int_to_string(int i) {
+    static char buf[16];
+    int written = snprintf(buf, sizeof(buf), "%d", i);
+    return (string){(char*)buf, written, false};
+}
+
 void print(string s) {
     printf("%.*s\n", s.length, s.ptr);
 }
 
 int main(void) {
-    string s = string_new("Hello World", 11);
+    string s = int_to_string(-2147483648);
     print(s);
+
+    string len = int_to_string(s.length);
+    print(len);
+
     string_destroy(&s);
+    string_destroy(&len);
     return 0;
 }

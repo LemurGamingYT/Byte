@@ -68,37 +68,12 @@ class Intrinsics:
         self.file = file
     
     def register(self):
-        int_type = self.file.type_map.get('int')
-        float_type = self.file.type_map.get('float')
-        bool_type = self.file.type_map.get('bool')
         string_type = self.file.type_map.get('string')
-        pointer_type = self.file.type_map.get('pointer')
-        Math_type = self.file.type_map.get('Math')
         System_type = self.file.type_map.get('System')
         
-        self.declare_attribute_function(int_type, 'min', int_type, is_static=True, is_method=False)
-        self.declare_attribute_function(int_type, 'max', int_type, is_static=True, is_method=False)
-        self.declare_attribute_function(int_type, 'to_string', string_type)
-        
-        # self.declare_attribute_function(float_type, 'min', float_type, is_static=True, is_method=False)
-        # self.declare_attribute_function(float_type, 'max', float_type, is_static=True, is_method=False)
-        self.declare_attribute_function(float_type, 'to_string', string_type)
-        
         self.declare_attribute_function(string_type, 'to_string', string_type)
-        self.declare_attribute_function(bool_type, 'to_string', string_type)
-        
-        self.declare_attribute_function(string_type, 'ptr', pointer_type, is_method=False)
-        self.declare_attribute_function(string_type, 'length', int_type, is_method=False)
-        self.declare_attribute_function(string_type, 'is_allocated', bool_type, is_method=False)
-        
-        self.declare_attribute_function(Math_type, 'pi', float_type, is_static=True, is_method=False)
-        self.declare_attribute_function(Math_type, 'e', float_type, is_static=True, is_method=False)
         
         self.declare_attribute_function(System_type, 'os', string_type, is_static=True, is_method=False)
-        self.declare_attribute_function(System_type, 'pid', int_type, is_static=True, is_method=False)
-        self.declare_attribute_function(System_type, 'sleep', params=[
-            ast.Param(ast.Position(), int_type, 'milliseconds')
-        ], is_static=True)
         
         for definition in Registry.get_all_definitions():
             name = definition.display_name or definition.llvm_name
@@ -156,40 +131,6 @@ class Intrinsics:
         
         info(f'calling intrinsic function {name} with {len(args)} arguments')
         match name:
-            case 'string.ptr':
-                return builder.extract_value(args[0], 0, 'string.ptr')
-            case 'int.to_string':
-                snprintf = module.registry.get('snprintf')
-                
-                int_fmt = module.try_get_global('int_fmt', lambda: module.global_string('%d', 'int_fmt'))
-                int_fmt_ptr = builder.first_elem(int_fmt, 'int_fmt_ptr')
-                
-                BUF_SIZE = 16
-                int_buf = builder.first_elem(
-                    module.global_buffer(ir.IntType(8), BUF_SIZE, module.get_unique_name('int_buf')),
-                    'int_buf'
-                )
-                
-                written = builder.call(snprintf, [int_buf, llint(BUF_SIZE), int_fmt_ptr, args[0]], 'written')
-                # TODO: check if snprintf failed
-                
-                return builder.struct(string_type, [int_buf, written, llint(0, 1)], 'int.to_string')
-            case 'float.to_string':
-                snprintf = module.registry.get('snprintf')
-                
-                float_fmt = module.try_get_global('float_fmt', lambda: module.global_string('%f', 'float_fmt'))
-                float_fmt_ptr = builder.first_elem(float_fmt, 'float_fmt_ptr')
-                
-                f_double = builder.fpext(args[0], ir.DoubleType(), 'f_double')
-                
-                BUF_SIZE = 64
-                float_buf = builder.first_elem(
-                    module.global_buffer(ir.IntType(8), BUF_SIZE, module.get_unique_name('float_buf')),
-                    'float_buf'
-                )
-                
-                written = builder.call(snprintf, [float_buf, llint(BUF_SIZE), float_fmt_ptr, f_double], 'written')
-                return builder.struct(string_type, [float_buf, written, llint(0, 1)], 'float.to_string')
             case 'string.to_string':
                 malloc = module.registry.get('malloc')
                 memcpy = module.registry.get('memcpy')
@@ -209,53 +150,6 @@ class Intrinsics:
                 ctx = IntrinsicCallContext(pos, builder, module, 'string.ptr', [s])
                 ptr = self.call(ctx)
                 builder.call(memcpy, [ptr_copy, ptr, length, llint(0, 1)])
-                return builder.struct(string_type, [ptr_copy, length, llint(0, 1)], 'string.to_string')
-            case 'bool.to_string':
-                true_str = module.global_string('true', module.get_unique_name('true_str'))
-                false_str = module.global_string('false', module.get_unique_name('false_str'))
-                true_ptr = builder.first_elem(true_str, 'true_ptr')
-                false_ptr = builder.first_elem(false_str, 'false_ptr')
-                
-                ptr = builder.select(args[0], true_ptr, false_ptr, 'b_ptr')
-                length = builder.select(args[0], llint(4), llint(5), 'b_length')
-                return builder.struct(string_type, [ptr, length, llint(0, 1)], 'bool.to_string')
-            case 'string.length':
-                return builder.extract_value(args[0], 1, 'string.length')
-            case 'string.is_allocated':
-                return builder.extract_value(args[0], 2, 'string.is_allocated')
-            case 'int.min':
-                return llint(-2147483648)
-            case 'int.max':
-                return llint(2147483647)
-            case 'float.min':
-                return ir.Constant(ir.FloatType(), 1.175494e-38)
-            case 'float.max':
-                return ir.Constant(ir.FloatType(), 3.402823e+38)
-            case 'System.os':
-                text = self.file.target.name.title()
-                os_name = module.global_string(text, 'os_name')
-                os_name_ptr = builder.first_elem(os_name, 'os_name_ptr')
-                return builder.struct(string_type, [os_name_ptr, llint(len(text)), llint(0, 1)], 'System.os')
-            case 'System.sleep':
-                duration = args[0]
-                
-                if self.file.target == ast.Target.WINDOWS:
-                    Sleep = module.registry.get('Sleep')
-                    builder.call(Sleep, [duration])
-                else:
-                    usleep = module.registry.get('usleep')
-                    duration_microseconds = builder.mul(duration, llint(1000), 'duration_microseconds')
-                    builder.call(usleep, [duration_microseconds])
-            case 'System.pid':
-                if self.file.target == ast.Target.WINDOWS:
-                    GetCurrentProcessId = module.registry.get('GetCurrentProcessId')
-                    return builder.call(GetCurrentProcessId, [], 'System.pid')
-                else:
-                    getpid = module.registry.get('getpid')
-                    return builder.call(getpid, [], 'System.pid')
-            case 'Math.pi':
-                return ir.Constant(ir.FloatType(), pi)
-            case 'Math.e':
-                return ir.Constant(ir.FloatType(), e)
+                return builder.struct(string_type, [ptr_copy, length, llint(1, 1)], 'string.to_string')
             case _:
                 raise NotImplementedError(name)
