@@ -183,7 +183,8 @@ class TypeChecker(ByteCompilerPass):
         return [new_constructor, to_string] + field_properties
     
     def visitClass(self, node: ast.Class):
-        self.file.type_map.add(node.name)
+        field_types = [field.type for field in node.fields]
+        self.file.type_map.add(node.name, ast.ClassType(node.name, field_types))
         
         members = self.init_class(node)
         for member in node.members:
@@ -191,7 +192,7 @@ class TypeChecker(ByteCompilerPass):
                 member.extend_type = self.file.type_map.get(node.name)
             
             members.append(self.visit(member))
-        
+
         return ast.Class(node.pos, node.name, cast(list[ast.Function | ast.Property], members))
     
     def visitVariable(self, node: ast.Variable):

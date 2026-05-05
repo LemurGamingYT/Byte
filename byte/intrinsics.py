@@ -14,8 +14,13 @@ class IntrinsicCallContext:
     pos: ast.Position
     builder: IRBuilderExt
     module: ModuleExt
+    file: ast.File
     name: str
+    codegen: Any
     args: list[Any] = field(default_factory=list)
+
+    def call(self, name: str, args: list[Any] | None = None):
+        return self.codegen.call(self.pos, name, args or [])
 
 def intrinsic(
     self, ret_type: ast.Type | None = None, params: list[ast.Param] | None = None, flags: ast.FunctionFlags | None = None,
@@ -123,7 +128,6 @@ class Intrinsics:
         module = ctx.module
         builder = ctx.builder
         args = ctx.args
-        pos = ctx.pos
         string_type = module.context.get_identified_type('string')
         
         info(f'calling intrinsic function {name} with {len(args)} arguments')
@@ -133,19 +137,17 @@ class Intrinsics:
                 memcpy = module.registry.get('memcpy')
                 
                 s = args[0]
-                length = self.call(IntrinsicCallContext(pos, builder, module, 'string.length', [s]))
+                length = ctx.call('string.length', [s])
                 ptr_copy = builder.call(malloc, [length], 'ptr_copy')
-                is_null = self.call(IntrinsicCallContext(pos, builder, module, '==.pointer.pointer', [ptr_copy, NULL()]))
+                is_null = builder.icmp_signed('==', ptr_copy, NULL(), 'is_null')
                 with builder.if_then(is_null):
                     oom_text = 'out of memory'
                     oom_global = module.global_string(oom_text, 'oom_global')
                     oom_ptr = builder.first_elem(oom_global, 'oom_ptr')
                     oom_string = builder.struct(string_type, [oom_ptr, llint(len(oom_text))], 'oom_string')
-                    ctx = IntrinsicCallContext(pos, builder, module, 'error', [oom_string])
-                    self.call(ctx)
+                    ctx.call('error', [oom_string])
 
-                ctx = IntrinsicCallContext(pos, builder, module, 'string.ptr', [s])
-                ptr = self.call(ctx)
+                ptr = ctx.call('string.ptr', [s])
                 builder.call(memcpy, [ptr_copy, ptr, length, llint(0, 1)])
                 return builder.struct(string_type, [ptr_copy, length, llint(1, 1)], 'string.to_string')
             case _:

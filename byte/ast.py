@@ -109,8 +109,8 @@ class TypeMap:
     def tryget(self, name: str):
         return self.types.get(name)
                  
-    def add(self, typ: str):
-        self.types[typ] = Type(typ)
+    def add(self, name: str, typ: Union['Type', None] = None):
+        self.types[name] = typ or Type(name)
     
     def has(self, name: str):
         return name in self.types
@@ -287,6 +287,14 @@ class ReferenceType(Type):
         return f'{self.type}&'
 
 @dataclass
+class ClassType(Type):
+    fields: list[Type] = field(default_factory=list)
+    
+    @property
+    def name(self):
+        return self.type
+
+@dataclass
 class Program(TypelessNode):
     nodes: list[Node] = field(default_factory=list)
     
@@ -347,6 +355,10 @@ class Property(Node):
 class Class(TypelessNode):
     name: str
     members: list[Union['Function', 'Property']] = field(default_factory=list)
+
+    @property
+    def fields(self):
+        return [member for member in self.members if isinstance(member, Property)]
     
     def __str__(self) -> str:
         members_str = '\n'.join(map(str, self.members))

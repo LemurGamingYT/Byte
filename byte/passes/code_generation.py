@@ -55,13 +55,14 @@ class CodeGeneration(ByteCompilerPass):
             case 'any' | 'pointer' | 'function':
                 return ir.PointerType(ir.IntType(8))
             case _:
-                if node.type in self.class_types:
-                    return self.class_types[node.type]
-                
                 raise NotImplementedError(node.type)
     
     def visitReferenceType(self, node: ast.ReferenceType):
         return ir.PointerType(self.visit(node.type))
+
+    def visitClassType(self, node: ast.ClassType):
+        elements = [cast(ir.Type, self.visit(field_type)) for field_type in node.fields]
+        return self.module.declare_identified_type(node.name, *elements)
     
     def visitArg(self, node: ast.Arg):
         return self.visit(node.value)
@@ -87,7 +88,7 @@ class CodeGeneration(ByteCompilerPass):
         
         info(f'created IR function {node.name}')
         self.scope.symbol_table.add(ast.Symbol(func.name, self.file.type_map.get('function'), func))
-        if node.body is not None:
+        if isinstance(node.body, ast.Body):
             info(f'generating body for IR function {node.name}')
             with self.file.child_scope():
                 old_builder = self.builder
@@ -122,9 +123,8 @@ class CodeGeneration(ByteCompilerPass):
     
     def visitClass(self, node: ast.Class):
         info(f'generating IR for class {node.name}')
-        fields = [member for member in node.members if isinstance(member, ast.Property)]
-        field_types = [cast(ir.Type, self.visit(field.type)) for field in fields]
-        cls_type = self.module.declare_identified_type(node.name, *field_types)
+        fields = [member for member in node.fields]
+        cls_type = self.visit(self.file.type_map.get(node.name))
         self.class_types[node.name] = cls_type
         self.class_field_names[node.name] = [field.name for field in fields]
         
@@ -315,8 +315,7 @@ class CodeGeneration(ByteCompilerPass):
             err_msg_ptr = self.builder.first_elem(err_msg_global, 'err_msg_ptr')
             err_msg_string = self.builder.struct(self.string_type, [err_msg_ptr, llint(len(err_msg))], 'err_msg_string')
 
-            ctx = IntrinsicCallContext(node.pos, self.builder, self.module, 'error', [err_msg_string])
-            self.intrinsics.call(ctx)
+            self.call(node.pos, 'error', [err_msg_string])
         
         var_ptr = self.builder.allocate_value(start, name=f'{node.iter_name}.addr')
         self.builder.branch(cond_block)
@@ -367,27 +366,29 @@ class CodeGeneration(ByteCompilerPass):
             ptr = self.builder.load(ptr, f'{node.name}.ref')
         
         return self.builder.load(ptr, node.name)
-    
-    def visitCall(self, node: ast.Call):
-        symbol = self.scope.symbol_table.get(node.callee)
+
+    def call(self, pos: ast.Position, name: str, args: list[Any]):
+        symbol = self.scope.symbol_table.get(name)
         func = cast(ast.Function | ir.Function, symbol.value)
-        args = [self.visit(arg) for arg in node.args]
         if isinstance(func, ast.Function):
-            if node.callee in self.module.registry.functions:
-                ir_func = self.module.registry.get(node.callee)
-                return self.builder.call(ir_func, args, node.callee)
+            if name in self.module.registry.functions:
+                ir_func = self.module.registry.get(name)
+                return self.builder.call(ir_func, args, name)
 
             if isinstance(func.body, ast.Body):
                 func = self.visitFunction(func)
             else:
-                ctx = IntrinsicCallContext(node.pos, self.builder, self.module, node.callee, args)
+                ctx = IntrinsicCallContext(pos, self.builder, self.module, self.file, name, self, args)
                 if callable(func.body):
                     return func.body(ctx)
                 
                 return self.intrinsics.call(ctx)
         
-        info(f'calling function {node.callee}')
-        return self.builder.call(func, args, node.callee)
+        info(f'calling function {name}')
+        return self.builder.call(func, args, name)
+    
+    def visitCall(self, node: ast.Call):
+        return self.call(node.pos, node.callee, [self.visit(arg) for arg in node.args])
     
     def visitTernary(self, node: ast.Ternary):
         return self.builder.select(self.visit(node.cond), self.visit(node.true), self.visit(node.false), 'ternary')
