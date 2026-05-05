@@ -117,7 +117,6 @@ class TypeChecker(ByteCompilerPass):
 
     def init_field(self, cls_type: ast.ClassType, i: int, field: ast.Property):
         self_param = ast.Param(field.pos, cls_type, 'self')
-        self_id = ast.Id(field.pos, cls_type, 'self')
         @intrinsic(
             None, field.type, [self_param], flags=ast.FunctionFlags(property=True),
             override_name=f'{cls_type}.{field.name}'
