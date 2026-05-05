@@ -3,7 +3,7 @@ from math import pi, e
 from llvmlite import ir
 
 from byte.intrinsics import IntrinsicLib, IntrinsicCallContext, intrinsic, intrinsic_op
-from byte.llvm_extensions import NULL, llint, Registry
+from byte.llvm_extensions import NULL, llint, Registry, max_int, min_int
 from byte import ast
 
 
@@ -225,11 +225,11 @@ class builtins(IntrinsicLib):
 
         @intrinsic(self, int_type, flags=ast.FunctionFlags(static=True, property=True), override_name=f'{int_type}.max')
         def int_max(_: IntrinsicCallContext):
-            return llint(2147483647)
+            return llint(max_int())
 
         @intrinsic(self, int_type, flags=ast.FunctionFlags(static=True, property=True), override_name=f'{int_type}.min')
         def int_min(_: IntrinsicCallContext):
-            return llint(-2147483648)
+            return llint(min_int())
 
         @intrinsic(
             self, string_type, [ast.Param(ast.Position(), int_type, 'self')], flags=ast.FunctionFlags(method=True),

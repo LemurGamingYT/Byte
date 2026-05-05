@@ -1,3 +1,4 @@
+from byte.llvm_extensions import max_int, min_int
 from byte.passes import ByteCompilerPass
 from byte import ast
 
@@ -39,5 +40,14 @@ class CodeAnalysis(ByteCompilerPass):
     def visitContinue(self, node: ast.Continue):
         if not self.scope.in_loop:
             node.pos.comptime_error(self.file, 'continue statement used outside a loop')
+
+        return node
+
+    def visitInt(self, node: ast.Int):
+        if node.value < min_int():
+            node.pos.comptime_error(self.file, 'integer literal value is smaller than minimum 32-bit integer limit')
+
+        if node.value > max_int():
+            node.pos.comptime_error(self.file, 'integer literal value exceeds maximum 32-bit integer limit')
 
         return node

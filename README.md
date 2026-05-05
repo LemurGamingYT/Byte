@@ -14,4 +14,4 @@ A simple compiled programming language
 - simple memory management (very buggy too)
 - comments (defined using `//` and `/* */`)
 - operator overloading
-- `Math` static class
+- `Math` and `System` static classes

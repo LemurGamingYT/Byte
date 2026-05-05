@@ -4,8 +4,19 @@ from shutil import which
 from llvmlite import ir, binding
 
 
+def max_int(width: int = 32):
+    """Returns the maximum integer value of the given width"""
+    
+    return 2 ** (width - 1) - 1
+
+def min_int(width: int = 32):
+    """Returns the minimum integer value of the given width"""
+    
+    return -2 ** (width - 1)
+
 def llint(value: int, width: int = 32):
     """Returns an integer constant with the given width and value"""
+    
     return ir.Constant(ir.IntType(width), value)
 
 def NULL(type: ir.Type | None = None):
