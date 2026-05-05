@@ -3,7 +3,6 @@ from logging import info
 from typing import cast
 
 from byte.passes import ByteCompilerPass
-from byte.intrinsics import Intrinsics
 from byte import ast
 
 
@@ -11,8 +10,6 @@ class TypeChecker(ByteCompilerPass):
     def __init__(self, file: ast.File):
         super().__init__(file)
 
-        self.intrinsics = Intrinsics(file)
-        
         self.toplevel_nodes = []
         self.expanded_generics = {}
     
@@ -327,10 +324,6 @@ class TypeChecker(ByteCompilerPass):
         return True
 
     def visitUse(self, node: ast.Use):
-        if node.path == 'intrinsics':
-            self.intrinsics.register()
-            return node
-
         file = ast.File(ast.STDLIB_PATH / node.path, options=self.file.options, target=self.file.target)
         used_py = self.use_py(file, node.path)
         used_byte = self.use_byte(file, node.path)

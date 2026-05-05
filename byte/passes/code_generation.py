@@ -5,7 +5,7 @@ from logging import info
 from llvmlite import ir, binding
 
 from byte.llvm_extensions import ModuleExt, IRBuilderExt, llint
-from byte.intrinsics import Intrinsics, IntrinsicCallContext
+from byte.intrinsics import IntrinsicCallContext
 from byte.passes import ByteCompilerPass
 from byte import ast
 
@@ -22,8 +22,6 @@ class CodeGeneration(ByteCompilerPass):
         self.module.triple = binding.get_default_triple()
         
         self.builder = IRBuilderExt()
-        
-        self.intrinsics = Intrinsics(file)
         
         self.string_type = self.module.declare_identified_type(
             'string', ir.PointerType(ir.IntType(8)), ir.IntType(32), ir.IntType(1)
@@ -382,7 +380,7 @@ class CodeGeneration(ByteCompilerPass):
                 if callable(func.body):
                     return func.body(ctx)
                 
-                return self.intrinsics.call(ctx)
+                raise NotImplementedError
         
         info(f'calling function {name}')
         return self.builder.call(func, args, name)

@@ -46,7 +46,7 @@ class ReturnChecker(ByteCompilerPass):
         return ReturnStatus.NEVER
     
     def visitFunction(self, node: ast.Function):
-        if node.body is None:
+        if not isinstance(node.body, ast.Body):
             return node
         
         status = self.visit(node.body)

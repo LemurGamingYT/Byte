@@ -3,7 +3,7 @@ from math import pi, e
 from llvmlite import ir
 
 from byte.intrinsics import IntrinsicLib, IntrinsicCallContext, intrinsic, intrinsic_op
-from byte.llvm_extensions import NULL, llint
+from byte.llvm_extensions import NULL, llint, Registry
 from byte import ast
 
 
@@ -14,7 +14,6 @@ class builtins(IntrinsicLib):
         bool_type = self.file.type_map.get('bool')
         string_type = self.file.type_map.get('string')
         pointer_type = self.file.type_map.get('pointer')
-        any_type = self.file.type_map.get('any')
         Math_type = self.file.type_map.get('Math')
         System_type = self.file.type_map.get('System')
 
@@ -309,6 +308,27 @@ class builtins(IntrinsicLib):
             return ctx.builder.extract_value(ctx.args[0], 2, ctx.name)
 
         @intrinsic(
+            self, string_type, [ast.Param(ast.Position(), string_type, 'self')], flags=ast.FunctionFlags(method=True),
+            override_name=f'{string_type}.to_string'
+        )
+        def string_to_string(ctx: IntrinsicCallContext):
+            malloc = ctx.module.registry.get('malloc')
+            memcpy = ctx.module.registry.get('memcpy')
+
+            string_type = ctx.module.context.get_identified_type('string')
+            
+            s, *_ = ctx.args
+            length = ctx.call('string.length', [s])
+            ptr_copy = ctx.builder.call(malloc, [length], 'ptr_copy')
+            is_null = ctx.builder.icmp_signed('==', ptr_copy, NULL(), 'is_null')
+            with ctx.builder.if_then(is_null):
+                ctx.error_literal('out of memory')
+
+            ptr = ctx.call('string.ptr', [s])
+            ctx.builder.call(memcpy, [ptr_copy, ptr, length, llint(0, 1)])
+            return ctx.builder.struct(string_type, [ptr_copy, length, llint(1, 1)], 'string.to_string')
+
+        @intrinsic(
             self, string_type, [ast.Param(ast.Position(), bool_type, 'self')], flags=ast.FunctionFlags(method=True),
             override_name=f'{bool_type}.to_string'
         )
@@ -363,3 +383,14 @@ class builtins(IntrinsicLib):
             else:
                 getpid = ctx.module.registry.get('getpid')
                 return ctx.builder.call(getpid, [], 'System.pid')
+
+        for definition in Registry.get_all_definitions():
+            name = definition.display_name or definition.llvm_name
+            param_types = [ast.Type.from_llvm(self.file, ir_type) for ir_type in definition.type.args]
+            params = [ast.Param(ast.Position(), type, str(i)) for i, type in enumerate(param_types)]
+            ret_type = ast.Type.from_llvm(self.file, definition.type.return_type)
+
+            @intrinsic(self, ret_type, params, override_name=name)
+            def _(ctx: IntrinsicCallContext):
+                # never called
+                raise NotImplementedError('This should never run')

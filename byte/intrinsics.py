@@ -1,9 +1,8 @@
 from typing import Any, Callable, cast, TypeAlias
 from dataclasses import dataclass, field
 from abc import ABC, abstractmethod
-from logging import info
 
-from byte.llvm_extensions import llint, NULL, IRBuilderExt, ModuleExt, Registry
+from byte.llvm_extensions import llint, IRBuilderExt, ModuleExt
 from byte import ast
 
 
@@ -18,6 +17,13 @@ class IntrinsicCallContext:
     name: str
     codegen: Any
     args: list[Any] = field(default_factory=list)
+
+    def error_literal(self, msg: str):
+        string_type = self.module.context.get_identified_type('string')
+        global_var = self.module.global_string(msg, 'oom_global')
+        err_var_ptr = self.builder.first_elem(global_var, 'oom_ptr')
+        err_string = self.builder.struct(string_type, [err_var_ptr, llint(len(msg))], 'oom_string')
+        return self.call('error', [err_string])
 
     def call(self, name: str, args: list[Any] | None = None):
         return self.codegen.call(self.pos, name, args or [])
@@ -63,92 +69,3 @@ class IntrinsicLib(ABC):
     @abstractmethod
     def init(self):
         ...
-
-class Intrinsics:
-    def __init__(self, file: ast.File):
-        self.registered = {}
-        self.file = file
-    
-    def register(self):
-        string_type = self.file.type_map.get('string')
-        System_type = self.file.type_map.get('System')
-        
-        self.declare_attribute_function(string_type, 'to_string', string_type)
-        
-        self.declare_attribute_function(System_type, 'os', string_type, is_static=True, is_method=False)
-        
-        for definition in Registry.get_all_definitions():
-            name = definition.display_name or definition.llvm_name
-            param_types = [ast.Type.from_llvm(self.file, ir_type) for ir_type in definition.type.args]
-            params = [ast.Param(ast.Position(), type, str(i)) for i, type in enumerate(param_types)]
-            ret_type = ast.Type.from_llvm(self.file, definition.type.return_type)
-            self.declare_empty_function(name, ret_type, params)
-    
-    def declare_op_function(
-        self, op: str, ret_type: ast.Type, a_type: ast.Type, b_type: ast.Type | None = None, public: bool = True
-    ):
-        if b_type is None:
-            name = f'{op}.{a_type}'
-            params = [ast.Param(ast.Position(), a_type, 'a')]
-        else:
-            name = f'{op}.{a_type}.{b_type}'
-            params = [ast.Param(ast.Position(), a_type, 'a'), ast.Param(ast.Position(), b_type, 'b')]
-        
-        self.declare_empty_function(name, ret_type, params, public=public)
-    
-    def declare_attribute_function(self, object_type: ast.Type, attr_name: str,
-        ret_type: ast.Type | None = None, params: list[ast.Param] | None = None,
-        is_static: bool = False, is_method: bool = True, public: bool = True):
-        if params is None:
-            params = []
-        
-        if not is_static:
-            params.insert(0, ast.Param(ast.Position(), object_type, 'self'))
-        
-        flags = ast.FunctionFlags(static=is_static, property=not is_method, method=is_method)
-        self.declare_empty_function(f'{object_type}.{attr_name}', ret_type, params, flags, public)
-    
-    def declare_empty_function(self, name: str, ret_type: ast.Type | None = None, params: list[ast.Param] | None = None,
-        flags: ast.FunctionFlags | None = None, public: bool = False):
-        if flags is None:
-            flags = ast.FunctionFlags()
-        
-        if params is None:
-            params = []
-        
-        if ret_type is None:
-            ret_type = self.file.type_map.get('nil')
-        
-        func = ast.Function(ast.Position(), ret_type, name, params, flags=flags)
-        self.file.scope.symbol_table.add(ast.Symbol(func.name, self.file.type_map.get('function'), func, public=public))
-        self.registered[name] = func
-    
-    def call(self, ctx: IntrinsicCallContext):
-        name = ctx.name
-        module = ctx.module
-        builder = ctx.builder
-        args = ctx.args
-        string_type = module.context.get_identified_type('string')
-        
-        info(f'calling intrinsic function {name} with {len(args)} arguments')
-        match name:
-            case 'string.to_string':
-                malloc = module.registry.get('malloc')
-                memcpy = module.registry.get('memcpy')
-                
-                s = args[0]
-                length = ctx.call('string.length', [s])
-                ptr_copy = builder.call(malloc, [length], 'ptr_copy')
-                is_null = builder.icmp_signed('==', ptr_copy, NULL(), 'is_null')
-                with builder.if_then(is_null):
-                    oom_text = 'out of memory'
-                    oom_global = module.global_string(oom_text, 'oom_global')
-                    oom_ptr = builder.first_elem(oom_global, 'oom_ptr')
-                    oom_string = builder.struct(string_type, [oom_ptr, llint(len(oom_text))], 'oom_string')
-                    ctx.call('error', [oom_string])
-
-                ptr = ctx.call('string.ptr', [s])
-                builder.call(memcpy, [ptr_copy, ptr, length, llint(0, 1)])
-                return builder.struct(string_type, [ptr_copy, length, llint(1, 1)], 'string.to_string')
-            case _:
-                raise NotImplementedError(name)

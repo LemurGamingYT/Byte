@@ -1,6 +1,3 @@
-use "intrinsics"
-
-
 static fn string.new(pointer ptr, int length) -> string {
     ptr_copy = malloc(length)
     if ptr_copy == null() {

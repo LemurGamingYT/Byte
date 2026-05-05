@@ -1,18 +1,12 @@
 from importlib import import_module
 
 from byte.passes import ByteCompilerPass
-from byte.intrinsics import Intrinsics
 from byte import ast
 
 
 class NameResolver(ByteCompilerPass):
-    def __init__(self, file: ast.File):
-        super().__init__(file)
-
-        self.intrinsics = Intrinsics(file)
-
     def visitFunction(self, node: ast.Function):
-        if node.body is not None:
+        if isinstance(node.body, ast.Body):
             with self.file.child_scope():
                 for param in node.params:
                     self.scope.symbol_table.add(param.to_symbol())
@@ -90,10 +84,6 @@ class NameResolver(ByteCompilerPass):
         return True
 
     def visitUse(self, node: ast.Use):
-        if node.path == 'intrinsics':
-            self.intrinsics.register()
-            return node
-
         file = ast.File(ast.STDLIB_PATH / node.path, options=self.file.options, target=self.file.target)
         used_py = self.use_py(file, node.path)
         used_byte = self.use_byte(file, node.path)
