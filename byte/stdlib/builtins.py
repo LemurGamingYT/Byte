@@ -171,22 +171,20 @@ class builtins(IntrinsicLib):
         def _print_string(ctx: IntrinsicCallContext):
             printf = ctx.module.registry.get('printf')
 
-            s, *_ = ctx.args
             fmt = ctx.module.try_get_global('string_fmt', lambda: ctx.module.global_string('%.*s\n', 'string_fmt'))
             ptr = ctx.builder.first_elem(fmt, 'string_fmt_ptr')
-            s_ptr = ctx.builder.extract_value(s, 0, 's_ptr')
-            s_length = ctx.builder.extract_value(s, 1, 's_length')
+            s_ptr = ctx.call('string.ptr', ctx.args)
+            s_length = ctx.call('string.length', ctx.args)
             ctx.builder.call(printf, [ptr, s_length, s_ptr])
 
         @intrinsic(self, params=[ast.Param(ast.Position(), string_type, 's')])
         def _print_literal(ctx: IntrinsicCallContext):
             printf = ctx.module.registry.get('printf')
 
-            s, *_ = ctx.args
             fmt = ctx.module.try_get_global('string_lit_fmt', lambda: ctx.module.global_string('%.*s', 'string_lit_fmt'))
             ptr = ctx.builder.first_elem(fmt, 'string_lit_fmt_ptr')
-            s_ptr = ctx.builder.extract_value(s, 0, 's_ptr')
-            s_length = ctx.builder.extract_value(s, 1, 's_length')
+            s_ptr = ctx.call('string.ptr', ctx.args)
+            s_length = ctx.call('string.length', ctx.args)
             ctx.builder.call(printf, [ptr, s_length, s_ptr])
 
         @intrinsic(self, string_type, [
@@ -212,13 +210,12 @@ class builtins(IntrinsicLib):
             fprintf = ctx.module.registry.get('fprintf')
             exit = ctx.module.registry.get('exit')
             
-            msg, *_ = ctx.args
             stderr = ctx.builder.call(acrt_iob_func, [llint(2)], 'stderr')
             fmt = ctx.module.try_get_global('error_fmt', lambda: ctx.module.global_string('error: %.*s\n', 'error_fmt'))
             ptr = ctx.builder.first_elem(fmt, 'error_fmt_ptr')
-            s_ptr = ctx.builder.extract_value(msg, 0, 's_ptr')
-            s_length = ctx.builder.extract_value(msg, 1, 's_length')
-            ctx.builder.call(fprintf, [stderr, ptr, s_length, s_ptr])
+            msg_ptr = ctx.call('string.ptr', ctx.args)
+            msg_length = ctx.call('string.length', ctx.args)
+            ctx.builder.call(fprintf, [stderr, ptr, msg_length, msg_ptr])
             ctx.builder.call(exit, [llint(1)])
             ctx.builder.unreachable()
         
@@ -253,8 +250,7 @@ class builtins(IntrinsicLib):
             written = ctx.builder.call(snprintf, [int_buf, llint(BUF_SIZE), int_fmt_ptr, ctx.args[0]], 'written')
             # TODO: check if snprintf failed
 
-            string_type = ctx.module.context.get_identified_type('string')
-            return ctx.builder.struct(string_type, [int_buf, written, llint(0, 1)], ctx.name)
+            return ctx.call('string.new', [int_buf, written, llint(0, 1)])
 
         # @intrinsic(self, float_type, flags=ast.FunctionFlags(static=True, property=True), override_name=f'{float_type}.max')
         # def float_max(_: IntrinsicCallContext):
@@ -282,9 +278,8 @@ class builtins(IntrinsicLib):
                 'float_buf'
             )
 
-            string_type = ctx.module.context.get_identified_type('string')
             written = ctx.builder.call(snprintf, [float_buf, llint(BUF_SIZE), float_fmt_ptr, f_double], 'written')
-            return ctx.builder.struct(string_type, [float_buf, written, llint(0, 1)], ctx.name)
+            return ctx.call('string.new', [float_buf, written, llint(0, 1)])
 
         @intrinsic(
             self, pointer_type, [ast.Param(ast.Position(), string_type, 'self')], flags=ast.FunctionFlags(property=True),
@@ -312,21 +307,9 @@ class builtins(IntrinsicLib):
             override_name=f'{string_type}.to_string'
         )
         def string_to_string(ctx: IntrinsicCallContext):
-            malloc = ctx.module.registry.get('malloc')
-            memcpy = ctx.module.registry.get('memcpy')
-
-            string_type = ctx.module.context.get_identified_type('string')
-            
-            s, *_ = ctx.args
-            length = ctx.call('string.length', [s])
-            ptr_copy = ctx.builder.call(malloc, [length], 'ptr_copy')
-            is_null = ctx.builder.icmp_signed('==', ptr_copy, NULL(), 'is_null')
-            with ctx.builder.if_then(is_null):
-                ctx.error_literal('out of memory')
-
-            ptr = ctx.call('string.ptr', [s])
-            ctx.builder.call(memcpy, [ptr_copy, ptr, length, llint(0, 1)])
-            return ctx.builder.struct(string_type, [ptr_copy, length, llint(1, 1)], 'string.to_string')
+            ptr = ctx.call('string.ptr', ctx.args)
+            length = ctx.call('string.length', ctx.args)
+            return ctx.call('string.new.pointer.int', [ptr, length])
 
         @intrinsic(
             self, string_type, [ast.Param(ast.Position(), bool_type, 'self')], flags=ast.FunctionFlags(method=True),
@@ -338,10 +321,9 @@ class builtins(IntrinsicLib):
             true_ptr = ctx.builder.first_elem(true_str, 'true_ptr')
             false_ptr = ctx.builder.first_elem(false_str, 'false_ptr')
 
-            string_type = ctx.module.context.get_identified_type('string')
             ptr = ctx.builder.select(ctx.args[0], true_ptr, false_ptr, 'b_ptr')
             length = ctx.builder.select(ctx.args[0], llint(4), llint(5), 'b_length')
-            return ctx.builder.struct(string_type, [ptr, length, llint(0, 1)], ctx.name)
+            return ctx.call('string.new', [ptr, length, llint(0, 1)])
 
         @intrinsic(self, float_type, flags=ast.FunctionFlags(static=True, property=True), override_name=f'{Math_type}.pi')
         def Math_pi(_: IntrinsicCallContext):
@@ -356,10 +338,9 @@ class builtins(IntrinsicLib):
         )
         def System_os(ctx: IntrinsicCallContext):
             text = self.file.target.name.title()
-            string_type = ctx.module.context.get_identified_type('string')
             os_name = ctx.module.global_string(text, 'os_name')
             os_name_ptr = ctx.builder.first_elem(os_name, 'os_name_ptr')
-            return ctx.builder.struct(string_type, [os_name_ptr, llint(len(text)), llint(0, 1)], 'System.os')
+            return ctx.call('string.new', [os_name_ptr, llint(len(text)), llint(0, 1)])
 
         @intrinsic(
             self, params=[ast.Param(ast.Position(), int_type, 'duration')], flags=ast.FunctionFlags(static=True, method=True),
@@ -391,6 +372,6 @@ class builtins(IntrinsicLib):
             ret_type = ast.Type.from_llvm(self.file, definition.type.return_type)
 
             @intrinsic(self, ret_type, params, override_name=name)
-            def _(ctx: IntrinsicCallContext):
+            def _(_: IntrinsicCallContext):
                 # never called
                 raise NotImplementedError('This should never run')
