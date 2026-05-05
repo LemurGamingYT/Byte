@@ -10,6 +10,6 @@ fn int.magnitude(mut int x) -> int {
 
 fn main() -> int {
     x = 3 * 1000000
-    print(x.magnitude().to_string())
+    assert(x.magnitude() == 2)
     return 0
 }

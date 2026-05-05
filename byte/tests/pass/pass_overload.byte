@@ -9,10 +9,10 @@ fn add(float a, float b) -> float {
 fn main() -> int {
     a = 3
     b = 4
-    print(add(a, b).to_string())
+    add(a, b)
     
     a2 = 7.3
     b2 = 9.03
-    print(add(a, b).to_string())
+    add(a, b)
     return 0
 }

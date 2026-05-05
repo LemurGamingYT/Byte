@@ -162,7 +162,8 @@ class TypeChecker(ByteCompilerPass):
         def new_string(text: str):
             return ast.Attribute(node.pos, string_type, ast.Id(node.pos, string_type, 'string'), 'new', [
                 ast.String(node.pos, self.file.type_map.get('pointer'), text).to_arg(),
-                ast.Int(node.pos, self.file.type_map.get('int'), len(text)).to_arg()
+                ast.Int(node.pos, self.file.type_map.get('int'), len(text)).to_arg(),
+                ast.Bool(node.pos, self.file.type_map.get('bool'), False).to_arg()
             ])
 
         operation = new_string(f'{node.name}(')

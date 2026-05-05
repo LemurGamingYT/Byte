@@ -259,7 +259,7 @@ class CodeGeneration(ByteCompilerPass):
         obj_file = compile_to_obj(file)
         for symbol in file.scope.symbol_table.symbols.values():
             func = symbol.value
-            if not isinstance(func, ir.Function):
+            if not isinstance(func, ir.Function) or func.name in self.module.globals:
                 continue
             
             extern_func = ir.Function(self.module, func.function_type, func.name)

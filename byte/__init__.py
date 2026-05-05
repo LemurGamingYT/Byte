@@ -234,7 +234,10 @@ class ArgParser:
             case '.byte':
                 with disable_io():
                     try:
-                        self._build(str(test))
+                        exe_file = self._build(str(test))
+                        if exe_file.is_file():
+                            run(f'{exe_file}', shell=True)
+                        
                         return False
                     except SystemExit:
                         return True
@@ -263,4 +266,4 @@ class ArgParser:
         
         options = ast.CompileOptions.from_arg_parser(self)
         file = ast.File(path, options=options)
-        compile_to_exe(file)
+        return compile_to_exe(file)
