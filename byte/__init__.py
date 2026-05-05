@@ -223,7 +223,7 @@ class ArgParser:
                     res = run(f'{exe_file}')
                 
                 if res.returncode != 0:
-                    print(f'{Style.BRIGHT}{Fore.RED}error occurred running exe file{Style.RESET_ALL}')
+                    print(f'{Style.BRIGHT}{Fore.RED}error occurred running exe file (error code {res.returncode}){Style.RESET_ALL}')
                     return True
                 
                 exe_file.unlink()

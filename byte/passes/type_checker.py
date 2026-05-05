@@ -131,19 +131,19 @@ class TypeChecker(ByteCompilerPass):
         
         field_properties = []
         for field in fields:
-            self_param = ast.Param(node.pos, cls_type, 'self')
-            self_id = ast.Id(node.pos, cls_type, 'self')
+            self_param = ast.Param(field.pos, cls_type, 'self')
+            self_id = ast.Id(field.pos, cls_type, 'self')
             field_get = self.visit(ast.Function(
-                node.pos, field.type, field.name, [self_param], ast.Body(node.pos, field.type, [
-                    ast.Return(node.pos, field.type, ast.StructPropertyGetter(node.pos, field.type, self_id, field.name))
+                field.pos, field.type, field.name, [self_param], ast.Body(field.pos, field.type, [
+                    ast.Return(field.pos, field.type, ast.StructPropertyGetter(field.pos, field.type, self_id, field.name))
                 ]), flags=ast.FunctionFlags(property=True), extend_type=cls_type
             ))
 
-            self_ref_param = ast.Param(node.pos, cls_type.reference(), 'self')
-            set_params = [self_ref_param, ast.Param(node.pos, field.type, 'value')]
+            self_ref_param = ast.Param(field.pos, cls_type.reference(), 'self')
+            set_params = [self_ref_param, ast.Param(field.pos, field.type, 'value')]
             field_set = self.visit(ast.Function(
-                node.pos, self.file.type_map.get('nil'), f'set.{field.name}', set_params, ast.Body(node.pos, field.type, [
-                    ast.StructPropertySetter(node.pos, field.type, self_id, field.name, ast.Id(node.pos, field.type, 'value'))
+                field.pos, self.file.type_map.get('nil'), f'set.{field.name}', set_params, ast.Body(field.pos, field.type, [
+                    ast.StructPropertySetter(field.pos, field.type, self_id, field.name, ast.Id(field.pos, field.type, 'value'))
                 ]), flags=ast.FunctionFlags(method=True), extend_type=cls_type
             ))
 
@@ -166,11 +166,11 @@ class TypeChecker(ByteCompilerPass):
 
             field_str += f'{field.name}='
             field_str_node = new_string(field_str)
-            operation = ast.Operation(node.pos, string_type, '+', operation, field_str_node)
+            operation = ast.Operation(field.pos, string_type, '+', operation, field_str_node)
 
-            field_get = ast.Attribute(node.pos, field.type, cls_self, field.name)
-            field_to_string = ast.Attribute(node.pos, string_type, field_get, 'to_string', [])
-            operation = ast.Operation(node.pos, string_type, '+', operation, field_to_string)
+            field_get = ast.Attribute(field.pos, field.type, cls_self, field.name)
+            field_to_string = ast.Attribute(field.pos, string_type, field_get, 'to_string', [])
+            operation = ast.Operation(field.pos, string_type, '+', operation, field_to_string)
 
         closing_bracket = new_string(')')
         operation = ast.Operation(node.pos, string_type, '+', operation, closing_bracket)

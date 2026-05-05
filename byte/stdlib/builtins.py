@@ -321,7 +321,7 @@ class builtins(IntrinsicLib):
             string_type = ctx.module.context.get_identified_type('string')
             ptr = ctx.builder.select(ctx.args[0], true_ptr, false_ptr, 'b_ptr')
             length = ctx.builder.select(ctx.args[0], llint(4), llint(5), 'b_length')
-            return ctx.builder.struct(string_type, [ptr, length, llint(0, 1)], 'bool.to_string')
+            return ctx.builder.struct(string_type, [ptr, length, llint(0, 1)], ctx.name)
 
         @intrinsic(self, float_type, flags=ast.FunctionFlags(static=True, property=True), override_name=f'{Math_type}.pi')
         def Math_pi(_: IntrinsicCallContext):

@@ -21,6 +21,8 @@ def find_linker():
     
     if which('clang') is not None:
         return 'clang'
+    elif which('gcc') is not None:
+        return 'gcc'
 
 # TODO: support external variable definitions as well as external functions
 class RegistryDefinition:
@@ -82,6 +84,7 @@ class Registry:
             RegistryDefinition('usleep', ir.FunctionType(ir.VoidType(), [ir.IntType(32)])),
             RegistryDefinition('GetCurrentProcessId', ir.FunctionType(ir.IntType(32), [])),
             RegistryDefinition('getpid', ir.FunctionType(ir.IntType(32), [])),
+            RegistryDefinition('strlen', ir.FunctionType(ir.IntType(32), [pointer_type]))
         ]
     
     def add_function(self, name: str, func_type: ir.FunctionType, display_name: str | None = None):

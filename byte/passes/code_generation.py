@@ -387,10 +387,7 @@ class CodeGeneration(ByteCompilerPass):
                 return self.intrinsics.call(ctx)
         
         info(f'calling function {node.callee}')
-        try:
-            return self.builder.call(func, args, node.callee)
-        except TypeError:
-            print(func, args)
+        return self.builder.call(func, args, node.callee)
     
     def visitTernary(self, node: ast.Ternary):
         return self.builder.select(self.visit(node.cond), self.visit(node.true), self.visit(node.false), 'ternary')
