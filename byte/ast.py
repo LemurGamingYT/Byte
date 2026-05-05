@@ -409,6 +409,11 @@ class Function(Node):
         extend_type = f'{self.extend_type}.' if self.extend_type is not None else ''
         generic_params = ('<' + ', '.join(self.generic_params) + '>') if self.is_generic else ''
         return f'{self.flags}fn {extend_type}{self.name}{generic_params}({params_str}) -> {self.ret_type}'
+
+    @property
+    def symbol_name(self):
+        extend_type = f'{self.extend_type}.' if self.extend_type is not None else ''
+        return f'{extend_type}{self.name}'
     
     def __str__(self) -> str:
         signature = self.signature

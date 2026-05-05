@@ -32,11 +32,14 @@ def parse(file: ast.File):
     return builder.build()
 
 def run_passes(file: ast.File, stop_idx: int = -1):
+    info(f'running passes until index {stop_idx}')
+    
     program = parse(file)
     for i, cls in enumerate(PASS_CLASSES):
         if i == stop_idx:
             break
 
+        info(f'running pass {cls.__name__} on file {file.path}')
         program = cls.run(file, program)
 
     return program
