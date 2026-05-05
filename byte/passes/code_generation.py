@@ -399,35 +399,8 @@ class CodeGeneration(ByteCompilerPass):
         return symbol.value
     
     def visitStructLiteral(self, node: ast.StructLiteral):
-        struct_type = self.module.get_identified_types().get(node.name)
+        struct_type = self.module.context.get_identified_type(node.name)
         assert struct_type is not None
         
         args = [self.visit(arg) for arg in node.args]
         return self.builder.struct(struct_type, args, node.name)
-    
-    def visitStructPropertyGetter(self, node: ast.StructPropertyGetter):
-        struct = self.visit(node.struct)
-        assert isinstance(struct, ir.LoadInstr)
-        
-        cls_type = struct.type
-        assert isinstance(cls_type, ir.IdentifiedStructType)
-        
-        cls_name = cls_type.name
-        field_order = self.class_field_names[cls_name]
-        idx = field_order.index(node.property_name)
-        return self.builder.extract_value(struct, idx, node.property_name)
-
-    def visitStructPropertySetter(self, node: ast.StructPropertySetter):
-        struct = self.visit(node.struct)
-        assert isinstance(struct, ir.LoadInstr)
-        
-        cls_type = struct.type
-        assert isinstance(cls_type, ir.IdentifiedStructType)
-        
-        cls_name = cls_type.name
-        field_order = self.class_field_names[cls_name]
-        idx = field_order.index(node.property_name)
-        value = self.visit(node.value)
-        struct_ptr = struct.operands[0]
-        field_ptr = self.builder.gep(struct_ptr, [llint(0), llint(idx)], True, f'load_{node.property_name}')
-        self.builder.store(value, field_ptr)

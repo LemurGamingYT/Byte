@@ -1,8 +1,8 @@
 from dataclasses import dataclass, field, fields
-from logging import info, error, warning
 from typing import Callable, Union, Any
 from contextlib import contextmanager
 from abc import ABC, abstractmethod
+from logging import error, warning
 from sys import exit as sys_exit
 from platform import system
 from pathlib import Path
@@ -644,23 +644,6 @@ class StructLiteral(Node):
     def __str__(self) -> str:
         args_str = ', '.join(map(str, self.args))
         return f'struct<{self.name}>({args_str})'
-
-@dataclass
-class StructPropertyGetter(Node):
-    struct: Node
-    property_name: str
-    
-    def __str__(self) -> str:
-        return f'{self.struct}.{self.property_name}'
-
-@dataclass
-class StructPropertySetter(Node):
-    struct: Node
-    property_name: str
-    value: Node
-
-    def __str__(self) -> str:
-        return f'{self.struct}.{self.property_name} = {self.value}'
 
 @dataclass
 class Null(Node):
