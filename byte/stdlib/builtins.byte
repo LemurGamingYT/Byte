@@ -1,3 +1,7 @@
+static fn string.new(pointer ptr, int length, bool is_allocated) -> string {
+    return string_struct(ptr, length, is_allocated)
+}
+
 static fn string.new(pointer ptr, int length) -> string {
     ptr_copy = malloc(length)
     if ptr_copy == null() {
@@ -16,10 +20,6 @@ static fn string.new(int length) -> string {
     
     memset(ptr, 32, length, false)
     return string_struct(ptr, length, true)
-}
-
-static fn string.new(pointer ptr, int length, bool is_allocated) -> string {
-    return string_struct(ptr, length, is_allocated)
 }
 
 fn string.destroy(string& s) {

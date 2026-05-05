@@ -11,5 +11,6 @@ class Preprocessor(ByteCompilerPass):
     def visitString(self, node: ast.String):
         return ast.Attribute(node.pos, node.type, ast.Id(node.pos, ast.Type('string'), 'string'), 'new', [
             ast.String(node.pos, self.file.type_map.get('pointer'), node.value).to_arg(),
-            ast.Int(node.pos, self.file.type_map.get('int'), len(node.value)).to_arg()
+            ast.Int(node.pos, self.file.type_map.get('int'), len(node.value)).to_arg(),
+            ast.Bool(node.pos, self.file.type_map.get('bool'), False).to_arg()
         ])
