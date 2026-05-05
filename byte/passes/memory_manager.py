@@ -101,7 +101,7 @@ class MemoryManager(ByteCompilerPass):
         info(f'managing memory of function body {node.name}')
         
         body = node.body
-        if body is not None:
+        if isinstance(body, ast.Body):
             with self.file.child_scope():
                 info('adding function parameters')
                 for param in node.params:

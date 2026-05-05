@@ -46,7 +46,9 @@ def intrinsic(
         ast_func = ast.Function(ast.Position(), cast(ast.Type, ret_type), name, params, func, flags)
         setattr(func, 'ast_func', ast_func)
 
-        self.intrinsics[name] = func
+        if self is not None:
+            self.intrinsics[name] = func
+        
         return func
 
     return decorator
