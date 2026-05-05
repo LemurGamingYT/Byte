@@ -65,7 +65,8 @@ class TypeChecker(ByteCompilerPass):
             name = f'{name}.{a.type}'
         
         if func.extend_type is not None:
-            name = f'{func.extend_type}.{name}'
+            extend_type = self.visit(func.extend_type)
+            name = f'{extend_type}.{name}'
         
         return name
     
