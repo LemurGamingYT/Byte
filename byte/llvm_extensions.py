@@ -91,6 +91,9 @@ class Registry:
             RegistryDefinition('usleep', ir.FunctionType(ir.VoidType(), [ir.IntType(32)])),
             RegistryDefinition('GetCurrentProcessId', ir.FunctionType(ir.IntType(32), [])),
             RegistryDefinition('getpid', ir.FunctionType(ir.IntType(32), [])),
+            RegistryDefinition('asprintf', ir.FunctionType(ir.IntType(32), [
+                ir.PointerType(pointer_type), pointer_type
+            ], True)),
         ]
     
     def add_function(self, name: str, func_type: ir.FunctionType, display_name: str | None = None):

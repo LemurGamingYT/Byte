@@ -2,7 +2,9 @@ from importlib import import_module
 from logging import info
 from typing import cast
 
+from byte.intrinsics import intrinsic, IntrinsicCallContext
 from byte.passes import ByteCompilerPass
+from byte.llvm_extensions import llint
 from byte import ast
 
 
@@ -113,40 +115,49 @@ class TypeChecker(ByteCompilerPass):
     def visitProperty(self, node: ast.Property):
         return ast.Property(node.pos, cast(ast.Type, self.visit(node.type)), node.name)
 
+    def init_field(self, cls_type: ast.ClassType, i: int, field: ast.Property):
+        self_param = ast.Param(field.pos, cls_type, 'self')
+        self_id = ast.Id(field.pos, cls_type, 'self')
+        @intrinsic(
+            None, field.type, [self_param], flags=ast.FunctionFlags(property=True),
+            override_name=f'{cls_type}.{field.name}'
+        )
+        def getter(ctx: IntrinsicCallContext):
+            return ctx.builder.extract_value(ctx.args[0], i, field.name)
+
+        field_get = self.visit(getattr(getter, 'ast_func'))
+
+        self_ref_param = ast.Param(field.pos, cls_type.reference(), 'self')
+        set_params = [self_ref_param, ast.Param(field.pos, field.type, 'value')]
+        @intrinsic(
+            None, self.file.type_map.get('nil'), set_params, flags=ast.FunctionFlags(method=True),
+            override_name=f'{cls_type}.set.{field.name}'
+        )
+        def setter(ctx: IntrinsicCallContext):
+            field_ptr = ctx.builder.gep(ctx.args[0], [llint(0), llint(i)], True, f'{field.name}.gep')
+            ctx.builder.store(ctx.args[1], field_ptr)
+
+        field_set = self.visit(getattr(setter, 'ast_func'))
+        return field_get, field_set
+
     def init_class(self, node: ast.Class):
-        cls_type = self.file.type_map.get(node.name)
+        cls_type = cast(ast.ClassType, self.file.type_map.get(node.name))
 
         fields = [member for member in node.members if isinstance(member, ast.Property)]
         constructor_params = [ast.Param(node.pos, member.type, member.name) for member in fields]
-        new_constructor = self.visit(ast.Function(
-            node.pos, cls_type, 'new', constructor_params, ast.Body(node.pos, cls_type, [
-                ast.Return(node.pos, cls_type, ast.StructLiteral(node.pos, cls_type, node.name, [
-                    ast.Id(node.pos, param.type, param.name)
-                    for param in constructor_params
-                ]))
-            ]), flags=ast.FunctionFlags(static=True, method=True), extend_type=cls_type
-        ))
+        @intrinsic(
+            None, cls_type, constructor_params, flags=ast.FunctionFlags(static=True, method=True),
+            override_name=f'{cls_type}.new'
+        )
+        def constructor(ctx: IntrinsicCallContext):
+            struct_type = ctx.module.context.get_identified_type(node.name)
+            return ctx.builder.struct(struct_type, ctx.args, ctx.name)
+
+        new_constructor = self.visit(getattr(constructor, 'ast_func'))
         
         field_properties = []
-        for field in fields:
-            self_param = ast.Param(field.pos, cls_type, 'self')
-            self_id = ast.Id(field.pos, cls_type, 'self')
-            field_get = self.visit(ast.Function(
-                field.pos, field.type, field.name, [self_param], ast.Body(field.pos, field.type, [
-                    ast.Return(field.pos, field.type, ast.StructPropertyGetter(field.pos, field.type, self_id, field.name))
-                ]), flags=ast.FunctionFlags(property=True), extend_type=cls_type
-            ))
-
-            self_ref_param = ast.Param(field.pos, cls_type.reference(), 'self')
-            set_params = [self_ref_param, ast.Param(field.pos, field.type, 'value')]
-            field_set = self.visit(ast.Function(
-                field.pos, self.file.type_map.get('nil'), f'set.{field.name}', set_params, ast.Body(field.pos, field.type, [
-                    ast.StructPropertySetter(field.pos, field.type, self_id, field.name, ast.Id(field.pos, field.type, 'value'))
-                ]), flags=ast.FunctionFlags(method=True), extend_type=cls_type
-            ))
-
-            field_properties.append(field_get)
-            field_properties.append(field_set)
+        for i, field in enumerate(fields):
+            field_properties.extend(self.init_field(cls_type, i, field))
 
         string_type = self.file.type_map.get('string')
         def new_string(text: str):

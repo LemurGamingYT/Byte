@@ -66,7 +66,7 @@ class CodeGeneration(ByteCompilerPass):
         return self.visit(node.value)
     
     def visitFunction(self, node: ast.Function):
-        if node.is_generic:
+        if node.is_generic or callable(node.body):
             return node
         
         if node.name in self.module.globals:
