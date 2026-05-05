@@ -54,10 +54,6 @@ class Registry:
             ]), 'memcpy'),
             
             RegistryDefinition('memcmp', ir.FunctionType(ir.IntType(1), [pointer_type, pointer_type, ir.IntType(32)])),
-            RegistryDefinition('asprintf', ir.FunctionType(ir.IntType(32), [
-                ir.PointerType(pointer_type), pointer_type
-            ], True)),
-            
             RegistryDefinition('llvm.sqrt.f32', ir.FunctionType(ir.FloatType(), [ir.FloatType()]), 'sqrt'),
             RegistryDefinition('llvm.pow.f32', ir.FunctionType(ir.FloatType(), [ir.FloatType(), ir.FloatType()]), 'pow'),
             RegistryDefinition('llvm.fabs.f32', ir.FunctionType(ir.FloatType(), [ir.FloatType()]), 'fabs'),
@@ -84,7 +80,6 @@ class Registry:
             RegistryDefinition('usleep', ir.FunctionType(ir.VoidType(), [ir.IntType(32)])),
             RegistryDefinition('GetCurrentProcessId', ir.FunctionType(ir.IntType(32), [])),
             RegistryDefinition('getpid', ir.FunctionType(ir.IntType(32), [])),
-            RegistryDefinition('strlen', ir.FunctionType(ir.IntType(32), [pointer_type]))
         ]
     
     def add_function(self, name: str, func_type: ir.FunctionType, display_name: str | None = None):
