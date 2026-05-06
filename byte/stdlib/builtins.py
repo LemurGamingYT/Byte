@@ -83,6 +83,11 @@ class builtins(IntrinsicLib):
             b = ctx.arg(1)
             return ctx.builder.icmp_signed('>=', a, b, ctx.name)
 
+        @intrinsic_op(self, '-', int_type, int_type)
+        def neg_int(ctx: IntrinsicCallContext):
+            a = ctx.arg(0)
+            return ctx.builder.neg(a, ctx.name)
+
         @intrinsic_op(self, '+', float_type, float_type, float_type)
         def add_floats(ctx: IntrinsicCallContext):
             a = ctx.arg(0)
@@ -148,6 +153,11 @@ class builtins(IntrinsicLib):
             a = ctx.arg(0)
             b = ctx.arg(1)
             return ctx.builder.fcmp_ordered('>=', a, b, ctx.name)
+
+        @intrinsic_op(self, '-', float_type, float_type)
+        def neg_float(ctx: IntrinsicCallContext):
+            a = ctx.arg(0)
+            return ctx.builder.fneg(a, ctx.name)
 
         @intrinsic_op(self, '==', bool_type, bool_type, bool_type)
         def eq_bools(ctx: IntrinsicCallContext):

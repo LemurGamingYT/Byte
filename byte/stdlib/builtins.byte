@@ -27,9 +27,13 @@ fn string.destroy(string& s) {
     free(s.ptr)
 }
 
-fn string.get(string s, int index) -> string {
+fn string.get(string s, mut int index) -> string {
     if index >= s.length {
         error("string index out of bounds")
+    }
+
+    if index < 0 {
+        index = s.length + index
     }
     
     ptr_index = s.ptr + index
