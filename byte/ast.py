@@ -12,7 +12,9 @@ from colorama import Fore, Style
 from llvmlite import ir
 
 
-STDLIB_PATH = Path(__file__).parent / 'stdlib'
+BYTE_DIR = Path(__file__).parent
+STDLIB_PATH = BYTE_DIR / 'stdlib'
+VERSION = '0.0.1'
 
 class Target(Enum):
     WINDOWS = 'Windows'

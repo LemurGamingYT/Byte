@@ -2,13 +2,12 @@ from sys import exit as sys_exit
 from pathlib import Path
 
 from byte.test_factory import TestFactory, PythonTestHandler, CTestHandler, ByteTestHandler
+# from byte.project import create_new_project
 from byte.pipeline import Pipeline
 from byte import ast
 
 
-BYTE_DIR = Path(__file__).parent
-TESTS_DIR = BYTE_DIR / 'tests'
-VERSION = '0.0.1'
+TESTS_DIR = ast.BYTE_DIR / 'tests'
 
 class ArgParser:
     def __init__(self, args: list[str]):
@@ -59,7 +58,32 @@ class ArgParser:
                 return file
     
     def _version(self):
-        print(f'Byte v{VERSION}')
+        print(f'Byte v{ast.VERSION}')
+
+    # def _init(self):
+    #     name = self.arg(1)
+    #     if name is None:
+    #         print('Usage: byte init <name> [<directory>]')
+    #         print('no name specified')
+    #         sys_exit(1)
+            
+    #     directory_path = self.arg(2)
+    #     if directory_path is None:
+    #         directory = Path.cwd()
+    #     else:
+    #         directory = Path(directory_path)
+
+    #     if not directory.exists():
+    #         print('Usage: byte init <name> [<directory>]')
+    #         print('directory does not exist')
+    #         sys_exit(1)
+
+    #     if not directory.is_dir():
+    #         print('Usage: byte init <name> [<directory>]')
+    #         print('given directory is not a directory')
+    #         sys_exit(1)
+
+    #     create_new_project(name, directory)
     
     def _test(self, test_name: str | None = None):
         if test_name is None:

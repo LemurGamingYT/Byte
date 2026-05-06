@@ -5,11 +5,11 @@ from sys import argv
 from llvmlite import binding
 from colorama import init
 
-from byte import ArgParser, VERSION
+from byte import ArgParser, ast
 
 
 def main():
-    info(f"""Byte compiler v{VERSION}
+    info(f"""Byte compiler v{ast.VERSION}
 backend: LLVM
 platform: {platform()}
 architecture: {architecture()[0]}
