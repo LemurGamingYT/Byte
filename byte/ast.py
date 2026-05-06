@@ -310,7 +310,7 @@ class Comment(TypelessNode):
 
 @dataclass
 class Arg(Node):
-    value: Node
+    value: Any
     
     def __str__(self) -> str:
         return str(self.value)

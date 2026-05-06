@@ -3,8 +3,8 @@ from logging import info
 from typing import cast
 
 from byte.intrinsics import intrinsic, IntrinsicCallContext
+from byte.llvm_extensions import llint, NULL
 from byte.passes import ByteCompilerPass
-from byte.llvm_extensions import llint
 from byte import ast
 
 
@@ -122,7 +122,8 @@ class TypeChecker(ByteCompilerPass):
             override_name=f'{cls_type}.{field.name}'
         )
         def getter(ctx: IntrinsicCallContext):
-            return ctx.builder.extract_value(ctx.args[0], i, field.name)
+            struct = ctx.arg(0)
+            return ctx.builder.extract_value(struct, i, field.name)
 
         field_get = self.visit(getattr(getter, 'ast_func'))
 
@@ -133,8 +134,10 @@ class TypeChecker(ByteCompilerPass):
             override_name=f'{cls_type}.set.{field.name}'
         )
         def setter(ctx: IntrinsicCallContext):
-            field_ptr = ctx.builder.gep(ctx.args[0], [llint(0), llint(i)], True, f'{field.name}.gep')
-            ctx.builder.store(ctx.args[1], field_ptr)
+            struct = ctx.arg(0)
+            value = ctx.arg(1)
+            field_ptr = ctx.builder.gep(struct, [llint(0), llint(i)], True, f'{field.name}.gep')
+            ctx.builder.store(value, field_ptr)
 
         field_set = self.visit(getattr(setter, 'ast_func'))
         return field_get, field_set
@@ -150,7 +153,7 @@ class TypeChecker(ByteCompilerPass):
         )
         def constructor(ctx: IntrinsicCallContext):
             struct_type = ctx.module.context.get_identified_type(node.name)
-            return ctx.builder.struct(struct_type, ctx.args, ctx.name)
+            return ctx.builder.struct(struct_type, ctx.codegen_args, ctx.name)
 
         new_constructor = self.visit(getattr(constructor, 'ast_func'))
         
@@ -159,35 +162,49 @@ class TypeChecker(ByteCompilerPass):
             field_properties.extend(self.init_field(cls_type, i, field))
 
         string_type = self.file.type_map.get('string')
-        def new_string(text: str):
-            return ast.Attribute(node.pos, string_type, ast.Id(node.pos, string_type, 'string'), 'new', [
-                ast.String(node.pos, self.file.type_map.get('pointer'), text).to_arg(),
-                ast.Int(node.pos, self.file.type_map.get('int'), len(text)).to_arg(),
-                ast.Bool(node.pos, self.file.type_map.get('bool'), False).to_arg()
+        string_format = f'{node.name}(' + ', '.join(f'{field.name}=%.*s' for field in fields) + ')'
+        
+        @intrinsic(
+            None, string_type, [ast.Param(node.pos, cls_type, 'self')], flags=ast.FunctionFlags(method=True),
+            override_name=f'{cls_type}.to_string'
+        )
+        def cls_to_string(ctx: IntrinsicCallContext):
+            from llvmlite import ir
+            
+            asprintf = ctx.module.registry.get('asprintf')
+
+            struct = ctx.arg(0)
+            field_strs = []
+            for i, field in enumerate(fields):
+                field_value = ctx.builder.extract_value(struct, i, field.name)
+                field_str = ctx.call(f'{field.type}.to_string', [
+                    ast.Arg(ctx.pos, field.type, field_value)
+                ])
+                field_strs.append(field_str)
+
+            buf_addr = ctx.builder.alloca(ir.PointerType(ir.IntType(8)))
+            ctx.builder.store(NULL(), buf_addr)
+
+            fmt = ctx.module.try_get_global(
+                f'{node.name}_str_fmt', lambda: ctx.module.global_string(string_format, f'{node.name}_str_fmt')
+            )
+            fmt_ptr = ctx.builder.first_elem(fmt, 'fmt_ptr')
+
+            asprintf_args = [buf_addr, fmt_ptr]
+            for field_str in field_strs:
+                length = ctx.call('string.length', [ast.Arg(ctx.pos, ctx.file.type_map.get('string'), field_str)])
+                ptr = ctx.call('string.ptr', [ast.Arg(ctx.pos, ctx.file.type_map.get('string'), field_str)])
+                asprintf_args.append(length)
+                asprintf_args.append(ptr)
+
+            written = ctx.builder.call(asprintf, asprintf_args, 'written')
+            return ctx.call('string.new', [
+                ast.Arg(ctx.pos, ctx.file.type_map.get('pointer'), ctx.builder.load(buf_addr, 'buf')),
+                ast.Arg(ctx.pos, ctx.file.type_map.get('int'), written),
+                ast.Arg(ctx.pos, ctx.file.type_map.get('bool'), llint(1, 1))
             ])
 
-        operation = new_string(f'{node.name}(')
-        cls_self = ast.Id(node.pos, cls_type, 'self')
-        for i, field in enumerate(fields):
-            field_str = ''
-            if i != 0:
-                field_str += ', '
-
-            field_str += f'{field.name}='
-            field_str_node = new_string(field_str)
-            operation = ast.Operation(field.pos, string_type, '+', operation, field_str_node)
-
-            field_get = ast.Attribute(field.pos, field.type, cls_self, field.name)
-            field_to_string = ast.Attribute(field.pos, string_type, field_get, 'to_string', [])
-            operation = ast.Operation(field.pos, string_type, '+', operation, field_to_string)
-
-        closing_bracket = new_string(')')
-        operation = ast.Operation(node.pos, string_type, '+', operation, closing_bracket)
-        to_string = self.visit(ast.Function(
-            node.pos, string_type, 'to_string', [ast.Param(node.pos, cls_type, 'self')], ast.Body(node.pos, string_type, [
-                ast.Return(node.pos, string_type, operation)
-            ]), flags=ast.FunctionFlags(method=True), extend_type=cls_type
-        ))
+        to_string = self.visit(getattr(cls_to_string, 'ast_func'))
 
         return [new_constructor, to_string] + field_properties
     

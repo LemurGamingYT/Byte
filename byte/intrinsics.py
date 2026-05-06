@@ -16,16 +16,22 @@ class IntrinsicCallContext:
     file: ast.File
     name: str
     codegen: Any
-    args: list[Any] = field(default_factory=list)
+    args: list[ast.Arg] = field(default_factory=list)
+
+    def __post_init__(self):
+        self.codegen_args = [self.codegen.visit(arg) for arg in self.args]
+
+    def arg(self, idx: int):
+        return self.codegen_args[idx]
 
     def error_literal(self, msg: str):
         string_type = self.module.context.get_identified_type('string')
         global_var = self.module.global_string(msg, 'oom_global')
         err_var_ptr = self.builder.first_elem(global_var, 'oom_ptr')
         err_string = self.builder.struct(string_type, [err_var_ptr, llint(len(msg))], 'oom_string')
-        return self.call('error', [err_string])
+        return self.call('error', [ast.Arg(self.pos, self.file.type_map.get('string'), err_string)])
 
-    def call(self, name: str, args: list[Any] | None = None):
+    def call(self, name: str, args: list[ast.Arg] | None = None):
         return self.codegen.call(self.pos, name, args or [])
 
 def intrinsic(

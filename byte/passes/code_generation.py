@@ -63,7 +63,10 @@ class CodeGeneration(ByteCompilerPass):
         return self.module.declare_identified_type(node.name, *elements)
     
     def visitArg(self, node: ast.Arg):
-        return self.visit(node.value)
+        if isinstance(node.value, ast.Node):
+            return self.visit(node.value)
+
+        return node.value
     
     def visitFunction(self, node: ast.Function):
         if node.is_generic or callable(node.body):
@@ -313,7 +316,9 @@ class CodeGeneration(ByteCompilerPass):
             err_msg_ptr = self.builder.first_elem(err_msg_global, 'err_msg_ptr')
             err_msg_string = self.builder.struct(self.string_type, [err_msg_ptr, llint(len(err_msg))], 'err_msg_string')
 
-            self.call(node.pos, 'error', [err_msg_string])
+            self.call(node.pos, 'error', [
+                ast.Arg(node.pos, self.file.type_map.get('string'), err_msg_string)
+            ])
         
         var_ptr = self.builder.allocate_value(start, name=f'{node.iter_name}.addr')
         self.builder.branch(cond_block)
@@ -365,13 +370,14 @@ class CodeGeneration(ByteCompilerPass):
         
         return self.builder.load(ptr, node.name)
 
-    def call(self, pos: ast.Position, name: str, args: list[Any]):
+    def call(self, pos: ast.Position, name: str, args: list[ast.Arg]):
         symbol = self.scope.symbol_table.get(name)
         func = cast(ast.Function | ir.Function, symbol.value)
+        ir_args = [self.visit(arg) for arg in args]
         if isinstance(func, ast.Function):
             if name in self.module.registry.functions:
                 ir_func = self.module.registry.get(name)
-                return self.builder.call(ir_func, args, name)
+                return self.builder.call(ir_func, ir_args, name)
 
             if isinstance(func.body, ast.Body):
                 func = self.visitFunction(func)
@@ -383,10 +389,10 @@ class CodeGeneration(ByteCompilerPass):
                 raise NotImplementedError
         
         info(f'calling function {name}')
-        return self.builder.call(func, args, name)
+        return self.builder.call(func, ir_args, name)
     
     def visitCall(self, node: ast.Call):
-        return self.call(node.pos, node.callee, [self.visit(arg) for arg in node.args])
+        return self.call(node.pos, node.callee, node.args)
     
     def visitTernary(self, node: ast.Ternary):
         return self.builder.select(self.visit(node.cond), self.visit(node.true), self.visit(node.false), 'ternary')
