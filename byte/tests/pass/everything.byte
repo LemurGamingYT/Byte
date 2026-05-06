@@ -1,3 +1,9 @@
+class Vector2 {
+    int x
+    int y
+}
+
+
 fn main() -> int {
     int_a = 4
     int_b = 8
@@ -34,5 +40,10 @@ fn main() -> int {
 
     num_str = "42"
     assert(num_str.parse_int() == 42)
+
+    vec = new Vector2(100, 100)
+    assert(vec.x == 100)
+    assert(vec.y == 100)
+    assert(vec.to_string() == "Vector2(x=100, y=100)")
     return 0
 }
