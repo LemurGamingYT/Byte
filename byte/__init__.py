@@ -1,126 +1,24 @@
-from importlib import import_module
 from sys import exit as sys_exit
-from subprocess import run
-from logging import info
 from pathlib import Path
-from typing import cast
 
-from colorama import Fore, Style
-
-from byte.passes.code_generation import CodeGeneration, CompileResult
-from byte.passes.forward_decl import ForwardDeclaration
-# from byte.passes.return_checker import ReturnChecker
-from byte.passes.memory_manager import MemoryManager
-from byte.passes.name_resolver import NameResolver
-from byte.passes.code_analysis import CodeAnalysis
-from byte.passes.preprocessor import Preprocessor
-from byte.passes.type_checker import TypeChecker
-from byte.llvm_extensions import find_linker
-from byte.ast_builder import ByteASTBuilder
-from byte.io_disabler import disable_io
+from byte.test_factory import TestFactory, PythonTestHandler, CTestHandler, ByteTestHandler
+from byte.pipeline import Pipeline
 from byte import ast
 
 
 BYTE_DIR = Path(__file__).parent
 TESTS_DIR = BYTE_DIR / 'tests'
-CRUNTIME_DIR = BYTE_DIR / 'cruntime'
 VERSION = '0.0.1'
-PASS_CLASSES = [Preprocessor, CodeAnalysis, ForwardDeclaration, NameResolver, TypeChecker, MemoryManager]
-
-def parse(file: ast.File):
-    builder = ByteASTBuilder(file)
-    return builder.build()
-
-def run_passes(file: ast.File, stop_idx: int = -1):
-    info(f'running passes until index {stop_idx}')
-    
-    program = parse(file)
-    for i, cls in enumerate(PASS_CLASSES):
-        if i == stop_idx:
-            break
-
-        info(f'running pass {cls.__name__} on file {file.path}')
-        program = cls.run(file, program)
-
-    return program
-
-def compile_file(file: ast.File):
-    ast_file = file.path.with_suffix('.byteast')
-    
-    program = parse(file)
-    if file.options.debug:
-        ast_file.write_text(str(program))
-    else:
-        ast_file.unlink(True)
-    
-    for cls in PASS_CLASSES:
-        info(f'running pass {cls.__name__} on file {file.path}')
-        ast_file = ast_file.with_stem(f'{file.path.stem}_{cls.__name__.lower()}')
-        
-        program = cls.run(file, program)
-        if file.options.debug:
-            ast_file.write_text(str(program))
-        else:
-            ast_file.unlink(True)
-    
-    return cast(CompileResult, CodeGeneration.run(file, program))
-
-def compile_to_obj(file: ast.File):
-    res = compile_file(file)
-
-    ll_file = file.path.with_suffix('.ll')
-    ll_file.write_text(str(res.module))
-
-    flags = ['-Wno-override-module', '-Wall', '-Werror', '-Wpedantic', '-Wextra']
-    if file.options.optimise:
-        flags.append('-O3')
-    
-    flags_str = ' '.join(flags)
-
-    obj_file = file.path.with_suffix('.o')
-    compile_cmd = f'clang -c -o {obj_file} {ll_file} {flags_str}'
-    info(f'running clang compile command \'{compile_cmd}\'')
-    run(compile_cmd, shell=True)
-
-    if file.options.emit_asm:
-        asm_file = file.path.with_suffix('.asm')
-        asm_compile_cmd = f'clang -S -o {asm_file} {ll_file} {flags_str}'
-        info(f'running clang compile (to assembly) command \'{asm_compile_cmd}\'')
-        run(asm_compile_cmd, shell=True)
-
-    if not file.options.emit_llvm:
-        ll_file.unlink()
-    
-    return obj_file
-
-def compile_to_exe(file: ast.File):
-    obj_file = compile_to_obj(file)
-    obj_files = [obj_file] + [dependency for dependency in file.dependencies if dependency.suffix == '.o']
-    for cfile in CRUNTIME_DIR.rglob('*.c'):
-        c_obj = cfile.with_suffix('.o')
-        run(f'clang -c {cfile} -o {c_obj}')
-        
-        obj_files.append(c_obj)
-    
-    exe_file = file.path.with_suffix('.exe')
-    obj_files_str = ' '.join(map(str, obj_files))
-    flags = []
-    if file.options.optimise:
-        flags.append('-O3')
-
-    flags_str = ' '.join(flags)
-    link_cmd = f'{find_linker()} {obj_files_str} -o {exe_file} {flags_str}'
-    info(f'running clang link command \'{link_cmd}\'')
-    run(link_cmd, shell=True)
-    
-    for obj in obj_files:
-        obj.unlink()
-    
-    return exe_file
-
 
 class ArgParser:
     def __init__(self, args: list[str]):
+        self.test_factory = TestFactory()
+        self.test_factory.register('.py', PythonTestHandler())
+        self.test_factory.register('.c', CTestHandler())
+        self.test_factory.register('.byte', ByteTestHandler())
+
+        self.pipeline = Pipeline()
+        
         self.args = args
     
     def parse(self):
@@ -187,7 +85,7 @@ class ArgParser:
             print('Unknown test name')
             sys_exit(1)
         
-        had_error = self.test_file(test)
+        had_error = self.test_factory.test_file(test)
         if had_error:
             print('test failed')
         else:
@@ -197,7 +95,7 @@ class ArgParser:
         tests = list(path.glob('*.byte'))
         passed_count = 0
         for byte_file in tests:
-            had_error = self.test_file(byte_file)
+            had_error = self.test_factory.test_file(byte_file)
             
             dir_name = byte_file.parent.name
             success = (dir_name == 'fail' and had_error) or (dir_name == 'pass' and not had_error)
@@ -208,41 +106,6 @@ class ArgParser:
                 print(f'{byte_file.stem} test failed')
         
         return passed_count, len(tests)
-    
-    def test_file(self, test: Path):
-        match test.suffix:
-            case '.py':
-                module = import_module(f'byte.tests.{test.stem}')
-                method = getattr(module, f'test_{test.stem}')
-                return not method()
-            case '.c':
-                exe_file = test.with_suffix('.exe')
-                res = run(f'clang {test.absolute().as_posix()} -o {exe_file.absolute().as_posix()} -D_TEST')
-                if res.returncode != 0:
-                    print(f'{Style.BRIGHT}{Fore.RED}C exe compilation failed{Style.RESET_ALL}')
-                    return True
-                
-                with disable_io():
-                    res = run(f'{exe_file}')
-                
-                if res.returncode != 0:
-                    print(f'{Style.BRIGHT}{Fore.RED}error occurred running exe file (error code {res.returncode}){Style.RESET_ALL}')
-                    return True
-                
-                exe_file.unlink()
-                return False
-            case '.byte':
-                with disable_io():
-                    try:
-                        exe_file = self._build(str(test))
-                        if exe_file.is_file():
-                            run(f'{exe_file}', shell=True)
-                        
-                        return False
-                    except SystemExit:
-                        return True
-            case _:
-                raise NotImplementedError(f'test suffix {test.suffix}')
     
     def _build(self, file_path: str | None = None):
         if file_path is None:
@@ -266,4 +129,4 @@ class ArgParser:
         
         options = ast.CompileOptions.from_arg_parser(self)
         file = ast.File(path, options=options)
-        return compile_to_exe(file)
+        return self.pipeline.compile_to_exe(file)

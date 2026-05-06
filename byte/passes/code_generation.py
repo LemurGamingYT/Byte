@@ -247,13 +247,14 @@ class CodeGeneration(ByteCompilerPass):
         if not stdlib_path.exists():
             node.pos.comptime_error(self.file, f'unknown library \'{lib_name}\'')
         
-        from byte import compile_to_obj
+        from byte import Pipeline
         
         file = ast.File(stdlib_path, options=self.file.options, target=self.file.target)
         if file.path.stem == self.file.path.stem:
             return node
-        
-        obj_file = compile_to_obj(file)
+
+        pipeline = Pipeline()
+        obj_file = pipeline.compile_to_obj(file)
         for symbol in file.scope.symbol_table.symbols.values():
             func = symbol.value
             if not isinstance(func, ir.Function) or func.name in self.module.globals:

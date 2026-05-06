@@ -336,7 +336,7 @@ class TypeChecker(ByteCompilerPass):
         return True
 
     def use_byte(self, file: ast.File, path: str):
-        from byte import run_passes, PASS_CLASSES
+        from byte import Pipeline
 
         if self.file.path.stem == file.path.stem:
             return True
@@ -346,7 +346,8 @@ class TypeChecker(ByteCompilerPass):
             return False
 
         file.path = stdlib_path
-        run_passes(file, PASS_CLASSES.index(TypeChecker) + 1)
+        pipeline = Pipeline()
+        pipeline.end_at_pass(TypeChecker).run_passes(file)
         
         self.scope.symbol_table.merge(file.scope.symbol_table)
         self.file.type_map.merge(file.type_map)

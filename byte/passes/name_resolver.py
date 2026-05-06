@@ -67,8 +67,8 @@ class NameResolver(ByteCompilerPass):
         return True
 
     def use_byte(self, file: ast.File, path: str):
-        from byte import run_passes, PASS_CLASSES
-
+        from byte.pipeline import Pipeline
+        
         if self.file.path.stem == file.path.stem:
             return True
         
@@ -77,7 +77,8 @@ class NameResolver(ByteCompilerPass):
             return False
 
         file.path = stdlib_path
-        run_passes(file, PASS_CLASSES.index(NameResolver) + 1)
+        pipeline = Pipeline()
+        pipeline.end_at_pass(NameResolver).run_passes(file)
         
         self.scope.symbol_table.merge(file.scope.symbol_table)
         self.file.type_map.merge(file.type_map)
