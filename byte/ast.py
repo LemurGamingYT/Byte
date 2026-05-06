@@ -635,6 +635,13 @@ class Ref(Node):
     def __str__(self) -> str:
         return f'&{self.name}'
 
+@dataclass
+class Deref(Node):
+    name: str
+
+    def __str__(self) -> str:
+        return f'*{self.name}'
+
 
 @dataclass
 class StructLiteral(Node):

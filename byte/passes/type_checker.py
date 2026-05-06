@@ -398,6 +398,7 @@ class TypeChecker(ByteCompilerPass):
 make {ref_symbol.name} mutable using the 'mut' keyword to remove this warning""")
 
             if ref_symbol.type.is_reference():
+                args[i] = ast.Deref(arg.pos, arg.type, arg.value.name).to_arg()
                 continue
             
             args[i] = ast.Ref(arg.pos, arg.type.reference(), arg.value.name).to_arg()

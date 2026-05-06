@@ -27,9 +27,6 @@ class CodeGeneration(ByteCompilerPass):
             'string', ir.PointerType(ir.IntType(8)), ir.IntType(32), ir.IntType(1)
         )
         
-        self.class_types = {}
-        self.class_field_names = {}
-        
         info('successfully created builder and module')
     
     def visitProgram(self, node: ast.Program):
@@ -124,11 +121,8 @@ class CodeGeneration(ByteCompilerPass):
     
     def visitClass(self, node: ast.Class):
         info(f'generating IR for class {node.name}')
-        fields = [member for member in node.fields]
-        cls_type = self.visit(self.file.type_map.get(node.name))
-        self.class_types[node.name] = cls_type
-        self.class_field_names[node.name] = [field.name for field in fields]
         
+        self.visit(self.file.type_map.get(node.name))
         for member in node.members:
             if isinstance(member, ast.Property):
                 continue
@@ -403,6 +397,11 @@ class CodeGeneration(ByteCompilerPass):
     def visitRef(self, node: ast.Ref):
         symbol = self.scope.symbol_table.get(node.name)
         return symbol.value
+
+    def visitDeref(self, node: ast.Deref):
+        symbol = self.scope.symbol_table.get(node.name)
+        ptr = cast(Any, symbol.value)
+        return self.builder.load(ptr, node.name)
     
     def visitStructLiteral(self, node: ast.StructLiteral):
         struct_type = self.module.context.get_identified_type(node.name)
