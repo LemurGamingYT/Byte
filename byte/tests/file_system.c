@@ -83,7 +83,8 @@ bool File_exists(const File* file) {
 
 
 int main(void) {
-    File file = File_new("byte");
+    File file = File_new("byte.txt");
+    File_write(&file, "Hello, World");
     char* contents = File_contents(&file);
     puts(contents);
     

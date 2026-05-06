@@ -1,5 +1,0 @@
-fn main() -> int {
-    y = 30
-    y *= 2
-    return 0
-}

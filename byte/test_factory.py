@@ -32,7 +32,7 @@ class PythonTestHandler(TestFileHandler):
     def test(self, path: Path):
         module = import_module(f'byte.tests.{path.stem}')
         method = getattr(module, f'test_{path.stem}')
-        return not method()
+        return method()
 
 class CTestHandler(TestFileHandler):
     def test(self, path: Path):
@@ -40,28 +40,40 @@ class CTestHandler(TestFileHandler):
         res = run(['clang', str(path), '-o', str(exe_file), '-D_TEST'], shell=True)
         if res.returncode != 0:
             print(f'{Style.BRIGHT}{Fore.RED}C exe compilation failed{Style.RESET_ALL}')
-            return True
+            return False
         
         with disable_io():
             res = run([str(exe_file)], shell=True)
         
         if res.returncode != 0:
             print(f'{Style.BRIGHT}{Fore.RED}error occurred running exe file (error code {res.returncode}){Style.RESET_ALL}')
-            return True
+            return False
         
         exe_file.unlink()
-        return False
+        return True
 
 class ByteTestHandler(TestFileHandler):
+    def run_byte(self, path: Path):
+        pipeline = Pipeline()
+        file = ast.File(path)
+        exe_file = pipeline.compile_to_exe(file)
+        if not exe_file.is_file():
+            return False
+        
+        res = run([str(exe_file)], text=True, capture_output=True)
+        if res.returncode != 0:
+            return False
+
+        expected_file = path.with_suffix('.out')
+        if not expected_file.is_file():
+            return True
+        
+        output = res.stdout.strip()
+        expected_output = expected_file.read_text().strip()
+        return output == expected_output
+    
     def test(self, path: Path):
-        with disable_io():
-            try:
-                pipeline = Pipeline()
-                file = ast.File(path)
-                exe_file = pipeline.compile_to_exe(file)
-                if exe_file.is_file():
-                    run(f'{exe_file}', shell=True)
-                
-                return False
-            except SystemExit:
-                return True
+        try:
+            return self.run_byte(path)
+        except SystemExit:
+            return False
