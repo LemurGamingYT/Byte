@@ -5,7 +5,6 @@ from pathlib import Path
 
 from colorama import Fore, Style
 
-from byte.io_disabler import disable_io
 from byte.pipeline import Pipeline
 from byte import ast
 
@@ -42,9 +41,7 @@ class CTestHandler(TestFileHandler):
             print(f'{Style.BRIGHT}{Fore.RED}C exe compilation failed{Style.RESET_ALL}')
             return False
         
-        with disable_io():
-            res = run([str(exe_file)], shell=True)
-        
+        res = run([str(exe_file)], shell=True)
         if res.returncode != 0:
             print(f'{Style.BRIGHT}{Fore.RED}error occurred running exe file (error code {res.returncode}){Style.RESET_ALL}')
             return False
@@ -61,6 +58,7 @@ class ByteTestHandler(TestFileHandler):
             return False
         
         res = run([str(exe_file)], text=True, capture_output=True)
+        exe_file.unlink()
         if res.returncode != 0:
             return False
 

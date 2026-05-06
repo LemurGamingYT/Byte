@@ -1,5 +1,6 @@
 from sys import exit as sys_exit
 from pathlib import Path
+from logging import info
 
 from colorama import Fore, Style
 
@@ -25,8 +26,6 @@ class ArgParser:
         self.test_factory.register('.py', PythonTestHandler())
         self.test_factory.register('.c', CTestHandler())
         self.test_factory.register('.byte', ByteTestHandler())
-
-        self.pipeline = Pipeline()
         
         self.args = args
     
@@ -118,6 +117,7 @@ class ArgParser:
         print(f'{colour}{Style.BRIGHT}{passed_count}/{num_tests} tests passed{Style.RESET_ALL}')
 
     def test_single(self, path: Path):
+        info(f'running test path {path}')
         success = self.test_factory.test_file(path)
         if success:
             print(f'{Fore.GREEN}{Style.BRIGHT}successfully ran test {path.stem}{Style.RESET_ALL}')
@@ -163,7 +163,8 @@ class ArgParser:
             print('Usage: byte build <file>')
             print(f'File \'{file_path}\' is not a file')
             sys_exit(1)
-        
+
+        pipeline = Pipeline()
         options = ast.CompileOptions.from_arg_parser(self)
         file = ast.File(path, options=options)
-        return self.pipeline.compile_to_exe(file)
+        return pipeline.compile_to_exe(file)

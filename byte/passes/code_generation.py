@@ -18,7 +18,7 @@ class CodeGeneration(ByteCompilerPass):
     def __init__(self, file: ast.File):
         super().__init__(file)
         
-        self.module = ModuleExt(file.path.stem)
+        self.module = ModuleExt(file.path.stem, ir.Context())
         self.module.triple = binding.get_default_triple()
         
         self.builder = IRBuilderExt()

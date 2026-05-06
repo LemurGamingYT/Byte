@@ -384,8 +384,8 @@ class TypeChecker(ByteCompilerPass):
         for i, (arg, param) in enumerate(zip(args, overload.params)):
             if not param.type.is_reference():
                 continue
-            
-            if not isinstance(arg.value, ast.Id):
+
+            if not isinstance(arg.value, (ast.Ref, ast.Deref, ast.Id)):
                 # TODO: turn argument into a temporary variable
                 arg.pos.comptime_error(self.file, 'cannot reference non-identifier')
             
