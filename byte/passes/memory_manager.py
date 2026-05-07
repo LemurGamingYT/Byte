@@ -112,6 +112,10 @@ class MemoryManager(ByteCompilerPass):
                     info(f'added parameter {param.name}')
                 
                 body = cast(ast.Body, self.visit(body))
+
+        self.scope.symbol_table.add(ast.Symbol(
+            node.name, self.file.type_map.get('function'), node
+        ))
         
         return ast.Function(
             node.pos, node.type, node.name, node.params, body, node.flags, node.extend_type, node.generic_params, node.overloads
