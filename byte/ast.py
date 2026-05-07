@@ -15,7 +15,7 @@ from llvmlite import ir
 BYTE_DIR = Path(__file__).parent
 STDLIB_PATH = BYTE_DIR / 'stdlib'
 VERSION = '0.0.1'
-NODE_KWARGS = {'frozen': True}
+NODE_KWARGS = {'slots': True}
 
 class Target(Enum):
     WINDOWS = 'Windows'
@@ -256,7 +256,7 @@ class Type(Node):
         if isinstance(ir_type, ir.IntType):
             if ir_type.width == 1:
                 return file.type_map.get('bool')
-            elif ir_type.width == 32:
+            elif ir_type.width == 32 or ir_type.width == 8:
                 return file.type_map.get('int')
         elif isinstance(ir_type, ir.FloatType):
             return file.type_map.get('float')

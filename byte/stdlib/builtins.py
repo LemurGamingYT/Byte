@@ -398,6 +398,26 @@ class builtins(IntrinsicLib):
             return ir.Constant(ir.FloatType(), e)
 
         @intrinsic(
+            self, int_type, [ast.Param(ast.Position(), float_type, 'x')], flags=ast.FunctionFlags(static=True, method=True),
+            override_name=f'{Math_type}.floor'
+        )
+        def Math_floor(ctx: IntrinsicCallContext):
+            floor = ctx.module.registry.get('floor')
+            x = ctx.arg(0)
+            res_float = ctx.builder.call(floor, [x], 'res_float')
+            return ctx.builder.fptosi(res_float, ir.IntType(32), 'res')
+
+        @intrinsic(
+            self, int_type, [ast.Param(ast.Position(), float_type, 'x')], flags=ast.FunctionFlags(static=True, method=True),
+            override_name=f'{Math_type}.ceil'
+        )
+        def Math_ceil(ctx: IntrinsicCallContext):
+            ceil = ctx.module.registry.get('ceil')
+            x = ctx.arg(0)
+            res_float = ctx.builder.call(ceil, [x], 'res_float')
+            return ctx.builder.fptosi(res_float, ir.IntType(32), 'res')
+
+        @intrinsic(
             self, string_type, flags=ast.FunctionFlags(static=True, property=True), override_name=f'{System_type}.os'
         )
         def System_os(ctx: IntrinsicCallContext):

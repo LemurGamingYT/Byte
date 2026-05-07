@@ -65,9 +65,12 @@ class Pipeline:
     
     def compile_file(self, file: ast.File):
         program = self.parse(file)
-    
+
+        ast_file = file.path.with_suffix('.byteast')
         if file.options.debug:
-            file.path.with_suffix('.byteast').write_text(str(program))
+            ast_file.write_text(str(program))
+        else:
+            ast_file.unlink(missing_ok=True)
     
         program = self.run(file, program)
         return cast(CompileResult, CodeGeneration.run(file, program))
@@ -79,7 +82,7 @@ class Pipeline:
         ll_file.write_text(str(res.module))
     
         flags = file.options.to_clang_flags()
-    
+
         obj_file = file.path.with_suffix('.o')
         run_cmd(['clang', '-c', '-o', str(obj_file), str(ll_file), *flags])
     

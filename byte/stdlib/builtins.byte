@@ -111,8 +111,6 @@ fn assert(bool condition, string msg) {
 static fn Math.sqrt(float x) -> float { return sqrt(x) }
 static fn Math.pow(float base, float exponent) -> float { return pow(base, exponent) }
 static fn Math.abs(float x) -> float { return fabs(x) }
-static fn Math.floor(float x) -> int { return floor(x) }
-static fn Math.ceil(float x) -> int { return ceil(x) }
 static fn Math.min(float a, float b) -> float { return minnum(a, b) }
 static fn Math.min(int a, int b) -> int { return smin(a, b) }
 static fn Math.max(float a, float b) -> float { return maxnum(a, b) }

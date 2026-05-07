@@ -29,7 +29,7 @@ def NULL(type: ir.Type | None = None):
 
 def find_linker():
     """Finds any supported linker"""
-    
+
     if which('clang') is not None:
         return 'clang'
     elif which('gcc') is not None:
@@ -68,8 +68,8 @@ class Registry:
             RegistryDefinition('llvm.sqrt.f32', ir.FunctionType(ir.FloatType(), [ir.FloatType()]), 'sqrt'),
             RegistryDefinition('llvm.pow.f32', ir.FunctionType(ir.FloatType(), [ir.FloatType(), ir.FloatType()]), 'pow'),
             RegistryDefinition('llvm.fabs.f32', ir.FunctionType(ir.FloatType(), [ir.FloatType()]), 'fabs'),
-            RegistryDefinition('llvm.floor.f32', ir.FunctionType(ir.IntType(32), [ir.FloatType()]), 'floor'),
-            RegistryDefinition('llvm.ceil.f32', ir.FunctionType(ir.IntType(32), [ir.FloatType()]), 'ceil'),
+            RegistryDefinition('llvm.floor.f32', ir.FunctionType(ir.FloatType(), [ir.FloatType()]), 'floor'),
+            RegistryDefinition('llvm.ceil.f32', ir.FunctionType(ir.FloatType(), [ir.FloatType()]), 'ceil'),
             RegistryDefinition('llvm.maxnum.f32', ir.FunctionType(ir.FloatType(), [ir.FloatType(), ir.FloatType()]), 'maxnum'),
             RegistryDefinition('llvm.minnum.f32', ir.FunctionType(ir.FloatType(), [ir.FloatType(), ir.FloatType()]), 'minnum'),
             RegistryDefinition('llvm.smax.i32', ir.FunctionType(ir.IntType(32), [ir.IntType(32), ir.IntType(32)]), 'smax'),
@@ -79,7 +79,7 @@ class Registry:
             RegistryDefinition('__acrt_iob_func', ir.FunctionType(FILE_type, [ir.IntType(32)]), 'acrt_iob_func'),
             RegistryDefinition('exit', ir.FunctionType(ir.VoidType(), [ir.IntType(32)])),
             RegistryDefinition('llvm.memset.p0.i32', ir.FunctionType(
-                ir.VoidType(), [pointer_type, ir.IntType(32), ir.IntType(32), ir.IntType(1)]
+                ir.VoidType(), [pointer_type, ir.IntType(8), ir.IntType(32), ir.IntType(1)]
             ), 'memset'),
             RegistryDefinition('snprintf', ir.FunctionType(
                 ir.IntType(32), [pointer_type, ir.IntType(32), pointer_type], True
