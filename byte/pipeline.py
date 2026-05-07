@@ -47,8 +47,8 @@ class Pipeline:
             info(f'running pass {pass_name} on file {file.path}')
             program = p.run(file, program)
 
+            ast_file = ast_file.with_stem(f'{file.path.stem}_{pass_name.lower()}')
             if file.options.debug:
-                ast_file = ast_file.with_stem(f'{file.path.stem}_{pass_name.lower()}')
                 ast_file.write_text(str(program))
             else:
                 ast_file.unlink(missing_ok=True)
