@@ -33,7 +33,7 @@ class TypeChecker(ByteCompilerPass):
         return ast.Arg(node.pos, value.type, value)
     
     def visitParam(self, node: ast.Param):
-        return ast.Param(node.pos, cast(ast.Type, self.visit(node.type)), node.name, node.is_mutable)
+        return ast.Param(node.pos, cast(ast.Type, self.visit(node.type)), node.name, node.flags)
     
     def visitBody(self, node: ast.Body):
         return ast.Body(node.pos, cast(ast.Type, self.visit(node.type)), [self.visit(stmt) for stmt in node.nodes])
@@ -98,7 +98,7 @@ class TypeChecker(ByteCompilerPass):
         func = ast.Function(node.pos, ret_type, node.name, params, node.body, node.flags, extend_type)
         func.name = self.get_mangled_name(func)
         symbol = self.scope.symbol_table.tryget(func.name)
-        if symbol is not None and not symbol.is_forward_decl:
+        if symbol is not None and not symbol.flags.forward_decl:
             base = cast(ast.Function, symbol.value)
             self.create_overload(base, func)
         
@@ -146,7 +146,7 @@ class TypeChecker(ByteCompilerPass):
         cls_type = cast(ast.ClassType, self.file.type_map.get(node.name))
 
         fields = [member for member in node.members if isinstance(member, ast.Property)]
-        constructor_params = [ast.Param(node.pos, member.type, member.name) for member in fields]
+        constructor_params = [ast.Param(node.pos, member.type, member.name, ast.ParamFlags(copy=True)) for member in fields]
         @intrinsic(
             None, cls_type, constructor_params, flags=ast.FunctionFlags(static=True, method=True),
             override_name=f'{cls_type}.new'
@@ -226,7 +226,7 @@ class TypeChecker(ByteCompilerPass):
         if self.scope.symbol_table.has(node.name):
             return self.visit(ast.Assignment(node.pos, value.type, node.name, value, node.op))
         
-        self.scope.symbol_table.add(ast.Symbol(node.name, value.type, value, node.is_mutable))
+        self.scope.symbol_table.add(ast.Symbol(node.name, value.type, value, ast.SymbolFlags(mutable=node.is_mutable)))
         return ast.Variable(node.pos, value.type, node.name, value, node.is_mutable)
     
     def visitAssignment(self, node: ast.Assignment):
@@ -234,7 +234,7 @@ class TypeChecker(ByteCompilerPass):
         if symbol is None:
             node.pos.comptime_error(self.file, f'unknown symbol \'{node.name}\'')
 
-        if not symbol.is_mutable:
+        if not symbol.flags.mutable:
             if node.attr is not None:
                 node.pos.comptime_error(
                     self.file, f'cannot change attribute \'{node.attr}\' because \'{node.name}\' is immutable'
@@ -393,7 +393,7 @@ class TypeChecker(ByteCompilerPass):
             if ref_symbol is None:
                 arg.pos.comptime_error(self.file, 'cannot reference unknown identifier')
             
-            if not ref_symbol.is_mutable and param.is_mutable:
+            if not ref_symbol.flags.mutable and param.flags.mutable:
                 arg.pos.comptime_warning(
                     self.file, f"""argument reference symbol is immutable but is being passed by mutable reference
 make {ref_symbol.name} mutable using the 'mut' keyword to remove this warning""")
@@ -432,7 +432,7 @@ make {ref_symbol.name} mutable using the 'mut' keyword to remove this warning"""
         generic_params_str = '<' + ', '.join(str(generic_type) for generic_type in generic_map.values()) + '>'
         
         params = [
-            ast.Param(param.pos, generic_map.get(str(param.type), param.type), param.name, param.is_mutable)
+            ast.Param(param.pos, generic_map.get(str(param.type), param.type), param.name, param.flags)
             for param in func.params
         ]
         

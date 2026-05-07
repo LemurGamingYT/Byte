@@ -50,14 +50,18 @@ class Position:
         print(f'{Style.BRIGHT}{Fore.YELLOW}warning: {message}{Style.RESET_ALL}')
         warning(message)
 
+@dataclass(kw_only=True, slots=True)
+class SymbolFlags:
+    mutable: bool = False
+    public: bool = True
+    forward_decl: bool = False
+
 @dataclass
 class Symbol:
     name: str
     type: 'Type'
     value: Any
-    is_mutable: bool = False
-    public: bool = True
-    is_forward_decl: bool = False
+    flags: SymbolFlags = field(default_factory=SymbolFlags)
 
 @dataclass
 class SymbolTable:
@@ -98,7 +102,7 @@ class SymbolTable:
         if merge_private:
             self.symbols.update(other.symbols)
         else:
-            non_static_symbols = {k: v for k, v in other.symbols.items() if v.public}
+            non_static_symbols = {k: v for k, v in other.symbols.items() if v.flags.public}
             self.symbols.update(non_static_symbols)
                  
 @dataclass
@@ -323,17 +327,31 @@ class Arg(Node):
     def __str__(self) -> str:
         return str(self.value)
 
+@dataclass(kw_only=True, slots=True)
+class ParamFlags:
+    mutable: bool = False
+    copy: bool = False
+
+    def __str__(self) -> str:
+        code = ''
+        if self.copy:
+            code += 'copy '
+
+        if self.mutable:
+            code += 'mut '
+
+        return code
+
 @dataclass
 class Param(Node):
     name: str
-    is_mutable: bool = False
+    flags: ParamFlags = field(default_factory=ParamFlags)
     
     def to_symbol(self):
-        return Symbol(self.name, self.type, self, self.is_mutable)
+        return Symbol(self.name, self.type, self, SymbolFlags(mutable=self.flags.mutable))
     
     def __str__(self) -> str:
-        mut = 'mut ' if self.is_mutable else ''
-        return f'{mut}{self.type} {self.name}'
+        return f'{self.flags}{self.type} {self.name}'
 
 @dataclass
 class Body(Node):
@@ -374,7 +392,7 @@ class Class(TypelessNode):
 {members_str}
 }}"""
 
-@dataclass(kw_only=True)
+@dataclass(kw_only=True, slots=True)
 class FunctionFlags:
     static: bool = False
     property: bool = False

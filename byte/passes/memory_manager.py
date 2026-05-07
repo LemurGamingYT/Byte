@@ -105,7 +105,10 @@ class MemoryManager(ByteCompilerPass):
             with self.file.child_scope():
                 info('adding function parameters')
                 for param in node.params:
-                    self.scope.symbol_table.add(ast.Symbol(param.name, param.type, OwnedObject(param, True), param.is_mutable))
+                    self.scope.symbol_table.add(ast.Symbol(
+                        param.name, param.type, OwnedObject(param, True), ast.SymbolFlags(mutable=param.flags.mutable)
+                    ))
+                    
                     info(f'added parameter {param.name}')
                 
                 body = cast(ast.Body, self.visit(body))
@@ -123,10 +126,16 @@ class MemoryManager(ByteCompilerPass):
                 symbol.value.moved = True
                 info(f'{symbol.name} is now owned by {node.name}')
                 
-                self.scope.symbol_table.add(ast.Symbol(node.name, value.type, OwnedObject(value), node.is_mutable))
+                self.scope.symbol_table.add(ast.Symbol(
+                    node.name, value.type, OwnedObject(value), ast.SymbolFlags(mutable=node.is_mutable)
+                ))
+                
                 return ast.Variable(node.pos, value.type, node.name, value, node.is_mutable, node.op)
         
-        self.scope.symbol_table.add(ast.Symbol(node.name, cast(ast.Type, value.type), OwnedObject(value), node.is_mutable))
+        self.scope.symbol_table.add(ast.Symbol(
+            node.name, cast(ast.Type, value.type), OwnedObject(value), ast.SymbolFlags(mutable=node.is_mutable)
+        ))
+        
         return ast.Variable(node.pos, cast(ast.Type, value.type), node.name, value, node.is_mutable, node.op)
     
     def visitAssignment(self, node: ast.Assignment):
@@ -141,10 +150,16 @@ class MemoryManager(ByteCompilerPass):
                 symbol.value.moved = True
                 info(f'{symbol.name} is now owned by {node.name}')
                 
-                self.scope.symbol_table.add(ast.Symbol(node.name, value.type, OwnedObject(value), assign_symbol.is_mutable))
+                self.scope.symbol_table.add(ast.Symbol(
+                    node.name, value.type, OwnedObject(value), ast.SymbolFlags(mutable=assign_symbol.flags.mutable)
+                ))
+                
                 return ast.Assignment(node.pos, value.type, node.name, value, node.op)
         
-        self.scope.symbol_table.add(ast.Symbol(node.name, cast(ast.Type, value.type), OwnedObject(value), assign_symbol.is_mutable))
+        self.scope.symbol_table.add(ast.Symbol(
+            node.name, cast(ast.Type, value.type), OwnedObject(value), ast.SymbolFlags(mutable=assign_symbol.flags.mutable)
+        ))
+        
         return ast.Assignment(node.pos, cast(ast.Type, value.type), node.name, value, node.op)
     
     def visitReturn(self, node: ast.Return):
@@ -190,3 +205,25 @@ class MemoryManager(ByteCompilerPass):
             node.pos, node.iter_name, self.visit(node.start), self.visit(node.end), body,
             self.visit(node.step) if node.step is not None else None
         )
+
+    def clone_arg(self, arg: ast.Arg):
+        clone_method_name = f'{arg.type}.clone'
+        clone_method_symbol = self.scope.symbol_table.tryget(clone_method_name)
+        if clone_method_symbol is None:
+            return arg
+
+        clone_method = cast(ast.Function, clone_method_symbol.value)
+        return ast.Call(arg.pos, clone_method.ret_type, clone_method.name, [arg])
+
+    def visitCall(self, node: ast.Call):
+        symbol = self.scope.symbol_table.get(node.callee)
+        func = cast(ast.Function, symbol.value)
+        args = []
+        for arg, param in zip(node.args, func.params):
+            arg = cast(ast.Arg, self.visit(arg))
+            if param.flags.copy:
+                arg = self.clone_arg(arg)
+            
+            args.append(arg)
+
+        return ast.Call(node.pos, node.type, node.callee, args)

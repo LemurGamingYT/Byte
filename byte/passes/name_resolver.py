@@ -16,7 +16,7 @@ class NameResolver(ByteCompilerPass):
         return node
 
     def visitVariable(self, node: ast.Variable):
-        self.scope.symbol_table.add(ast.Symbol(node.name, node.type, node.value, node.is_mutable))
+        self.scope.symbol_table.add(ast.Symbol(node.name, node.type, node.value, ast.SymbolFlags(mutable=node.is_mutable)))
         return node
 
     def visitIf(self, node: ast.If):

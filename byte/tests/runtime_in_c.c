@@ -3,12 +3,6 @@
 #include <stdlib.h>
 #include <stdio.h>
 
-#include "../cruntime/asprintf.c"
-
-
-typedef struct {
-    int x, y;
-} Vector2;
 
 typedef struct {
     char* ptr;
@@ -81,19 +75,6 @@ string int_to_string(int i) {
     return (string){buf, written, false};
 }
 
-string Vector2_to_string(Vector2 vec) {
-    string x_str = int_to_string(vec.x);
-    string y_str = int_to_string(vec.y);
-    
-    char* buf = NULL;
-    int written = asprintf(&buf, "Vector2(x=%.*s, y=%.*s)", x_str.length, x_str.ptr, y_str.length, y_str.ptr);
-    return (string){buf, written, true};
-}
-
 int main(void) {
-    Vector2 pos = {100, 100};
-    string to_string = Vector2_to_string(pos);
-    print(to_string);
-    string_destroy(&to_string);
     return 0;
 }

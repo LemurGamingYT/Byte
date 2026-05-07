@@ -75,7 +75,7 @@ class ByteASTBuilder(ByteVisitor):
     def visitParam(self, ctx):
         return ast.Param(
             self.pos(ctx), self.visitType(ctx.type_()), ctx.ID().getText(),
-            ctx.MUTABLE() is not None
+            ast.ParamFlags(mutable=ctx.MUTABLE() is not None)
         )
     
     def visitFuncName(self, ctx):

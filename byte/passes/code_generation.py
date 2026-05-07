@@ -98,7 +98,9 @@ class CodeGeneration(ByteCompilerPass):
                     for i, param in enumerate(node.params):
                         info(f'allocating {param.name}')
                         ptr = self.builder.allocate_value(func.args[i], f'{param.name}.addr')
-                        self.scope.symbol_table.add(ast.Symbol(param.name, param.type, ptr, param.is_mutable))
+                        self.scope.symbol_table.add(ast.Symbol(
+                            param.name, param.type, ptr, ast.SymbolFlags(mutable=param.flags.mutable)
+                        ))
                 
                 info('creating main entry block')
                 entry_block = func.append_basic_block('entry')
@@ -274,7 +276,7 @@ class CodeGeneration(ByteCompilerPass):
     def visitVariable(self, node: ast.Variable):
         value = self.visit(node.value)
         ptr = self.builder.allocate_value(value, f'{node.name}.addr')
-        self.scope.symbol_table.add(ast.Symbol(node.name, node.type, ptr, node.is_mutable))
+        self.scope.symbol_table.add(ast.Symbol(node.name, node.type, ptr, ast.SymbolFlags(mutable=node.is_mutable)))
         info(f'allocated variable {node.name}')
         return ptr
     
