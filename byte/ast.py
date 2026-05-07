@@ -15,6 +15,7 @@ from llvmlite import ir
 BYTE_DIR = Path(__file__).parent
 STDLIB_PATH = BYTE_DIR / 'stdlib'
 VERSION = '0.0.1'
+NODE_KWARGS = {'frozen': True}
 
 class Target(Enum):
     WINDOWS = 'Windows'
@@ -210,7 +211,7 @@ class File:
         self.scope = outer_scope
 
 
-@dataclass
+@dataclass(**NODE_KWARGS)
 class Node(ABC):
     pos: Position
     type: 'Type'
@@ -234,11 +235,11 @@ class Node(ABC):
     def __str__(self) -> str:
         ...
 
-@dataclass
+@dataclass(**NODE_KWARGS)
 class TypelessNode(Node, ABC):
     type: 'Type' = field(default_factory=lambda: Type('any'), init=False, repr=False, compare=False)
 
-@dataclass
+@dataclass(**NODE_KWARGS)
 class Type(Node):
     pos: Position = field(default_factory=Position, init=False, compare=False)
     type: str #type: ignore
@@ -279,7 +280,7 @@ class Type(Node):
     def __str__(self) -> str:
         return self.type
 
-@dataclass
+@dataclass(**NODE_KWARGS)
 class ReferenceType(Type):
     type: Type # type: ignore
     
@@ -298,7 +299,7 @@ class ReferenceType(Type):
     def __str__(self) -> str:
         return f'{self.type}&'
 
-@dataclass
+@dataclass(**NODE_KWARGS)
 class ClassType(Type):
     fields: list[Type] = field(default_factory=list)
     
@@ -306,21 +307,21 @@ class ClassType(Type):
     def name(self):
         return self.type
 
-@dataclass
+@dataclass(**NODE_KWARGS)
 class Program(TypelessNode):
     nodes: list[Node] = field(default_factory=list)
     
     def __str__(self) -> str:
         return '\n'.join(map(str, self.nodes))
 
-@dataclass
+@dataclass(**NODE_KWARGS)
 class Comment(TypelessNode):
     text: str
     
     def __str__(self) -> str:
         return f'// {self.text}'
 
-@dataclass
+@dataclass(**NODE_KWARGS)
 class Arg(Node):
     value: Any
     
@@ -342,7 +343,7 @@ class ParamFlags:
 
         return code
 
-@dataclass
+@dataclass(**NODE_KWARGS)
 class Param(Node):
     name: str
     flags: ParamFlags = field(default_factory=ParamFlags)
@@ -353,14 +354,14 @@ class Param(Node):
     def __str__(self) -> str:
         return f'{self.flags}{self.type} {self.name}'
 
-@dataclass
+@dataclass(**NODE_KWARGS)
 class Body(Node):
     nodes: list[Node] = field(default_factory=list)
     
     def __str__(self) -> str:
         return '\n'.join(map(str, self.nodes))
 
-@dataclass
+@dataclass(**NODE_KWARGS)
 class Return(Node):
     value: Node | None = None
     
@@ -370,14 +371,14 @@ class Return(Node):
         
         return f'return {self.value}'
 
-@dataclass
+@dataclass(**NODE_KWARGS)
 class Property(Node):
     name: str
     
     def __str__(self) -> str:
         return f'{self.type} {self.name}'
 
-@dataclass
+@dataclass(**NODE_KWARGS)
 class Class(TypelessNode):
     name: str
     members: list[Union['Function', 'Property']] = field(default_factory=list)
@@ -411,7 +412,7 @@ class FunctionFlags:
         
         return code
 
-@dataclass
+@dataclass(**NODE_KWARGS)
 class Function(Node):
     name: str
     params: list[Param] = field(default_factory=list)
@@ -450,7 +451,7 @@ class Function(Node):
 {self.body}
 }}"""
 
-@dataclass
+@dataclass(**NODE_KWARGS)
 class Variable(Node):
     name: str
     value: Node
@@ -464,7 +465,7 @@ class Variable(Node):
         mut = 'mut ' if self.is_mutable else ''
         return f'{mut}{self.type} {self.name} = {self.value}'
 
-@dataclass
+@dataclass(**NODE_KWARGS)
 class Assignment(Node):
     name: str
     value: Node
@@ -476,7 +477,7 @@ class Assignment(Node):
         attr = f'.{self.attr}' or ''
         return f'{self.name}{attr} {op}= {self.value}'
 
-@dataclass
+@dataclass(**NODE_KWARGS)
 class Elseif(TypelessNode):
     cond: Node
     body: Body
@@ -486,7 +487,7 @@ class Elseif(TypelessNode):
 {self.body}
 }}"""
 
-@dataclass
+@dataclass(**NODE_KWARGS)
 class If(TypelessNode):
     cond: Node
     body: Body
@@ -502,7 +503,7 @@ class If(TypelessNode):
 {self.body}
 }}{elseifs}{else_body}"""
 
-@dataclass
+@dataclass(**NODE_KWARGS)
 class While(TypelessNode):
     cond: Node
     body: Body
@@ -512,7 +513,7 @@ class While(TypelessNode):
 {self.body}
 }}"""
 
-@dataclass
+@dataclass(**NODE_KWARGS)
 class ForRange(TypelessNode):
     iter_name: str
     start: Node
@@ -524,66 +525,66 @@ class ForRange(TypelessNode):
         step = f'..{self.step}' if self.step is not None else ''
         return f'for {self.iter_name} in {self.start}..{self.end}{step}'
 
-@dataclass
+@dataclass(**NODE_KWARGS)
 class Break(TypelessNode):
     def __str__(self) -> str:
         return 'break'
 
-@dataclass
+@dataclass(**NODE_KWARGS)
 class Continue(TypelessNode):
     def __str__(self) -> str:
         return 'continue'
 
-@dataclass
+@dataclass(**NODE_KWARGS)
 class Use(TypelessNode):
     path: str
     
     def __str__(self) -> str:
         return f'use "{self.path}"'
 
-@dataclass
+@dataclass(**NODE_KWARGS)
 class Defer(TypelessNode):
     expr: Node
     
     def __str__(self) -> str:
         return f'defer {self.expr}'
 
-@dataclass
+@dataclass(**NODE_KWARGS)
 class Int(Node):
     value: int
     
     def __str__(self) -> str:
         return f'{self.value}'
 
-@dataclass
+@dataclass(**NODE_KWARGS)
 class Float(Node):
     value: float
     
     def __str__(self) -> str:
         return f'{self.value}'
 
-@dataclass
+@dataclass(**NODE_KWARGS)
 class String(Node):
     value: str
     
     def __str__(self) -> str:
         return f'"{self.value}"'
 
-@dataclass
+@dataclass(**NODE_KWARGS)
 class StringPointer(Node):
     value: str
     
     def __str__(self) -> str:
         return f'p"{self.value}"'
 
-@dataclass
+@dataclass(**NODE_KWARGS)
 class Bool(Node):
     value: bool
     
     def __str__(self) -> str:
         return f'{self.value}'.lower()
 
-@dataclass
+@dataclass(**NODE_KWARGS)
 class Id(Node):
     name: str
     
@@ -593,7 +594,7 @@ class Id(Node):
     def __str__(self) -> str:
         return self.name
 
-@dataclass
+@dataclass(**NODE_KWARGS)
 class Call(Node):
     callee: str
     args: list[Arg] = field(default_factory=list)
@@ -602,7 +603,7 @@ class Call(Node):
         args_str = ', '.join(map(str, self.args))
         return f'{self.callee}({args_str})'
 
-@dataclass
+@dataclass(**NODE_KWARGS)
 class Operation(Node):
     op: str
     left: Node
@@ -611,7 +612,7 @@ class Operation(Node):
     def __str__(self) -> str:
         return f'{self.left} {self.op} {self.right}'
 
-@dataclass
+@dataclass(**NODE_KWARGS)
 class UnaryOperation(Node):
     op: str
     value: Node
@@ -619,7 +620,7 @@ class UnaryOperation(Node):
     def __str__(self) -> str:
         return f'{self.op}{self.value}'
 
-@dataclass
+@dataclass(**NODE_KWARGS)
 class Ternary(Node):
     cond: Node
     true: Node
@@ -628,14 +629,14 @@ class Ternary(Node):
     def __str__(self) -> str:
         return f'{self.true} if {self.cond} else {self.false}'
 
-@dataclass
+@dataclass(**NODE_KWARGS)
 class Bracketed(Node):
     value: Node
     
     def __str__(self) -> str:
         return f'({self.value})'
 
-@dataclass
+@dataclass(**NODE_KWARGS)
 class Attribute(Node):
     value: Node
     attr: str
@@ -645,7 +646,7 @@ class Attribute(Node):
         args_str = ', '.join(map(str, self.args or []))
         return f'{self.value}.{self.attr}({args_str})'
 
-@dataclass
+@dataclass(**NODE_KWARGS)
 class New(Node):
     new_type: Type
     args: list[Arg] = field(default_factory=list)
@@ -654,14 +655,14 @@ class New(Node):
         args_str = ', '.join(map(str, self.args))
         return f'new {self.new_type}({args_str})'
 
-@dataclass
+@dataclass(**NODE_KWARGS)
 class Ref(Node):
     name: str
     
     def __str__(self) -> str:
         return f'&{self.name}'
 
-@dataclass
+@dataclass(**NODE_KWARGS)
 class Deref(Node):
     name: str
 
@@ -669,7 +670,7 @@ class Deref(Node):
         return f'*{self.name}'
 
 
-@dataclass
+@dataclass(**NODE_KWARGS)
 class StructLiteral(Node):
     name: str
     args: list[Node] = field(default_factory=list)
@@ -678,7 +679,7 @@ class StructLiteral(Node):
         args_str = ', '.join(map(str, self.args))
         return f'struct<{self.name}>({args_str})'
 
-@dataclass
+@dataclass(**NODE_KWARGS)
 class Null(Node):
     def __str__(self) -> str:
         return 'null'

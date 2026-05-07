@@ -68,13 +68,11 @@ class TypeChecker(ByteCompilerPass):
             name = f'{name}.{a.type}'
         
         if func.extend_type is not None:
-            extend_type = self.visit(func.extend_type)
-            name = f'{extend_type}.{name}'
+            name = f'{func.extend_type}.{name}'
         
         return name
     
     def create_overload(self, base: ast.Function, func: ast.Function):
-        base.overloads.append(func)
         info(f'adding new overload to {base.name}')
         
         base_param_types = [param.type for param in base.params]
@@ -85,31 +83,33 @@ class TypeChecker(ByteCompilerPass):
         params_mangling = '.'.join(map(str, param_types))
         mangled_name = f'{func.name}.{params_mangling}'
         info(f'mangled overload function name \'{func.name}\' to \'{mangled_name}\'')
-        
-        func.name = mangled_name
+
+        overload = replace(func, name=mangled_name)
+        base.overloads.append(overload)
+        return overload
     
     def visitFunction(self, node: ast.Function):
         if node.is_generic:
             self.scope.symbol_table.add(ast.Symbol(node.name, self.file.type_map.get('function'), node))
             return node
         
-        params = [cast(ast.Param, self.visit(param)) for param in node.params]
-        ret_type = cast(ast.Type, self.visit(node.ret_type))
-        extend_type = cast(ast.Type, self.visit(node.extend_type)) if node.extend_type is not None else None
+        params = [self.visit(param) for param in node.params]
+        ret_type = self.visit(node.ret_type)
+        extend_type = self.visit(node.extend_type) if node.extend_type is not None else None
         func = replace(node, type=ret_type, params=params, extend_type=extend_type)
-        func.name = self.get_mangled_name(func)
+        func = replace(func, name=self.get_mangled_name(func))
         symbol = self.scope.symbol_table.tryget(func.name)
         if symbol is not None and not symbol.flags.forward_decl:
             base = cast(ast.Function, symbol.value)
-            self.create_overload(base, func)
+            func = self.create_overload(base, func)
         
         self.scope.symbol_table.add(ast.Symbol(func.name, self.file.type_map.get('function'), func))
         if isinstance(func.body, ast.Body):
             with self.file.child_scope():
                 for param in params:
-                    self.scope.symbol_table.add(param.to_symbol())
-                
-                func.body = cast(ast.Body, self.visit(func.body))
+                    self.scope.symbol_table.add(cast(ast.Param, param).to_symbol())
+
+                func = replace(func, body=self.visit(func.body))
         
         return func
     
