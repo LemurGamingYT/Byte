@@ -83,7 +83,7 @@ void Arena_free(Arena* a) {
 }
 
 int main(void) {
-    Arena a;
+    Arena a = { .begin = NULL, .end = NULL };
     int* data = (int*)Arena_alloc(&a, sizeof(int));
     *data = 10;
     printf("%d\n", *data);

@@ -1,5 +1,5 @@
+from dataclasses import dataclass, replace
 from contextlib import contextmanager
-from dataclasses import dataclass
 from logging import info
 from typing import cast
 
@@ -92,7 +92,7 @@ class MemoryManager(ByteCompilerPass):
         if not has_returned:
             nodes.extend(self.reached_end_of_scope(node.pos))
         
-        return ast.Body(node.pos, node.type, nodes)
+        return replace(node, nodes=nodes)
     
     def visitFunction(self, node: ast.Function):
         if node.is_generic:
@@ -117,9 +117,7 @@ class MemoryManager(ByteCompilerPass):
             node.name, self.file.type_map.get('function'), node
         ))
         
-        return ast.Function(
-            node.pos, node.type, node.name, node.params, body, node.flags, node.extend_type, node.generic_params, node.overloads
-        )
+        return replace(node, body=body)
     
     def visitVariable(self, node: ast.Variable):
         value = self.visit(node.value)
@@ -134,13 +132,13 @@ class MemoryManager(ByteCompilerPass):
                     node.name, value.type, OwnedObject(value), ast.SymbolFlags(mutable=node.is_mutable)
                 ))
                 
-                return ast.Variable(node.pos, value.type, node.name, value, node.is_mutable, node.op)
+                return replace(node, type=value.type, value=value)
         
         self.scope.symbol_table.add(ast.Symbol(
             node.name, cast(ast.Type, value.type), OwnedObject(value), ast.SymbolFlags(mutable=node.is_mutable)
         ))
         
-        return ast.Variable(node.pos, cast(ast.Type, value.type), node.name, value, node.is_mutable, node.op)
+        return replace(node, type=value.type, value=value)
     
     def visitAssignment(self, node: ast.Assignment):
         assign_symbol = self.scope.symbol_table.get(node.name)
@@ -158,13 +156,13 @@ class MemoryManager(ByteCompilerPass):
                     node.name, value.type, OwnedObject(value), ast.SymbolFlags(mutable=assign_symbol.flags.mutable)
                 ))
                 
-                return ast.Assignment(node.pos, value.type, node.name, value, node.op)
+                return replace(node, type=value.type, value=value)
         
         self.scope.symbol_table.add(ast.Symbol(
             node.name, cast(ast.Type, value.type), OwnedObject(value), ast.SymbolFlags(mutable=assign_symbol.flags.mutable)
         ))
         
-        return ast.Assignment(node.pos, cast(ast.Type, value.type), node.name, value, node.op)
+        return replace(node, type=value.type, value=value)
     
     def visitReturn(self, node: ast.Return):
         if node.value is None:
@@ -177,13 +175,13 @@ class MemoryManager(ByteCompilerPass):
                 symbol.value.moved = True
                 info(f'returned an owned object instance {symbol.name}, ownership is now on the callsite')
         
-        return ast.Return(node.pos, cast(ast.Type, value.type), value)
+        return replace(node, type=value.type, value=value)
         
     def visitElseif(self, node: ast.Elseif):
         with self.file.child_scope():
             body = self.visitBody(node.body)
         
-        return ast.Elseif(node.pos, self.visit(node.cond), body)
+        return replace(node, cond=self.visit(node.cond), body=body)
     
     def visitIf(self, node: ast.If):
         with self.file.child_scope():
@@ -193,21 +191,24 @@ class MemoryManager(ByteCompilerPass):
         if else_body is not None:
             else_body = self.visitBody(else_body)
         
-        return ast.If(node.pos, self.visit(node.cond), body, else_body, [self.visitElseif(elseif) for elseif in node.elseifs])
+        return replace(
+            node, cond=self.visit(node.cond), body=body, else_body=else_body,
+            elseifs=[self.visit(elseif) for elseif in node.elseifs]
+        )
     
     def visitWhile(self, node: ast.While):
         with self.file.child_scope():
             body = self.visitBody(node.body)
         
-        return ast.While(node.pos, self.visit(node.cond), body)
+        return replace(node, cond=self.visit(node.cond), body=body)
     
     def visitForRange(self, node: ast.ForRange):
         with self.file.child_scope():
             body = self.visitBody(node.body)
         
-        return ast.ForRange(
-            node.pos, node.iter_name, self.visit(node.start), self.visit(node.end), body,
-            self.visit(node.step) if node.step is not None else None
+        return replace(
+            node, start=self.visit(node.start), end=self.visit(node.end), body=body,
+            step=self.visit(node.step) if node.step is not None else None
         )
 
     def clone_arg(self, arg: ast.Arg):
@@ -230,4 +231,4 @@ class MemoryManager(ByteCompilerPass):
             
             args.append(arg)
 
-        return ast.Call(node.pos, node.type, node.callee, args)
+        return replace(node, args=args)

@@ -1,4 +1,5 @@
 from importlib import import_module
+from dataclasses import replace
 from logging import info
 from typing import cast
 
@@ -19,7 +20,7 @@ class TypeChecker(ByteCompilerPass):
         for stmt in node.nodes:
             self.toplevel_nodes.append(self.visit(stmt))
         
-        return ast.Program(node.pos, self.toplevel_nodes)
+        return replace(node, nodes=self.toplevel_nodes)
     
     def visitType(self, node: ast.Type):
         typ = self.file.type_map.tryget(node.type)
@@ -30,20 +31,20 @@ class TypeChecker(ByteCompilerPass):
     
     def visitArg(self, node: ast.Arg):
         value = self.visit(node.value)
-        return ast.Arg(node.pos, value.type, value)
+        return replace(node, type=value.type, value=value)
     
     def visitParam(self, node: ast.Param):
-        return ast.Param(node.pos, cast(ast.Type, self.visit(node.type)), node.name, node.flags)
+        return replace(node, type=self.visit(node.type))
     
     def visitBody(self, node: ast.Body):
-        return ast.Body(node.pos, cast(ast.Type, self.visit(node.type)), [self.visit(stmt) for stmt in node.nodes])
+        return replace(node, type=self.visit(node.type), nodes=[self.visit(stmt) for stmt in node.nodes])
     
     def visitReturn(self, node: ast.Return):
         if node.value is None:
             return node
         
         value = self.visit(node.value)
-        return ast.Return(node.pos, value.type, value)
+        return replace(node, type=value.type, value=value)
     
     def have_same_types(self, list1: list[ast.Type], list2: list[ast.Type]):
         if len(list1) != len(list2):
@@ -95,7 +96,7 @@ class TypeChecker(ByteCompilerPass):
         params = [cast(ast.Param, self.visit(param)) for param in node.params]
         ret_type = cast(ast.Type, self.visit(node.ret_type))
         extend_type = cast(ast.Type, self.visit(node.extend_type)) if node.extend_type is not None else None
-        func = ast.Function(node.pos, ret_type, node.name, params, node.body, node.flags, extend_type)
+        func = replace(node, type=ret_type, params=params, extend_type=extend_type)
         func.name = self.get_mangled_name(func)
         symbol = self.scope.symbol_table.tryget(func.name)
         if symbol is not None and not symbol.flags.forward_decl:
@@ -113,7 +114,7 @@ class TypeChecker(ByteCompilerPass):
         return func
     
     def visitProperty(self, node: ast.Property):
-        return ast.Property(node.pos, cast(ast.Type, self.visit(node.type)), node.name)
+        return replace(node, type=self.visit(node.type))
 
     def init_field(self, cls_type: ast.ClassType, i: int, field: ast.Property):
         self_param = ast.Param(field.pos, cls_type, 'self')
@@ -219,7 +220,7 @@ class TypeChecker(ByteCompilerPass):
             
             members.append(self.visit(member))
 
-        return ast.Class(node.pos, node.name, cast(list[ast.Function | ast.Property], members))
+        return replace(node, members=members)
     
     def visitVariable(self, node: ast.Variable):
         value = self.visit(node.value)
@@ -227,7 +228,7 @@ class TypeChecker(ByteCompilerPass):
             return self.visit(ast.Assignment(node.pos, value.type, node.name, value, node.op))
         
         self.scope.symbol_table.add(ast.Symbol(node.name, value.type, value, ast.SymbolFlags(mutable=node.is_mutable)))
-        return ast.Variable(node.pos, value.type, node.name, value, node.is_mutable)
+        return replace(node, type=value.type, value=value)
     
     def visitAssignment(self, node: ast.Assignment):
         symbol = self.scope.symbol_table.tryget(node.name)
@@ -254,7 +255,7 @@ class TypeChecker(ByteCompilerPass):
                 node.pos, self.file.type_map.get('nil'), var_id, f'set.{node.attr}', [value.to_arg()]
             ))
         
-        return ast.Assignment(node.pos, value.type, node.name, value)
+        return replace(node, type=value.type, value=value)
     
     def visitElseif(self, node: ast.Elseif):
         with self.file.child_scope():
@@ -272,15 +273,15 @@ class TypeChecker(ByteCompilerPass):
         else:
             else_body = None
         
-        return ast.If(node.pos, self.visit(node.cond), body, else_body, [
-            cast(ast.Elseif, self.visit(elseif)) for elseif in node.elseifs
+        return replace(node, cond=self.visit(node.cond), body=body, else_body=else_body, elseifs=[
+            self.visit(elseif) for elseif in node.elseifs
         ])
     
     def visitWhile(self, node: ast.While):
         with self.file.child_scope():
             body = cast(ast.Body, self.visit(node.body))
         
-        return ast.While(node.pos, self.visit(node.cond), body)
+        return replace(node, cond=self.visit(node.cond), body=body)
     
     def is_valid_range_type(self, type: ast.Type):
         return str(type) in ('int', 'float')
@@ -317,7 +318,7 @@ class TypeChecker(ByteCompilerPass):
             
             body = cast(ast.Body, self.visit(node.body))
         
-        return ast.ForRange(node.pos, node.iter_name, start, end, body, step)
+        return replace(node, start=start, end=end, body=body, step=step)
     
     def use_py(self, file: ast.File, path: str):
         stdlib_path = ast.STDLIB_PATH / f'{path}.py'
@@ -365,7 +366,7 @@ class TypeChecker(ByteCompilerPass):
     def visitId(self, node: ast.Id):
         symbol = self.scope.symbol_table.tryget(node.name)
         typ = self.file.type_map.tryget(node.name)
-        return ast.Id(node.pos, symbol.type if symbol is not None else cast(ast.Type, typ), node.name)
+        return replace(node, type=symbol.type if symbol is not None else typ)
     
     def check_args(self, args: list[ast.Arg], func: ast.Function):
         params = func.params
@@ -441,9 +442,9 @@ make {ref_symbol.name} mutable using the 'mut' keyword to remove this warning"""
             info(f'reusing expanded generic {generic_name}')
             return self.expanded_generics[generic_name]
         
-        generic_func = self.visitFunction(ast.Function(
-            func.pos, generic_map.get(str(func.type), func.type), generic_name, params, func.body, func.flags,
-            func.extend_type, overloads=func.overloads
+        generic_func = self.visitFunction(replace(
+            func, type=generic_map.get(str(func.type), func.type), name=generic_name, params=params,
+            generic_params=[]
         ))
         
         self.expanded_generics[generic_name] = generic_func

@@ -1,3 +1,5 @@
+from dataclasses import replace
+
 from byte.passes import ByteCompilerPass
 from byte import ast
 
@@ -6,7 +8,7 @@ class Preprocessor(ByteCompilerPass):
     def visitProgram(self, node: ast.Program):
         nodes = [self.visit(stmt) for stmt in node.nodes]
         nodes.insert(0, ast.Use(node.pos, 'builtins'))
-        return ast.Program(node.pos, nodes)
+        return replace(node, nodes=nodes)
     
     def visitString(self, node: ast.String):
         return ast.Attribute(node.pos, node.type, ast.Id(node.pos, ast.Type('string'), 'string'), 'new', [
