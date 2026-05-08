@@ -109,8 +109,13 @@ fn assert(bool condition, string msg) {
 
 
 static fn Math.sqrt(float x) -> float { return sqrt(x) }
+static fn Math.sqrt(int x) -> int { return sqrt(x.to_float()).to_int() }
 static fn Math.pow(float base, float exponent) -> float { return pow(base, exponent) }
+static fn Math.pow(float base, int exponent) -> float { return pow(base, exponent.to_float()) }
+static fn Math.pow(int base, float exponent) -> float { return pow(base.to_float(), exponent) }
+static fn Math.pow(int base, int exponent) -> int { return pow(base.to_float(), exponent.to_float()).to_int() }
 static fn Math.abs(float x) -> float { return fabs(x) }
+static fn Math.abs(int x) -> int { return fabs(x.to_float()).to_int() }
 static fn Math.min(float a, float b) -> float { return minnum(a, b) }
 static fn Math.min(int a, int b) -> int { return smin(a, b) }
 static fn Math.max(float a, float b) -> float { return maxnum(a, b) }

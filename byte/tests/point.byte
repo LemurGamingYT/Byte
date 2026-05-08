@@ -1,0 +1,23 @@
+class Point {
+    int x
+    int y
+
+    fn translate(Point& pt, int dx, int dy) -> Point {
+        return new Point(pt.x + dx, pt.y + dy)
+    }
+
+    fn distance_from_origin(Point& pt) -> int {
+        return Math.sqrt(Math.pow(pt.x, 2) + Math.pow(pt.y, 2))
+    }
+}
+
+
+fn main() -> int {
+    pt = new Point(1, 2)
+    print(pt)
+    
+    new_pt = pt.translate(2, 2)
+    print(new_pt)
+    print(new_pt.distance_from_origin())
+    return 0
+}

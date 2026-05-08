@@ -300,6 +300,13 @@ class builtins(IntrinsicLib):
                 ast.Arg(ctx.pos, ctx.file.type_map.get('bool'), llint(0, 1))
             ])
 
+        @intrinsic(
+            self, float_type, [ast.Param(ast.Position(), int_type, 'self')], flags=ast.FunctionFlags(method=True),
+            override_name=f'{int_type}.to_float'
+        )
+        def int_to_float(ctx: IntrinsicCallContext):
+            return ctx.builder.sitofp(ctx.arg(0), ir.FloatType(), ctx.name)
+
         # @intrinsic(self, float_type, flags=ast.FunctionFlags(static=True, property=True), override_name=f'{float_type}.max')
         # def float_max(_: IntrinsicCallContext):
         #     return ir.Constant(ir.FloatType(), 3.402823e+38)
@@ -333,6 +340,13 @@ class builtins(IntrinsicLib):
                 ast.Arg(ctx.pos, ctx.file.type_map.get('int'), written),
                 ast.Arg(ctx.pos, ctx.file.type_map.get('bool'), llint(0, 1))
             ])
+
+        @intrinsic(
+            self, int_type, [ast.Param(ast.Position(), float_type, 'self')], flags=ast.FunctionFlags(method=True),
+            override_name=f'{float_type}.to_int'
+        )
+        def float_to_int(ctx: IntrinsicCallContext):
+            return ctx.builder.fptosi(ctx.arg(0), ir.IntType(32), ctx.name)
 
         @intrinsic(
             self, pointer_type, [ast.Param(ast.Position(), string_type, 'self')], flags=ast.FunctionFlags(property=True),

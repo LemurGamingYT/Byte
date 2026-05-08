@@ -261,13 +261,11 @@ class TypeChecker(ByteCompilerPass):
             node.pos.comptime_error(self.file, f'\'{node.name}\' is immutable')
         
         value = node.value
+        var_id = ast.Id(node.pos, node.type, node.name)
         if node.op is not None:
-            value = self.visit(ast.Operation(
-                node.value.pos, node.type, node.op, ast.Id(node.pos, node.type, node.name), node.value
-            ))
+            value = self.visit(ast.Operation(value.pos, node.type, node.op, var_id, value))
 
         if node.attr is not None:
-            var_id = ast.Id(node.pos, value.type, node.name)
             return self.visit(ast.Attribute(
                 node.pos, self.file.type_map.get('nil'), var_id, f'set.{node.attr}', [value.to_arg()]
             ))
