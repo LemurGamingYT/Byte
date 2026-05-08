@@ -12,7 +12,6 @@ from byte.passes.name_resolver import NameResolver
 from byte.passes.code_analysis import CodeAnalysis
 from byte.passes.preprocessor import Preprocessor
 from byte.passes.type_checker import TypeChecker
-from byte.llvm_extensions import find_linker
 from byte.ast_builder import ByteASTBuilder
 from byte.passes import ByteCompilerPass
 from byte import ast
@@ -24,7 +23,7 @@ DEFAULT_PASSES = [Preprocessor, CodeAnalysis, ForwardDeclaration, NameResolver, 
 def run_cmd(cmd: list[str]):
     cmd_str = ' '.join(cmd)
     info(f'running \'{cmd_str}\'')
-    return run(cmd, shell=True)
+    return run(cmd, check=True)
 
 
 class Pipeline:
@@ -93,12 +92,8 @@ class Pipeline:
     
     def compile_to_exe(self, file: ast.File):
         obj_file = self.compile_to_obj(file)
-        obj_files = [obj_file] + [dependency for dependency in file.dependencies if dependency.suffix == '.o']
-        for cfile in CRUNTIME_DIR.rglob('*.c'):
-            c_obj = cfile.with_suffix('.o')
-            run_cmd(['clang', '-c', str(cfile), '-o', str(c_obj)])
-            
-            obj_files.append(c_obj)
+        obj_files = [obj_file] + [dependency for dependency in file.dependencies if dependency.suffix == '.o']\
+            + self.compile_cruntime()
         
         exe_file = file.path.with_suffix('.exe')
         res = run_cmd(['clang', '-o', str(exe_file), *map(str, obj_files)])
@@ -110,3 +105,13 @@ class Pipeline:
             obj.unlink()
         
         return exe_file
+
+    def compile_cruntime(self):
+        obj_files = []
+        for cfile in CRUNTIME_DIR.rglob('*.c'):
+            c_obj = cfile.with_suffix('.o')
+            run_cmd(['clang', '-c', str(cfile), '-o', str(c_obj)])
+            
+            obj_files.append(c_obj)
+
+        return obj_files
