@@ -27,14 +27,6 @@ def NULL(type: ir.Type | None = None):
     
     return ir.Constant(ir.PointerType(type), None)
 
-def find_linker():
-    """Finds any supported linker"""
-
-    if which('clang') is not None:
-        return 'clang'
-    elif which('gcc') is not None:
-        return 'gcc'
-
 # TODO: support external variable definitions as well as external functions
 class RegistryDefinition:
     def __init__(self, llvm_name: str, type: ir.FunctionType, display_name: str | None = None):
