@@ -1,4 +1,5 @@
 from subprocess import run
+from pathlib import Path
 
 from llvmlite import ir, binding as llvm
 
@@ -36,9 +37,11 @@ def test_llvm_test():
     mod.verify()
     
     obj = target_machine.emit_object(mod)
-    with open('test.o', 'wb') as fp:
-        fp.write(obj)
+    obj_file = Path(__file__).parent / 'test.o'
+    obj_file.write_bytes(obj)
     
     run(['llvm-readobj', 'test.o'], check=True)
-    run(['clang', 'test.o', '-o', 'test.exe'], check=True)
+
+    exe_file = Path(__file__).parent / 'test.exe'
+    run(['clang', str(obj_file), '-o', str(exe_file)], check=True)
     return True
