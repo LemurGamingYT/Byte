@@ -1,6 +1,7 @@
 #include <windows.h>
 #include <Psapi.h>
 
+#include <assert.h>
 #include <stdint.h>
 #include <stddef.h>
 #include <stdio.h>
@@ -11,24 +12,15 @@ typedef struct {
 } Process;
 
 
-void error(const char* message) {
-    fprintf(stderr, "error: %s\n", message);
-    exit(EXIT_FAILURE);
-}
-
 Process Process_new(int pid) {
     HANDLE hProcess = OpenProcess(PROCESS_ALL_ACCESS, FALSE, pid);
-    if (!hProcess)
-        error("failed to open process");
-    
+    assert(hProcess != NULL);
     return (Process){hProcess};
 }
 
 Process Process_current(void) {
     HANDLE hProcess = GetCurrentProcess();
-    if (!hProcess)
-        error("failed to open process");
-    
+    assert(hProcess != NULL);
     return (Process){hProcess};
 }
 
@@ -38,15 +30,13 @@ void Process_close(const Process* proc) {
 
 #define Process_write(T) void Process_write_##T(const Process* proc, uintptr_t address, T value) {\
     SIZE_T bytesWritten;\
-    if (!WriteProcessMemory(proc->hProcess, (LPVOID)address, &value, sizeof(T), &bytesWritten))\
-        error("failed to write to process memory");\
+    assert(WriteProcessMemory(proc->hProcess, (LPVOID)address, &value, sizeof(T), &bytesWritten));\
 }
 
 #define Process_read(T) T Process_read_##T(const Process* proc, uintptr_t address){\
     SIZE_T bytesRead;\
     T value;\
-    if (!ReadProcessMemory(proc->hProcess, (LPCVOID)address, &value, sizeof(T), &bytesRead))\
-        error("failed to read process memory");\
+    assert(ReadProcessMemory(proc->hProcess, (LPCVOID)address, &value, sizeof(T), &bytesRead));\
     return value;\
 }
 

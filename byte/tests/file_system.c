@@ -1,4 +1,5 @@
 #include <stdbool.h>
+#include <assert.h>
 #include <stdlib.h>
 #include <stdio.h>
 
@@ -11,27 +12,6 @@ typedef struct {
 #define FILE_DOES_NOT_EXIST 2
 
 
-void error(const char* message) {
-    fprintf(stderr, "error: %s\n", message);
-    exit(EXIT_FAILURE);
-}
-
-void handle_file_error(errno_t error_code) {
-    switch (error_code) {
-    case EXIT_SUCCESS:
-        break;
-    case PERMISSION_DENIED_ERROR:
-        error("permission denied");
-        break;
-    case FILE_DOES_NOT_EXIST:
-        error("no such file or directory");
-        break;
-    default:
-        printf("New Error Code: %d\n", error_code);
-        perror("file error");
-    }
-}
-
 File File_new(const char* path) {
     return (File){path};
 }
@@ -39,7 +19,7 @@ File File_new(const char* path) {
 void File_write(const File* file, const char* content) {
     FILE* fp;
     errno_t error_code = fopen_s(&fp, file->path, "w");
-    handle_file_error(error_code);
+    assert(error_code == EXIT_SUCCESS);
     
     fprintf(fp, "%s", content);
     fclose(fp);
@@ -48,17 +28,14 @@ void File_write(const File* file, const char* content) {
 char* File_contents(const File* file) {
     FILE* fp;
     errno_t error_code = fopen_s(&fp, file->path, "r");
-    handle_file_error(error_code);
+    assert(error_code == EXIT_SUCCESS);
     
     fseek(fp, 0, SEEK_END);
     long length = ftell(fp);
     fseek(fp, 0, SEEK_SET);
     
     char* buf = (char*)malloc(length + 1);
-    if (buf == NULL) {
-        fclose(fp);
-        error("out of memory");
-    }
+    assert(buf != NULL);
     
     fread(buf, 1, length, fp);
     buf[length] = '\0';

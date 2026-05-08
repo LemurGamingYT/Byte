@@ -1,5 +1,5 @@
 #include <stdbool.h>
-#include <stdlib.h>
+#include <assert.h>
 #include <stdio.h>
 #include <math.h>
 
@@ -12,19 +12,12 @@ typedef struct {
 
 // TODO: bitwise operations
 
-void error(const char* message) {
-    fprintf(stderr, "error: %s\n", message);
-    exit(EXIT_FAILURE);
-}
-
 BitField BitField_new(int size) {
     return (BitField){0, size};
 }
 
 void BitField_set(BitField* bf, int index, bool active) {
-    if (index >= bf->size)
-        error("out of bounds");
-    
+    assert(index < bf->size);
     if (active)
         bf->bits |= (1u << index);
     else
