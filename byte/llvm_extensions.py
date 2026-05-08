@@ -1,7 +1,7 @@
 from typing import Any, Callable, cast
 from shutil import which
 
-from llvmlite import ir, binding
+from llvmlite import ir, binding as llvm
 
 
 def max_int(width: int = 32):
@@ -127,7 +127,7 @@ class ModuleExt(ir.Module):
         super().__init__(name, context)
         
         self.registry = Registry(self)
-        self.data = binding.create_target_data(self.data_layout)
+        self.data = llvm.create_target_data(self.data_layout)
     
     def declare_identified_type(self, name: str, *elem_types: ir.Type, packed: bool = False):
         """Adds a new identified type with the given name"""

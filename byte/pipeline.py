@@ -101,16 +101,10 @@ class Pipeline:
             obj_files.append(c_obj)
         
         exe_file = file.path.with_suffix('.exe')
-        flags = []
-        if file.options.optimise:
-            flags.append('-O3')
-    
-        linker = find_linker()
-        if linker is None:
-            print('unable to find a valid linker command')
+        res = run_cmd(['clang', '-o', str(exe_file), *map(str, obj_files)])
+        if res.returncode != 0:
+            print('unable to link files')
             sys_exit(1)
-        
-        run_cmd([linker, *[str(obj) for obj in obj_files], '-o', str(exe_file), *flags])
         
         for obj in obj_files:
             obj.unlink()
