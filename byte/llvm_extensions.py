@@ -1,5 +1,4 @@
 from typing import Any, Callable, cast
-from shutil import which
 
 from llvmlite import ir, binding as llvm
 
@@ -215,6 +214,11 @@ class IRBuilderExt(ir.IRBuilder):
             struct = self.insert_value(struct, arg, i, name)
         
         return struct
+
+    def extract_ptr(self, struct_ptr: Any, idx: int, name: str = ''):
+        """Extract member *idx* as a pointer from the struct pointer"""
+
+        return self.gep(struct_ptr, [llint(0), llint(idx)], True, name)
     
     def first_elem(self, ptr: Any, name: str = '', inbounds: bool = True, use_instruction: bool = False):
         """Gets the first element of a pointer or array"""

@@ -137,7 +137,7 @@ class TypeChecker(ByteCompilerPass):
         def setter(ctx: IntrinsicCallContext):
             struct = ctx.arg(0)
             value = ctx.arg(1)
-            field_ptr = ctx.builder.gep(struct, [llint(0), llint(i)], True, f'{field.name}.gep')
+            field_ptr = ctx.builder.extract_ptr(struct, i, f'{field.name}.ptr')
             ctx.builder.store(value, field_ptr)
 
         field_set = self.visit(getattr(setter, 'ast_func'))
@@ -157,6 +157,23 @@ class TypeChecker(ByteCompilerPass):
             return ctx.builder.struct(struct_type, ctx.codegen_args, ctx.name)
 
         new_constructor = self.visit(getattr(constructor, 'ast_func'))
+
+        destructor_params = [ast.Param(node.pos, cls_type.reference(), 'self')]
+        @intrinsic(
+            None, self.file.type_map.get('nil'), destructor_params, flags=ast.FunctionFlags(method=True),
+            override_name=f'{cls_type}.destroy'
+        )
+        def destructor(ctx: IntrinsicCallContext):
+            struct_ptr = ctx.arg(0)
+            for i, field in enumerate(fields):
+                field_destructor_name = f'{field.type}.destroy'
+                if not self.scope.symbol_table.has(field_destructor_name):
+                    continue
+
+                field_value = ctx.builder.extract_ptr(struct_ptr, i, f'{field.name}.ptr')
+                ctx.call(field_destructor_name, [ast.Arg(ctx.pos, field.type.reference(), field_value)])
+
+        destroy = self.visit(getattr(destructor, 'ast_func'))
         
         field_properties = []
         for i, field in enumerate(fields):
@@ -207,7 +224,7 @@ class TypeChecker(ByteCompilerPass):
 
         to_string = self.visit(getattr(cls_to_string, 'ast_func'))
 
-        return [new_constructor, to_string] + field_properties
+        return [new_constructor, destroy, to_string] + field_properties
     
     def visitClass(self, node: ast.Class):
         field_types = [field.type for field in node.fields]
