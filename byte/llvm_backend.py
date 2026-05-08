@@ -2,6 +2,7 @@ from ctypes import CFUNCTYPE, c_int
 from subprocess import run
 from logging import info
 from pathlib import Path
+from shutil import which
 
 from llvmlite import ir, binding as llvm
 
@@ -36,7 +37,12 @@ class LLVMBackend:
         return True
 
     def emit_executable(self, obj_files: list[Path], exe_file: Path):
-        res = run_cmd(['clang', '-o', str(exe_file), *map(str, obj_files)])
+        if which('lld-link') is not None:
+            runtimes = ['kernel32.lib', 'ucrt.lib', 'vcruntime.lib', 'msvcrt.lib', 'legacy_stdio_definitions.lib']
+            res = run_cmd(['lld-link', f'/OUT:{exe_file}', *map(str, obj_files), *runtimes, '/SUBSYSTEM:CONSOLE'])
+        else:
+            res = run_cmd(['clang', '-o', str(exe_file), *map(str, obj_files)])
+        
         return res.returncode == 0
 
     def jit(self):
