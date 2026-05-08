@@ -120,3 +120,5 @@ static fn Math.min(float a, float b) -> float { return minnum(a, b) }
 static fn Math.min(int a, int b) -> int { return smin(a, b) }
 static fn Math.max(float a, float b) -> float { return maxnum(a, b) }
 static fn Math.max(int a, int b) -> int { return smax(a, b) }
+static fn Math.floor(float x) -> int { return floor(x).to_int() }
+static fn Math.ceil(float x) -> int { return ceil(x).to_int() }

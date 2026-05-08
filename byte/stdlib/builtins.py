@@ -403,6 +403,13 @@ class builtins(IntrinsicLib):
                 ast.Arg(ctx.pos, ctx.file.type_map.get('bool'), llint(0, 1))
             ])
 
+        @intrinsic(
+            self, int_type, [ast.Param(ast.Position(), bool_type, 'self')], flags=ast.FunctionFlags(method=True),
+            override_name=f'{bool_type}.to_int'
+        )
+        def bool_to_int(ctx: IntrinsicCallContext):
+            return ctx.builder.zext(ctx.arg(0), ir.IntType(32), ctx.name)
+
         @intrinsic(self, float_type, flags=ast.FunctionFlags(static=True, property=True), override_name=f'{Math_type}.pi')
         def Math_pi(_: IntrinsicCallContext):
             return ir.Constant(ir.FloatType(), pi)
@@ -410,26 +417,6 @@ class builtins(IntrinsicLib):
         @intrinsic(self, float_type, flags=ast.FunctionFlags(static=True, property=True), override_name=f'{Math_type}.e')
         def Math_e(_: IntrinsicCallContext):
             return ir.Constant(ir.FloatType(), e)
-
-        @intrinsic(
-            self, int_type, [ast.Param(ast.Position(), float_type, 'x')], flags=ast.FunctionFlags(static=True, method=True),
-            override_name=f'{Math_type}.floor'
-        )
-        def Math_floor(ctx: IntrinsicCallContext):
-            floor = ctx.module.registry.get('floor')
-            x = ctx.arg(0)
-            res_float = ctx.builder.call(floor, [x], 'res_float')
-            return ctx.builder.fptosi(res_float, ir.IntType(32), 'res')
-
-        @intrinsic(
-            self, int_type, [ast.Param(ast.Position(), float_type, 'x')], flags=ast.FunctionFlags(static=True, method=True),
-            override_name=f'{Math_type}.ceil'
-        )
-        def Math_ceil(ctx: IntrinsicCallContext):
-            ceil = ctx.module.registry.get('ceil')
-            x = ctx.arg(0)
-            res_float = ctx.builder.call(ceil, [x], 'res_float')
-            return ctx.builder.fptosi(res_float, ir.IntType(32), 'res')
 
         @intrinsic(
             self, string_type, flags=ast.FunctionFlags(static=True, property=True), override_name=f'{System_type}.os'
