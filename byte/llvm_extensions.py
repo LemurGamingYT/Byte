@@ -71,7 +71,7 @@ class Registry:
             RegistryDefinition('__acrt_iob_func', ir.FunctionType(FILE_type, [ir.IntType(32)]), 'acrt_iob_func'),
             RegistryDefinition('exit', ir.FunctionType(ir.VoidType(), [ir.IntType(32)])),
             RegistryDefinition('llvm.memset.p0.i32', ir.FunctionType(
-                ir.VoidType(), [pointer_type, ir.IntType(8), ir.IntType(32), ir.IntType(1)]
+                ir.VoidType(), [pointer_type, ir.IntType(32), ir.IntType(32), ir.IntType(1)]
             ), 'memset'),
             RegistryDefinition('snprintf', ir.FunctionType(
                 ir.IntType(32), [pointer_type, ir.IntType(32), pointer_type], True

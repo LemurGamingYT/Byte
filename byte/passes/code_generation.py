@@ -367,11 +367,6 @@ class CodeGeneration(ByteCompilerPass):
         
         return self.builder.load(ptr, node.name)
 
-    def fix_args(self, ir_func: ir.Function, args: list[Any]):
-        for i, (arg, param) in enumerate(zip(args, getattr(ir_func, 'args'))):
-            if isinstance(param.type, ir.IntType) and param.type.width == 8:
-                args[i] = self.builder.trunc(arg, ir.IntType(8), 'trunc')
-
     def call(self, pos: ast.Position, name: str, args: list[ast.Arg]):
         symbol = self.scope.symbol_table.get(name)
         func = cast(ast.Function | ir.Function, symbol.value)
@@ -379,7 +374,6 @@ class CodeGeneration(ByteCompilerPass):
         if isinstance(func, ast.Function):
             if name in self.module.registry.functions:
                 ir_func = cast(ir.Function, self.module.registry.get(name))
-                self.fix_args(ir_func, ir_args)
                 return self.builder.call(ir_func, ir_args, name)
 
             if isinstance(func.body, ast.Body):
@@ -392,7 +386,6 @@ class CodeGeneration(ByteCompilerPass):
                 raise NotImplementedError
         
         info(f'calling function {name}')
-        self.fix_args(func, ir_args)
         return self.builder.call(func, ir_args, name)
     
     def visitCall(self, node: ast.Call):
