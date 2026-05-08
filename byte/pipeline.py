@@ -1,5 +1,4 @@
 from sys import exit as sys_exit
-from subprocess import run
 from logging import info
 from pathlib import Path
 from typing import cast
@@ -10,6 +9,7 @@ from byte.passes.forward_decl import ForwardDeclaration
 from byte.passes.memory_manager import MemoryManager
 from byte.passes.name_resolver import NameResolver
 from byte.passes.code_analysis import CodeAnalysis
+from byte.llvm_backend import LLVMBackend, run_cmd
 from byte.passes.preprocessor import Preprocessor
 from byte.passes.type_checker import TypeChecker
 from byte.ast_builder import ByteASTBuilder
@@ -19,11 +19,6 @@ from byte import ast
 
 CRUNTIME_DIR = Path(__file__).parent / 'cruntime'
 DEFAULT_PASSES = [Preprocessor, CodeAnalysis, ForwardDeclaration, NameResolver, TypeChecker, MemoryManager]
-
-def run_cmd(cmd: list[str]):
-    cmd_str = ' '.join(cmd)
-    info(f'running \'{cmd_str}\'')
-    return run(cmd, check=True)
 
 
 class Pipeline:
@@ -76,28 +71,28 @@ class Pipeline:
     
     def compile_to_obj(self, file: ast.File):
         res = self.compile_file(file)
-    
-        ll_file = file.path.with_suffix('.ll')
-        ll_file.write_text(str(res.module))
-    
-        flags = file.options.to_clang_flags()
-
-        obj_file = file.path.with_suffix('.o')
-        run_cmd(['clang', '-c', '-o', str(obj_file), str(ll_file), *flags])
-    
-        if not file.options.emit_llvm:
-            ll_file.unlink()
         
-        return obj_file
+        obj_file = file.path.with_suffix('.o')
+        ll_file = file.path.with_suffix('.ll')
+        
+        backend = LLVMBackend(res.module)
+        backend.emit_object(obj_file)
+
+        if file.options.emit_llvm:
+            backend.emit_ir(ll_file)
+        else:
+            ll_file.unlink(missing_ok=True)
+        
+        return backend, obj_file
     
     def compile_to_exe(self, file: ast.File):
-        obj_file = self.compile_to_obj(file)
+        backend, obj_file = self.compile_to_obj(file)
         obj_files = [obj_file] + [dependency for dependency in file.dependencies if dependency.suffix == '.o']\
             + self.compile_cruntime()
         
         exe_file = file.path.with_suffix('.exe')
-        res = run_cmd(['clang', '-o', str(exe_file), *map(str, obj_files)])
-        if res.returncode != 0:
+        success = backend.emit_executable(obj_files, exe_file)
+        if not success:
             print('unable to link files')
             sys_exit(1)
         
@@ -106,7 +101,7 @@ class Pipeline:
         
         return exe_file
 
-    def compile_cruntime(self):
+    def compile_cruntime(self) -> list[Path]:
         obj_files = []
         for cfile in CRUNTIME_DIR.rglob('*.c'):
             c_obj = cfile.with_suffix('.o')

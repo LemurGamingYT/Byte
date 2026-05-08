@@ -32,7 +32,7 @@ class ArgParser:
     def parse(self):
         action = self.arg(0)
         if action is None:
-            print('Usage: byte <action> <file>')
+            print('Usage: byte <action> [...]')
             print('No action')
             sys_exit(1)
         
@@ -42,7 +42,7 @@ class ArgParser:
         
         method = getattr(self, method_name, None)
         if method is None:
-            print('Usage: byte <action> <file>')
+            print('Usage: byte <action> [...]')
             print(f'Unknown action \'{action}\'')
             sys_exit(1)
         
@@ -68,31 +68,6 @@ class ArgParser:
     
     def _version(self):
         print(f'Byte v{ast.VERSION}')
-
-    # def _init(self):
-    #     name = self.arg(1)
-    #     if name is None:
-    #         print('Usage: byte init <name> [<directory>]')
-    #         print('no name specified')
-    #         sys_exit(1)
-            
-    #     directory_path = self.arg(2)
-    #     if directory_path is None:
-    #         directory = Path.cwd()
-    #     else:
-    #         directory = Path(directory_path)
-
-    #     if not directory.exists():
-    #         print('Usage: byte init <name> [<directory>]')
-    #         print('directory does not exist')
-    #         sys_exit(1)
-
-    #     if not directory.is_dir():
-    #         print('Usage: byte init <name> [<directory>]')
-    #         print('given directory is not a directory')
-    #         sys_exit(1)
-
-    #     create_new_project(name, directory)
 
     def test_list(self, paths: list[Path]):
         passed_count = 0
