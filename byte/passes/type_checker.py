@@ -347,8 +347,9 @@ class TypeChecker(ByteCompilerPass):
         for k, v in instance.intrinsics.items():
             ast_func = v.ast_func
             file.scope.symbol_table.add(ast.Symbol(k, self.file.type_map.get('function'), ast_func))
-            self.scope.symbol_table.add(ast.Symbol(k, self.file.type_map.get('function'), ast_func))
-        
+
+        self.scope.symbol_table.merge(file.scope.symbol_table)
+        self.file.type_map.merge(file.type_map)
         return True
 
     def use_byte(self, file: ast.File, path: str):

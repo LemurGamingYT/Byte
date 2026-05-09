@@ -2,7 +2,7 @@ from math import pi, e
 
 from llvmlite import ir
 
-from byte.intrinsics import IntrinsicLib, IntrinsicCallContext, intrinsic, intrinsic_op
+from byte.intrinsics import intrinsic, intrinsic_op, IntrinsicLib, IntrinsicCallContext
 from byte.llvm_extensions import NULL, llint, Registry, max_int, min_int
 from byte import ast
 

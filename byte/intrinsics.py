@@ -17,9 +17,7 @@ class IntrinsicCallContext:
     name: str
     codegen: Any
     args: list[ast.Arg] = field(default_factory=list)
-
-    def __post_init__(self):
-        self.codegen_args = [self.codegen.visit(arg) for arg in self.args]
+    codegen_args: list[Any] = field(default_factory=list)
 
     def arg(self, idx: int):
         return self.codegen_args[idx]

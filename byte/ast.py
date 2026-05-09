@@ -118,6 +118,7 @@ class TypeMap:
                  
     def add(self, name: str, typ: Union['Type', None] = None):
         self.types[name] = typ or Type(name)
+        return self.types[name]
     
     def has(self, name: str):
         return name in self.types

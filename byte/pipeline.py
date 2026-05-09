@@ -76,12 +76,12 @@ class Pipeline:
         ll_file = file.path.with_suffix('.ll')
         
         backend = LLVMBackend(res.module)
-        backend.emit_object(obj_file)
-
         if file.options.emit_llvm:
             backend.emit_ir(ll_file)
         else:
             ll_file.unlink(missing_ok=True)
+        
+        backend.emit_object(obj_file)
         
         return backend, obj_file
     

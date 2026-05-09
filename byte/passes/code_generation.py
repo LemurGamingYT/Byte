@@ -242,9 +242,14 @@ class CodeGeneration(ByteCompilerPass):
     
     def visitUse(self, node: ast.Use):
         lib_name = node.path
+        has_py_file = (ast.STDLIB_PATH / f'{lib_name}.py').exists()
         stdlib_path = ast.STDLIB_PATH / f'{lib_name}.byte'
-        if not stdlib_path.exists():
+        has_byte_file = stdlib_path.exists()
+        if not has_py_file and not has_byte_file:
             node.pos.comptime_error(self.file, f'unknown library \'{lib_name}\'')
+
+        if not has_byte_file:
+            return node
         
         from byte import Pipeline
         
@@ -382,7 +387,7 @@ class CodeGeneration(ByteCompilerPass):
             if isinstance(func.body, ast.Body):
                 func = self.visitFunction(func)
             else:
-                ctx = IntrinsicCallContext(pos, self.builder, self.module, self.file, name, self, args)
+                ctx = IntrinsicCallContext(pos, self.builder, self.module, self.file, name, self, args, ir_args)
                 if callable(func.body):
                     return func.body(ctx)
                 

@@ -40,7 +40,7 @@ def test_llvm_test():
     obj_file = Path(__file__).parent / 'test.o'
     obj_file.write_bytes(obj)
     
-    run(['llvm-readobj', 'test.o'], check=True)
+    run(['llvm-readobj', str(obj_file)], check=True)
 
     exe_file = Path(__file__).parent / 'test.exe'
     run(['clang', str(obj_file), '-o', str(exe_file)], check=True)
