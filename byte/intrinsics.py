@@ -75,3 +75,6 @@ class IntrinsicLib(ABC):
     @abstractmethod
     def init(self):
         ...
+
+class IntrinsicClass(IntrinsicLib):
+    ...

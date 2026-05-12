@@ -84,12 +84,10 @@ def init_class(pos: ast.Position, file: ast.File, name: str, fields: list[ast.Pr
         field_strs = []
         for i, field in enumerate(fields):
             field_value = ctx.builder.extract_value(struct, i, field.name)
-            field_str = ctx.call(f'{field.type}.to_string', [
-                ast.Arg(ctx.pos, field.type, field_value)
-            ])
+            field_str = ctx.call(f'{field.type}.to_string', [ast.Arg(ctx.pos, field.type, field_value)])
             field_strs.append(field_str)
 
-        buf_addr = ctx.builder.alloca(ir.PointerType(ir.IntType(8)))
+        buf_addr = ctx.builder.alloca(ir.PointerType(ir.IntType(8)), name='buf.addr')
         ctx.builder.store(NULL(), buf_addr)
 
         fmt = ctx.module.try_get_global(

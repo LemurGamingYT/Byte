@@ -116,14 +116,12 @@ class TypeChecker(ByteCompilerPass):
         return replace(node, type=self.visit(node.type))
     
     def visitClass(self, node: ast.Class):
-        members = init_class(node.pos, self.file, node.name, node.fields)
-        for member in node.members:
-            if isinstance(member, ast.Function):
-                member.extend_type = self.file.type_map.get(node.name)
-            
-            members.append(self.visit(member))
+        new_members = []
+        members = node.members + init_class(node.pos, self.file, node.name, node.fields)
+        for member in members:
+            new_members.append(self.visit(member))
 
-        return replace(node, members=members)
+        return replace(node, members=new_members)
     
     def visitVariable(self, node: ast.Variable):
         value = self.visit(node.value)
@@ -220,11 +218,17 @@ class TypeChecker(ByteCompilerPass):
             body = cast(ast.Body, self.visit(node.body))
         
         return replace(node, start=start, end=end, body=body, step=step)
+
+    def use_builtins(self):
+        self.visit(ast.Use(ast.Position(), 'builtins'))
     
     def use_py(self, file: ast.File, path: str):
         stdlib_path = ast.STDLIB_PATH / f'{path}.py'
         if not stdlib_path.exists():
             return False
+
+        if path != 'builtins':
+            self.use_builtins()
 
         module = import_module(f'byte.stdlib.{path}')
         cls = getattr(module, path)
@@ -247,6 +251,9 @@ class TypeChecker(ByteCompilerPass):
         stdlib_path = ast.STDLIB_PATH / f'{path}.byte'
         if not stdlib_path.exists():
             return False
+
+        if path != 'builtins':
+            self.use_builtins()
 
         file.path = stdlib_path
         pipeline = Pipeline()
