@@ -3,13 +3,13 @@ fn main() -> int {
     num2 = input("Enter 2nd number: ").parse_int()
     op = input("Enter operator: ")
     if op == "+" {
-        print((num1 + num2).to_string())
+        print(num1 + num2)
     } else if op == "-" {
-        print((num1 - num2).to_string())
+        print(num1 - num2)
     } else if op == "*" || op == "x" {
-        print((num1 * num2).to_string())
+        print(num1 * num2)
     } else if op == "/" {
-        print((num1 / num2).to_string())
+        print(num1 / num2)
     }
     
     return 0

@@ -117,7 +117,7 @@ class TypeChecker(ByteCompilerPass):
     
     def visitClass(self, node: ast.Class):
         new_members = []
-        members = node.members + init_class(node.pos, self.file, node.name, node.fields)
+        members = init_class(node.pos, self.file, node.name, node.fields) + node.members
         for member in members:
             new_members.append(self.visit(member))
 
