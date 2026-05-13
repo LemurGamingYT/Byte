@@ -147,7 +147,13 @@ class TypeChecker(ByteCompilerPass):
         value = node.value
         var_id = ast.Id(node.pos, node.type, node.name)
         if node.op is not None:
-            value = self.visit(ast.Operation(value.pos, node.type, node.op, var_id, value))
+            left = var_id
+            if node.attr is not None:
+                left = self.visit(ast.Attribute(
+                    node.pos, self.file.type_map.get('nil'), var_id, node.attr
+                ))
+            
+            value = self.visit(ast.Operation(value.pos, node.type, node.op, left, value))
 
         if node.attr is not None:
             return self.visit(ast.Attribute(
