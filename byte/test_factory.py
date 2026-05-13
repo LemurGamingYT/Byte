@@ -1,5 +1,5 @@
 from importlib import import_module
-from abc import ABC, abstractmethod
+from typing import Protocol
 from subprocess import run
 from pathlib import Path
 
@@ -22,18 +22,17 @@ class TestFactory:
         except KeyError:
             raise NotImplementedError(path.suffix)
 
-class TestFileHandler(ABC):
-    @abstractmethod
+class TestFileHandler(Protocol):
     def test(self, path: Path) -> bool:
         ...
 
-class PythonTestHandler(TestFileHandler):
+class PythonTestHandler:
     def test(self, path: Path):
         module = import_module(f'byte.tests.{path.stem}')
         method = getattr(module, f'test_{path.stem}')
         return method()
 
-class CTestHandler(TestFileHandler):
+class CTestHandler:
     def test(self, path: Path):
         exe_file = path.with_suffix('.exe')
         res = run(['clang', str(path), '-o', str(exe_file), '-D_TEST'], shell=True)
@@ -49,7 +48,7 @@ class CTestHandler(TestFileHandler):
         exe_file.unlink()
         return True
 
-class ByteTestHandler(TestFileHandler):
+class ByteTestHandler:
     def run_byte(self, path: Path):
         pipeline = Pipeline()
         file = ast.File(path)
