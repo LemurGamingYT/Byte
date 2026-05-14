@@ -1,4 +1,5 @@
 #include <stdlib.h>
+#include <assert.h>
 #include <stdio.h>
 #include <time.h>
 
@@ -18,7 +19,8 @@ int main(void) {
     srand(time(NULL));
     
     for (int i = 0; i < 10; i++) {
-        printf("Generating random number between 5 and 20 %d\n", generate_random_number(5, 20));
+        int num = generate_random_number(5, 20);
+        assert(num >= 5 && num <= 20);
     }
     
     return 0;

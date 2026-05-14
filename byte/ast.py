@@ -214,7 +214,7 @@ class File:
 
 @dataclass(**NODE_KWARGS)
 class Node(ABC):
-    pos: Position
+    pos: Position = field(repr=False, compare=False)
     type: 'Type'
     
     @property

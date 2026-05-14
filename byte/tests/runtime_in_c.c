@@ -49,12 +49,12 @@ string add_strings(string a, string b) {
 
 bool eq_strings(string a, string b) {
     if (a.length != b.length) return false;
-    return memcmp(a.ptr, b.ptr, a.length) == false;
+    return memcmp(a.ptr, b.ptr, a.length) == 0;
 }
 
 bool neq_strings(string a, string b) {
     if(a.length != b.length) return true;
-    return memcmp(a.ptr, b.ptr, a.length) != false;
+    return memcmp(a.ptr, b.ptr, a.length) != 0;
 }
 
 int string_to_int(string s) {

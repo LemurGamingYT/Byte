@@ -27,6 +27,9 @@ class TypeChecker(ByteCompilerPass):
             node.pos.comptime_error(self.file, f'unknown type \'{node.type}\'')
         
         return typ
+
+    def visitReferenceType(self, node: ast.ReferenceType):
+        return replace(node, type=self.visit(node.type))
     
     def visitArg(self, node: ast.Arg):
         value = self.visit(node.value)

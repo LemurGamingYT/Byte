@@ -55,12 +55,10 @@ void cheat_engine_test(void) {
 
 int main(void) {
     int x = 50;
-    printf("x = %d\n", x);
-    
     Process proc = Process_current();
     Process_write_int(&proc, (uintptr_t)&x, 100);
-    
-    printf("x = %d\n", x);
+
+    assert(x == 100);
     
     Process_close(&proc);
     return 0;

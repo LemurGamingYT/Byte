@@ -86,7 +86,7 @@ int main(void) {
     Arena a = { .begin = NULL, .end = NULL };
     int* data = (int*)Arena_alloc(&a, sizeof(int));
     *data = 10;
-    printf("%d\n", *data);
+    assert(*data == 10);
     
     Arena_free(&a);
     return 0;

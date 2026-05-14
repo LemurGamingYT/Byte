@@ -56,12 +56,9 @@ int main(void) {
     
     Pointer ptr = Pointer_new((void*)data, sizeof(int));
     Pointer_zero(&ptr);
-    
-    printf("%d\n", Pointer_read_int(&ptr));
-    
+    assert(Pointer_read_int(&ptr) == 0);
     Pointer_write_int(&ptr, 5);
-    
-    printf("%d\n", Pointer_read_int(&ptr));
+    assert(Pointer_read_int(&ptr) == 5);
     Pointer_free(&ptr);
     return 0;
 }

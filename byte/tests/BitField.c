@@ -1,6 +1,5 @@
 #include <stdbool.h>
 #include <assert.h>
-#include <stdio.h>
 #include <math.h>
 
 
@@ -32,7 +31,6 @@ bool BitField_get(const BitField* bf, int index) {
 int main(void) {
     BitField bf = BitField_new(20);
     BitField_set(&bf, 16, true);
-    
-    printf("%u\n", bf.bits);
+    assert(bf.bits == 65536);
     return 0;
 }

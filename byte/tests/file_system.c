@@ -1,6 +1,7 @@
 #include <stdbool.h>
 #include <assert.h>
 #include <stdlib.h>
+#include <string.h>
 #include <stdio.h>
 
 
@@ -60,10 +61,11 @@ bool File_exists(const File* file) {
 
 
 int main(void) {
+    const char* expected_content = "Hello, World";
     File file = File_new("byte/tests/file_system.txt");
-    File_write(&file, "Hello, World");
+    File_write(&file, expected_content);
     char* contents = File_contents(&file);
-    puts(contents);
+    assert(memcmp(contents, expected_content, 12) == 0);
     
     free(contents);
     return 0;
