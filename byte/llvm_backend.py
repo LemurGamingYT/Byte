@@ -4,7 +4,9 @@ from logging import info
 from pathlib import Path
 from shutil import which
 
-from llvmlite import ir, binding as llvm
+from llvmlite import binding as llvm
+
+from byte.llvm_extensions import ModuleExt
 
 
 def run_cmd(cmd: list[str]):
@@ -18,7 +20,7 @@ llvm.initialize_native_target()
 llvm.initialize_native_asmprinter()
 
 class LLVMBackend:
-    def __init__(self, module: ir.Module):
+    def __init__(self, module: ModuleExt):
         self.module = module
         self.triple = module.triple
         self.target = llvm.Target.from_triple(self.triple)

@@ -112,7 +112,7 @@ class Math {
     static fn sqrt(float x) -> float { return sqrt(x) }
     static fn sqrt(int x) -> int { return sqrt(x.to_float()).to_int() }
     static fn pow(float base, float exponent) -> float { return pow(base, exponent) }
-    static fn pow(float base, int exponent) -> float { return pow(base, exponent.to_float()) }
+    static fn pow(float base, int exponent) -> float { return powi(base, exponent) }
     static fn pow(int base, float exponent) -> float { return pow(base.to_float(), exponent) }
     static fn pow(int base, int exponent) -> int { return pow(base.to_float(), exponent.to_float()).to_int() }
     static fn abs(float x) -> float { return fabs(x) }

@@ -82,7 +82,6 @@ class Pipeline:
             ll_file.unlink(missing_ok=True)
         
         backend.emit_object(obj_file)
-        
         return backend, obj_file
     
     def compile_to_exe(self, file: ast.File):

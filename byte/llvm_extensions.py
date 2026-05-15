@@ -58,6 +58,7 @@ class Registry:
             RegistryDefinition('memcmp', ir.FunctionType(ir.IntType(1), [pointer_type, pointer_type, ir.IntType(32)])),
             RegistryDefinition('llvm.sqrt.f32', ir.FunctionType(ir.FloatType(), [ir.FloatType()]), 'sqrt'),
             RegistryDefinition('llvm.pow.f32', ir.FunctionType(ir.FloatType(), [ir.FloatType(), ir.FloatType()]), 'pow'),
+            RegistryDefinition('llvm.powi.f32.i32', ir.FunctionType(ir.FloatType(), [ir.FloatType(), ir.IntType(32)]), 'powi'),
             RegistryDefinition('llvm.fabs.f32', ir.FunctionType(ir.FloatType(), [ir.FloatType()]), 'fabs'),
             RegistryDefinition('llvm.floor.f32', ir.FunctionType(ir.FloatType(), [ir.FloatType()]), 'floor'),
             RegistryDefinition('llvm.ceil.f32', ir.FunctionType(ir.FloatType(), [ir.FloatType()]), 'ceil'),
