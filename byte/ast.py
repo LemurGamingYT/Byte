@@ -436,9 +436,13 @@ class Function(Node):
         signature = self.signature
         if self.body is None:
             return signature
+
+        body = str(self.body)
+        if callable(self.body):
+            body = f'// a python interop function is called here (name = {self.body.__name__})'
         
         return f"""{signature} {{
-{self.body}
+{body}
 }}"""
 
 @dataclass(**NODE_KWARGS)
