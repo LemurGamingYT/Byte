@@ -1,4 +1,5 @@
 from argparse import ArgumentParser, Namespace
+from json import dumps, loads
 from pathlib import Path
 from logging import info
 
@@ -30,7 +31,7 @@ class ArgParser:
         self.subparsers = self.arg_parser.add_subparsers(dest='action', required=True)
 
         self.build_parser = self.subparsers.add_parser('build', help='Builds the given file')
-        self.build_parser.add_argument('file', type=Path, help='The target file to build')
+        self.build_parser.add_argument('file', type=Path, help='The target file to build', nargs='?')
         self.build_parser.add_argument('--debug', action='store_true',
             help='Whether to enable debug mode (used mostly for development of the programming language)')
         self.build_parser.add_argument('-opt', '--optimise', action='store_true', help='Whether to optimise the code')
@@ -44,25 +45,76 @@ class ArgParser:
         self.version_parser = self.subparsers.add_parser('version', help='Get the language version')
         self.version_parser.set_defaults(func=self.version_command)
 
+        self.init_parser = self.subparsers.add_parser('init', help='Creates a new Byte project folder')
+        self.init_parser.add_argument('project_name', help='The name of the project')
+        self.init_parser.set_defaults(func=self.init_command)
+
     def parse(self):
         args = self.arg_parser.parse_args()
         args.func(args)
         return args
+
+    def init_command(self, args: Namespace):
+        project_name = str(args.project_name)
+        project_folder = Path.cwd() / project_name
+
+        try:
+            project_folder.mkdir()
+        except FileExistsError:
+            self.init_parser.error('a file already exists with that name')
+
+        src_folder = project_folder / 'src'
+        src_folder.mkdir()
+
+        main_file = src_folder / 'main.byte'
+        main_file.write_text("""fn main() -> int {
+    return 0
+}
+""")
+
+        config = {
+            'name': project_name,
+            'version': '0.1',
+            'byte-version': ast.VERSION,
+            'entry': str(main_file.relative_to(project_folder)),
+            'directory': str(project_folder)
+        }
+
+        config_json = project_folder / 'config.json'
+        config_json.write_text(dumps(config, indent=4))
 
     def build(self, path: Path, options: ast.CompileOptions):
         pipeline = Pipeline()
         file = ast.File(path, options=options)
         return pipeline.compile_to_exe(file)
 
+    def build_dir(self, path: Path, options: ast.CompileOptions):
+        config_json = path / 'config.json'
+        if not config_json.is_file():
+            self.build_parser.error('directory does not contain a config.json file or it is not a file')
+
+        config = loads(config_json.read_text())
+        if config.get('entry') is None:
+            self.build_parser.error('config.json file does not contain an entry point')
+
+        entry = Path(config['entry'])
+        if not entry.is_file():
+            self.build_parser.error('config.json contains an entry point file but it does not exist or it is not a file')
+
+        return self.build(entry, options)
+
     def build_command(self, args: Namespace):
+        options = ast.CompileOptions(args.debug, args.optimise, args.emit_llvm)
+        if args.file is None:
+            return self.build_dir(Path.cwd(), options)
+        
         file: Path = args.file
         if not file.exists():
-            self.build_parser.error(f'file does not exist ({file})')
+            self.build_parser.error('file does not exist')
 
         if file.is_dir():
-            self.build_parser.error('cannot build a directory')
+            return self.build_dir(args.file, options)
         
-        options = ast.CompileOptions(args.debug, args.optimise, args.emit_llvm)
         return self.build(args.file, options)
 
     def test_command(self, args: Namespace):

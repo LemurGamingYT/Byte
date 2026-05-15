@@ -159,17 +159,6 @@ class CompileOptions:
     optimise: bool = False
     emit_llvm: bool = False
 
-    @staticmethod
-    def from_arg_parser(parser):
-        return CompileOptions(parser.flag('debug'), parser.flag('opt'), parser.flag('emit-llvm'))
-
-    def to_clang_flags(self):
-        flags = ['-Wall', '-Werror', '-Wpedantic', '-Wextra', '-Wno-override-module']
-        if self.optimise:
-            flags.append('-O3')
-
-        return flags
-
 @dataclass
 class File:
     path: Path
