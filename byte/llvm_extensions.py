@@ -85,9 +85,6 @@ class Registry:
             RegistryDefinition('asprintf', ir.FunctionType(ir.IntType(32), [
                 ir.PointerType(pointer_type), pointer_type
             ], True)),
-
-            RegistryDefinition('fopen', ir.FunctionType(FILE_type, [pointer_type])),
-            RegistryDefinition('fclose', ir.FunctionType(ir.VoidType(), [FILE_type]))
         ]
     
     def add_function(self, name: str, func_type: ir.FunctionType, display_name: str | None = None):
