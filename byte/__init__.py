@@ -34,7 +34,7 @@ class ArgParser:
         self.build_parser = self.subparsers.add_parser('build', help='Builds the given file')
         self.build_parser.add_argument('file', type=Path, help='The target file to build', nargs='?')
         self.build_parser.add_argument('--debug', action='store_true',
-            help='Whether to enable debug mode (used mostly for development of the programming language)')
+            help='Whether to enable debug mode which produces the AST after each compiler pass')
         self.build_parser.add_argument('-opt', '--optimise', action='store_true', help='Whether to optimise the code')
         self.build_parser.add_argument('--emit-llvm', action='store_true', help='Whether to emit the .ll (LLVM IR) file')
         self.build_parser.set_defaults(func=self.build_command)
