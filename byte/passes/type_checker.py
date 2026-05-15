@@ -1,6 +1,6 @@
 from importlib import import_module
 from dataclasses import replace
-from logging import info
+from logging import error, info
 from typing import cast
 
 from byte.passes import ByteCompilerPass
@@ -350,15 +350,15 @@ make {ref_symbol.name} mutable using the 'mut' keyword to remove this warning"""
         generic_map = self.create_generic_map(func, args)
         generic_params_str = '<' + ', '.join(str(generic_type) for generic_type in generic_map.values()) + '>'
         
-        params = [
-            ast.Param(param.pos, generic_map.get(str(param.type), param.type), param.name, param.flags)
-            for param in func.params
-        ]
-        
         generic_name = f'{func.name}{generic_params_str}'
         if generic_name in self.expanded_generics:
             info(f'reusing expanded generic {generic_name}')
             return self.expanded_generics[generic_name]
+        
+        params = [
+            ast.Param(param.pos, generic_map.get(str(param.type), param.type), param.name, param.flags)
+            for param in func.params
+        ]
         
         generic_func = self.visitFunction(replace(
             func, type=generic_map.get(str(func.type), func.type), name=generic_name, params=params,
@@ -383,10 +383,7 @@ make {ref_symbol.name} mutable using the 'mut' keyword to remove this warning"""
         symbol = self.scope.symbol_table.get(node.callee)
         args = [cast(ast.Arg, self.visit(arg)) for arg in node.args]
         func = cast(ast.Function, symbol.value)
-        arg_types = [str(arg.type) for arg in args]
         for overload in [func] + func.overloads:
-            param_types = [str(param.type) for param in overload.params]
-            info(f'checking call types for {overload.name} - arg_types = {arg_types}, param_types = {param_types}')
             if not self.check_args(args, overload):
                 continue
             
@@ -395,6 +392,14 @@ make {ref_symbol.name} mutable using the 'mut' keyword to remove this warning"""
             overload = self.instantiate_generics(overload, args)
             return ast.Call(node.pos, overload.ret_type, overload.name, args)
 
+        overload_param_types = []
+        for overload in [func] + func.overloads:
+            param_type_names = ', '.join(f'{param.type} ({param.type.__class__.__name__})' for param in overload.params)
+            overload_param_types.append(f'   {overload.name}: ({param_type_names}) -> {overload.ret_type}')
+
+        arg_types = ', '.join(f'{arg.type} ({arg.type.__class__.__name__})' for arg in args)
+        error(f'attempt to call {node.callee} has no overload with arg types {arg_types}, possible overloads:\n'\
+            + '\n'.join(overload_param_types))
         node.pos.comptime_error(self.file, f'no matching overloads for call to \'{node.callee}\'')
     
     def visitOperation(self, node: ast.Operation):

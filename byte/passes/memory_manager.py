@@ -189,7 +189,8 @@ class MemoryManager(ByteCompilerPass):
         
         else_body = node.else_body
         if else_body is not None:
-            else_body = self.visitBody(else_body)
+            with self.file.child_scope():
+                else_body = self.visitBody(else_body)
         
         return replace(
             node, cond=self.visit(node.cond), body=body, else_body=else_body,

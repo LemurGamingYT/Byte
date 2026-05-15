@@ -475,7 +475,7 @@ class Assignment(Node):
     
     def __str__(self) -> str:
         op = self.op or ''
-        attr = f'.{self.attr}' or ''
+        attr = f'.{self.attr}' if self.attr is not None else ''
         return f'{self.name}{attr} {op}= {self.value}'
 
 @dataclass(**NODE_KWARGS)
