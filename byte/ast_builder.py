@@ -22,7 +22,7 @@ class ByteErrorListener(ANTLRErrorListener):
     def __init__(self, file: ast.File):
         self.file = file
     
-    def syntaxError(self, _, offendingSymbol: CommonToken, line: int, column: int, _msg, _e):
+    def syntaxError(self, recognizer, offendingSymbol: CommonToken, line: int, column: int, msg, e):
         pos = ast.Position(line, column)
         pos.comptime_error(self.file, f'invalid syntax \'{offendingSymbol.text}\'')
 
