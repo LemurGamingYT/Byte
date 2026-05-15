@@ -114,24 +114,20 @@ class ArgParser:
             if file.stem == name:
                 return file
 
-    def test_list(self, paths: list[Path]):
-        passed_count = 0
-        for path in paths:
-            success = self.test_single(path)
-            if not success:
+    def test_dir(self, path: Path):
+        files = path.glob('**/*')
+        num_tests = passed_count = 0
+        for file in files:
+            if file.suffix not in self.test_factory.handlers:
                 continue
             
+            num_tests += 1
+
+            success = self.test_single(file)
+            if not success:
+                continue
+
             passed_count += 1
-
-        return passed_count
-
-    def test_dir(self, path: Path):
-        possible_suffixes = list(self.test_factory.handlers)
-        num_tests = passed_count = 0
-        for suffix in possible_suffixes:
-            tests = list(path.rglob(f'*{suffix}'))
-            num_tests += len(tests)
-            passed_count += self.test_list(tests)
 
         colour = test_text_colour(num_tests, passed_count)
         print(f'{colour}{Style.BRIGHT}{passed_count}/{num_tests} tests passed{Style.RESET_ALL}')
