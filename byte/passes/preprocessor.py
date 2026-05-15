@@ -16,9 +16,9 @@ class Preprocessor(ByteCompilerPass):
         members = []
         for member in node.members:
             if isinstance(member, ast.Function):
-                members.append(replace(member, extend_type=cls_type))
-            else:
-                members.append(member)
+                member = replace(member, extend_type=cls_type)
+
+            members.append(self.visit(member))
 
         return replace(node, members=members)
     

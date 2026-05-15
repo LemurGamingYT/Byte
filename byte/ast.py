@@ -388,6 +388,7 @@ class FunctionFlags:
     static: bool = False
     property: bool = False
     method: bool = False
+    returns_reference: bool = False
     
     def __str__(self):
         code = ''
@@ -399,6 +400,9 @@ class FunctionFlags:
         
         if self.method:
             code += 'method '
+
+        if self.returns_reference:
+            code += 'ret_ref'
         
         return code
 
