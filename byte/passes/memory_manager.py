@@ -29,6 +29,18 @@ class MemoryManager(ByteCompilerPass):
         self.can_extract = False
         yield
         self.can_extract = True
+
+    def can_extract_node(self, node: ast.Node):
+        if not self.can_extract:
+            return False
+
+        if isinstance(node, ast.Call):
+            symbol = self.scope.symbol_table.get(node.callee)
+            func = cast(ast.Function, symbol.value)
+            if func.flags.returns_reference:
+                return False
+
+        return True
     
     def extract(self, node: ast.Node):
         var_name = self.file.unique_name
@@ -39,7 +51,7 @@ class MemoryManager(ByteCompilerPass):
         return var.to_id()
     
     def extract_node(self, node: ast.Node):
-        if isinstance(node, DONT_EXTRACT) or not self.can_extract:
+        if isinstance(node, DONT_EXTRACT) or not self.can_extract_node(node):
             return node
 
         destroy_method = self.scope.symbol_table.tryget(f'{node.type}.destroy')

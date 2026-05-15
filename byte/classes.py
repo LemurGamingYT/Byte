@@ -8,7 +8,7 @@ from byte import ast
 def init_field(file: ast.File, cls_type: ast.ClassType, i: int, field: ast.Property):
     self_param = ast.Param(field.pos, cls_type, 'self')
     @intrinsic(
-        None, field.type, [self_param], flags=ast.FunctionFlags(property=True),
+        None, field.type, [self_param], flags=ast.FunctionFlags(property=True, returns_reference=True),
         override_name=f'{cls_type}.{field.name}'
     )
     def getter(ctx: IntrinsicCallContext):

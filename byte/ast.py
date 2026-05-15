@@ -402,7 +402,7 @@ class FunctionFlags:
             code += 'method '
 
         if self.returns_reference:
-            code += 'ret_ref'
+            code += 'ret_ref '
         
         return code
 
