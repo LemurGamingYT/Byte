@@ -1,11 +1,12 @@
 from argparse import ArgumentParser, Namespace
-from json import dumps, loads
 from pathlib import Path
 from logging import info
+from typing import cast
 
 from colorama import Fore, Style
 
 from byte.test_factory import TestFactory, PythonTestHandler, CTestHandler, ByteTestHandler
+from byte.project_manager import create_project, get_entry_file
 from byte.pipeline import Pipeline
 from byte import ast
 
@@ -63,25 +64,7 @@ class ArgParser:
         except FileExistsError:
             self.init_parser.error('a file already exists with that name')
 
-        src_folder = project_folder / 'src'
-        src_folder.mkdir()
-
-        main_file = src_folder / 'main.byte'
-        main_file.write_text("""fn main() -> int {
-    return 0
-}
-""")
-
-        config = {
-            'name': project_name,
-            'version': '0.1',
-            'byte-version': ast.VERSION,
-            'entry': str(main_file.relative_to(project_folder)),
-            'directory': str(project_folder)
-        }
-
-        config_json = project_folder / 'config.json'
-        config_json.write_text(dumps(config, indent=4))
+        create_project(project_folder, project_name)
 
     def build(self, path: Path, options: ast.CompileOptions):
         pipeline = Pipeline()
@@ -89,19 +72,11 @@ class ArgParser:
         return pipeline.compile_to_exe(file)
 
     def build_dir(self, path: Path, options: ast.CompileOptions):
-        config_json = path / 'config.json'
-        if not config_json.is_file():
-            self.build_parser.error('directory does not contain a config.json file or it is not a file')
-
-        config = loads(config_json.read_text())
-        if config.get('entry') is None:
-            self.build_parser.error('config.json file does not contain an entry point')
-
-        entry = Path(config['entry'])
-        if not entry.is_file():
-            self.build_parser.error('config.json contains an entry point file but it does not exist or it is not a file')
-
-        return self.build(entry, options)
+        success, data = get_entry_file(path)
+        if not success:
+            self.build_parser.error(str(data))
+        
+        return self.build(cast(Path, data), options)
 
     def build_command(self, args: Namespace):
         options = ast.CompileOptions(args.debug, args.optimise, args.emit_llvm)
@@ -113,9 +88,9 @@ class ArgParser:
             self.build_parser.error('file does not exist')
 
         if file.is_dir():
-            return self.build_dir(args.file, options)
+            return self.build_dir(file, options)
         
-        return self.build(args.file, options)
+        return self.build(file, options)
 
     def test_command(self, args: Namespace):
         test_name = args.test_name
