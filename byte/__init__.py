@@ -1,11 +1,10 @@
-from sys import exit as sys_exit
+from argparse import ArgumentParser, Namespace
 from pathlib import Path
 from logging import info
 
 from colorama import Fore, Style
 
 from byte.test_factory import TestFactory, PythonTestHandler, CTestHandler, ByteTestHandler
-# from byte.project import create_new_project
 from byte.pipeline import Pipeline
 from byte import ast
 
@@ -21,53 +20,72 @@ def test_text_colour(num_tests: int, passed_count: int):
         return Fore.RED
 
 class ArgParser:
-    def __init__(self, args: list[str]):
+    def __init__(self):
         self.test_factory = TestFactory()
         self.test_factory.register('.py', PythonTestHandler())
         self.test_factory.register('.c', CTestHandler())
         self.test_factory.register('.byte', ByteTestHandler())
-        
-        self.args = args
-    
-    def parse(self):
-        action = self.arg(0)
-        if action is None:
-            print('Usage: byte <action> [...]')
-            print('No action')
-            sys_exit(1)
-        
-        method_name = f'_{action}'
-        if method_name.startswith('__'):
-            method_name = method_name[1:]
-        
-        method = getattr(self, method_name, None)
-        if method is None:
-            print('Usage: byte <action> [...]')
-            print(f'Unknown action \'{action}\'')
-            sys_exit(1)
-        
-        return method()
 
-    def arg(self, index: int):
-        while index < len(self.args):
-            arg = self.args[index]
-            if not arg.startswith('--'):
-                return arg
-            
-            index += 1
+        self.arg_parser = ArgumentParser(prog='byte', description='The Byte programming language compiler')
+        self.subparsers = self.arg_parser.add_subparsers(dest='action', required=True)
+
+        self.build_parser = self.subparsers.add_parser('build', help='Builds the given file')
+        self.build_parser.add_argument('file', type=Path, help='The target file to build')
+        self.build_parser.add_argument('--debug', action='store_true',
+            help='Whether to enable debug mode (used mostly for development of the programming language)')
+        self.build_parser.add_argument('-opt', '--optimise', action='store_true', help='Whether to optimise the code')
+        self.build_parser.add_argument('--emit-llvm', action='store_true', help='Whether to emit the .ll (LLVM IR) file')
+        self.build_parser.set_defaults(func=self.build_command)
+
+        self.test_parser = self.subparsers.add_parser('test', help='Run language tests')
+        self.test_parser.add_argument('test_name', help='The name of the test to run', nargs='?')
+        self.test_parser.set_defaults(func=self.test_command)
+
+        self.version_parser = self.subparsers.add_parser('version', help='Get the language version')
+        self.version_parser.set_defaults(func=self.version_command)
+
+    def parse(self):
+        args = self.arg_parser.parse_args()
+        args.func(args)
+        return args
+
+    def build(self, path: Path, options: ast.CompileOptions):
+        pipeline = Pipeline()
+        file = ast.File(path, options=options)
+        return pipeline.compile_to_exe(file)
+
+    def build_command(self, args: Namespace):
+        file: Path = args.file
+        if not file.exists():
+            self.build_parser.error(f'file does not exist ({file})')
+
+        if file.is_dir():
+            self.build_parser.error('cannot build a directory')
         
-        return None
-    
-    def flag(self, name: str):
-        return any(f'--{name}' == arg for arg in self.args)
+        options = ast.CompileOptions(args.debug, args.optimise, args.emit_llvm)
+        return self.build(args.file, options)
+
+    def test_command(self, args: Namespace):
+        test_name = args.test_name
+        if test_name is None:
+            return self.test_dir(TESTS_DIR)
+
+        test_file = self.find_first_file(TESTS_DIR, test_name)
+        if test_file is None:
+            self.test_parser.error(f'no test named {test_name}')
+
+        if not test_file.is_file():
+            self.test_parser.error(f'invalid test file {test_name} ({test_file})')
+
+        return self.test_single(test_file)
+
+    def version_command(self, _):
+        print(f'Byte v{ast.VERSION}')
     
     def find_first_file(self, path: Path, name: str):
         for file in path.iterdir():
             if file.stem == name:
                 return file
-    
-    def _version(self):
-        print(f'Byte v{ast.VERSION}')
 
     def test_list(self, paths: list[Path]):
         passed_count = 0
@@ -100,46 +118,3 @@ class ArgParser:
             print(f'{Fore.RED}{Style.BRIGHT}test {path.stem} failed{Style.RESET_ALL}')
 
         return success
-
-    def _test(self):
-        test_name = self.arg(1)
-        if test_name is None:
-            return self.test_dir(TESTS_DIR)
-
-        test_file = self.find_first_file(TESTS_DIR, test_name)
-        if test_file is None:
-            print('Usage: byte test <test-name>')
-            print(f'no test named {test_name}')
-            sys_exit(1)
-
-        if not test_file.is_file():
-            print('Usage: byte test <test-name>')
-            print(f'invalid test file {test_name} ({test_file})')
-            sys_exit(1)
-
-        return self.test_single(test_file)
-    
-    def _build(self, file_path: str | None = None):
-        if file_path is None:
-            file_path = self.arg(1)
-        
-        if file_path is None:
-            print('Usage: byte build <file>')
-            print('No file')
-            sys_exit(1)
-        
-        path = Path(file_path)
-        if not path.exists():
-            print('Usage: byte build <file>')
-            print(f'File \'{file_path}\' does not exist')
-            sys_exit(1)
-        
-        if not path.is_file():
-            print('Usage: byte build <file>')
-            print(f'File \'{file_path}\' is not a file')
-            sys_exit(1)
-
-        pipeline = Pipeline()
-        options = ast.CompileOptions.from_arg_parser(self)
-        file = ast.File(path, options=options)
-        return pipeline.compile_to_exe(file)

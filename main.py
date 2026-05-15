@@ -1,6 +1,5 @@
 from logging import info, basicConfig, DEBUG
 from platform import platform, architecture
-from sys import argv
 
 from llvmlite import binding
 from colorama import init
@@ -14,7 +13,7 @@ backend: LLVM
 platform: {platform()}
 architecture: {architecture()[0]}
 LLVM target (triple): {binding.get_default_triple()}""")
-    arg_parser = ArgParser(argv[1:])
+    arg_parser = ArgParser()
     arg_parser.parse()
 
 
