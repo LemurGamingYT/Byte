@@ -5,7 +5,7 @@
 #include <stdio.h>
 
 
-#define ARENA_REGION_DEFAULT_CAPACITY (8*1024)
+#define ARENA_REGION_DEFAULT_CAPACITY 512
 
 typedef struct Region Region;
 
