@@ -1,0 +1,14 @@
+class Vector2 {
+    float x
+    float y
+
+    fn new(int x, int y) -> Vector2 {
+        return new Vector2(x.to_float(), y.to_float())
+    }
+}
+
+fn main() -> int {
+    fvec = new Vector2(100.2, 90.4)
+    ivec = new Vector2(0, 1000)
+    return 0
+}

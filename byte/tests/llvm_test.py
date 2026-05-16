@@ -44,4 +44,7 @@ def test_llvm_test():
 
     exe_file = Path(__file__).parent / 'test.exe'
     run(['clang', str(obj_file), '-o', str(exe_file)], check=True)
+
+    exe_file.unlink()
+    obj_file.unlink()
     return True

@@ -1,0 +1,6 @@
+fn main() -> int {
+    assert(System.os == "Windows")
+    System.pid
+    System.sleep(1)
+    return 0
+}

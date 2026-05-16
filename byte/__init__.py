@@ -12,6 +12,7 @@ from byte import ast
 
 
 TESTS_DIR = ast.BYTE_DIR / 'tests'
+EXAMPLES_DIR = ast.BYTE_DIR.parent / 'examples'
 
 def test_text_colour(num_tests: int, passed_count: int):
     if passed_count == num_tests:
@@ -95,7 +96,8 @@ class ArgParser:
     def test_command(self, args: Namespace):
         test_name = args.test_name
         if test_name is None:
-            return self.test_dir(TESTS_DIR)
+            # return self.test_dirs([TESTS_DIR, EXAMPLES_DIR])
+            return self.test_dirs([TESTS_DIR])
 
         test_file = self.find_first_file(TESTS_DIR, test_name)
         if test_file is None:
@@ -114,20 +116,20 @@ class ArgParser:
             if file.stem == name:
                 return file
 
-    def test_dir(self, path: Path):
-        files = path.glob('**/*')
+    def test_dirs(self, paths: list[Path]):
         num_tests = passed_count = 0
-        for file in files:
-            if file.suffix not in self.test_factory.handlers:
-                continue
-            
-            num_tests += 1
-
-            success = self.test_single(file)
-            if not success:
-                continue
-
-            passed_count += 1
+        for path in paths:
+            for file in path.glob('**/*'):
+                if file.suffix not in self.test_factory.handlers:
+                    continue
+                
+                num_tests += 1
+    
+                success = self.test_single(file)
+                if not success:
+                    continue
+    
+                passed_count += 1
 
         colour = test_text_colour(num_tests, passed_count)
         print(f'{colour}{Style.BRIGHT}{passed_count}/{num_tests} tests passed{Style.RESET_ALL}')

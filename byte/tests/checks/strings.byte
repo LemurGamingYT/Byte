@@ -1,0 +1,14 @@
+fn main() -> int {
+    hello = "Hello"
+    world = "World"
+    assert(hello + world == "HelloWorld")
+    assert(hello + world != "Hello World")
+    assert(hello.get(0) == "H")
+    assert(world.get(2) == "r")
+    assert(hello.get(-1) == "o")
+    assert(world.get(-3) == "r")
+
+    num_str = "42"
+    assert(num_str.parse_int() == 42)
+    return 0
+}

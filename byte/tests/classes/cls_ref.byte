@@ -15,6 +15,6 @@ fn length(Vector2& vec) -> float {
 
 fn main() -> int {
     vec = new Vector2(100.0, 100.0)
-    print(length(vec))
+    assert(length(vec) == 141.421356)
     return 0
 }

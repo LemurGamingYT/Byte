@@ -1,0 +1,10 @@
+fn main() -> int {
+    assert(true && true)
+    assert(!(false && false))
+    assert(true || false)
+    assert(!(false || false))
+    
+    assert(true.to_int() == 1)
+    assert(false.to_int() == 0)
+    return 0
+}
