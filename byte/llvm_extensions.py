@@ -1,4 +1,5 @@
 from typing import Any, Callable, cast
+from dataclasses import dataclass
 
 from llvmlite import ir, binding as llvm
 
@@ -27,11 +28,11 @@ def NULL(type: ir.Type | None = None):
     return ir.Constant(ir.PointerType(type), None)
 
 # TODO: support external variable definitions as well as external functions
+@dataclass(slots=True)
 class RegistryDefinition:
-    def __init__(self, llvm_name: str, type: ir.FunctionType, display_name: str | None = None):
-        self.llvm_name = llvm_name
-        self.type = type
-        self.display_name = display_name
+    llvm_name: str
+    type: ir.FunctionType
+    display_name: str | None = None
 
 class Registry:
     def __init__(self, module: ir.Module) -> None:
