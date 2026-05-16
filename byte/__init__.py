@@ -1,4 +1,5 @@
 from argparse import ArgumentParser, Namespace
+from time import perf_counter
 from pathlib import Path
 from logging import info
 from typing import cast
@@ -68,9 +69,13 @@ class ArgParser:
         create_project(project_folder, project_name)
 
     def build(self, path: Path, options: ast.CompileOptions):
+        start = perf_counter()
         pipeline = Pipeline()
         file = ast.File(path, options=options)
-        return pipeline.compile_to_exe(file)
+        exe_file = pipeline.compile_to_exe(file)
+        end = perf_counter()
+        info(f'Time taken to build {path}: {end - start}s')
+        return exe_file
 
     def build_dir(self, path: Path, options: ast.CompileOptions):
         success, data = get_entry_file(path)

@@ -1,5 +1,5 @@
 # compiler/python/internal files
-__pycache__/
+__pycache__
 *.pyc
 *.interp
 *.tokens

@@ -17,6 +17,10 @@ class FuncName:
     op: str | None = None
 
 
+def unescapeable_string(text: str):
+    return bytes(text, 'utf-8').decode('unicode_escape')
+
+
 class ByteErrorListener(ANTLRErrorListener):
     def __init__(self, file: ast.File):
         self.file = file
@@ -180,10 +184,10 @@ class ByteASTBuilder(ByteVisitor):
         return ast.Float(self.pos(ctx), self.file.type_map.get('float'), float(ctx.getText()))
     
     def visitString(self, ctx):
-        return ast.String(self.pos(ctx), self.file.type_map.get('string'), ctx.getText()[1:-1])
+        return ast.String(self.pos(ctx), self.file.type_map.get('string'), unescapeable_string(ctx.getText()[1:-1]))
     
     def visitStringPointer(self, ctx):
-        return ast.StringPointer(self.pos(ctx), self.file.type_map.get('pointer'), ctx.getText()[1:-1])
+        return ast.StringPointer(self.pos(ctx), self.file.type_map.get('pointer'), unescapeable_string(ctx.getText()[1:-1]))
     
     def visitBool(self, ctx):
         return ast.Bool(self.pos(ctx), self.file.type_map.get('bool'), ctx.getText() == 'true')
