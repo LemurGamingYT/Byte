@@ -22,9 +22,14 @@ class ByteErrorListener(ANTLRErrorListener):
     def __init__(self, file: ast.File):
         self.file = file
     
-    def syntaxError(self, recognizer, offendingSymbol: CommonToken, line: int, column: int, msg, e):
+    def syntaxError(self, recognizer, offendingSymbol, line: int, column: int, msg, e):
         pos = ast.Position(line, column)
-        pos.comptime_error(self.file, f'invalid syntax \'{offendingSymbol.text}\'')
+        if isinstance(recognizer, ByteLexer):
+            offendingSymbol = self.file.src.splitlines()[line - 1][column]
+        elif offendingSymbol is not None:
+            offendingSymbol = offendingSymbol.text
+        
+        pos.comptime_error(self.file, f'invalid syntax \'{offendingSymbol}\'')
 
 class ByteASTBuilder(ByteVisitor):
     def __init__(self, file: ast.File):
@@ -34,10 +39,13 @@ class ByteASTBuilder(ByteVisitor):
         return ast.Position(ctx.start.line, ctx.start.column)
     
     def build(self):
+        error_listener = ByteErrorListener(self.file)
         lexer = ByteLexer(InputStream(self.file.src))
+        lexer.removeErrorListeners()
+        lexer.addErrorListener(error_listener)
         parser = ByteParser(CommonTokenStream(lexer))
         parser.removeErrorListeners()
-        parser.addErrorListener(ByteErrorListener(self.file))
+        parser.addErrorListener(error_listener)
         return self.visitProgram(parser.program())
     
     def visitProgram(self, ctx):

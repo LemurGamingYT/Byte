@@ -122,7 +122,10 @@ APOSTROPHE: '\'';
 
 INT: [0-9]+;
 FLOAT: [0-9]* '.' [0-9]+;
-STRING: '"' .*? '"' | APOSTROPHE .*? APOSTROPHE;
+STRING
+    : '"' (~["\\\r\n] | '\\' .)* '"'
+    | '\'' (~['\\\r\n] | '\\' .)* '\''
+    ;
 STRING_POINTER: 'p' STRING;
 BOOL: 'true' | 'false';
 ID: [a-zA-Z_][a-zA-Z_0-9]*;
@@ -153,7 +156,6 @@ RETURNS: '->';
 AMPERSAND: '&';
 DOUBLEDOT: '..';
 
-COMMENT: '//' .*? '\n' -> skip;
+COMMENT: '//' ~[\r\n]* '\n' -> skip;
 MULTILINE_COMMENT: '/*' .*? '*/' -> skip;
 WHITESPACE: [\t\r\n ]+ -> skip;
-OTHER: .;
