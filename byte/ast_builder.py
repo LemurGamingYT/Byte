@@ -29,7 +29,7 @@ class ByteErrorListener(ANTLRErrorListener):
         pos = ast.Position(line, column)
         if isinstance(recognizer, ByteLexer):
             offendingSymbol = self.file.src.splitlines()[line - 1][column]
-        elif offendingSymbol is not None:
+        elif isinstance(recognizer, ByteParser) and offendingSymbol is not None:
             offendingSymbol = offendingSymbol.text
         
         pos.comptime_error(self.file, f'invalid syntax \'{offendingSymbol}\'')
