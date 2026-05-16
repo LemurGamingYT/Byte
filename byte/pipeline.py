@@ -19,7 +19,7 @@ from byte import ast
 
 CRUNTIME_DIR = Path(__file__).parent / 'cruntime'
 DEFAULT_PASSES = [Preprocessor, CodeAnalysis, ForwardDeclaration, NameResolver, TypeChecker, MemoryManager]
-
+AST_CACHE = {}
 
 class Pipeline:
     def __init__(self, passes: list[type[ByteCompilerPass]] | None = None):
@@ -50,8 +50,13 @@ class Pipeline:
         return program
     
     def parse(self, file: ast.File):
+        if (program := AST_CACHE.get(str(file.path))) is not None:
+            return program
+        
         builder = ByteASTBuilder(file)
-        return builder.build()
+        program = builder.build()
+        AST_CACHE[str(file.path)] = program
+        return program
     
     def run_passes(self, file: ast.File):
         program = self.parse(file)
