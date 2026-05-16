@@ -16,6 +16,7 @@ class builtins(IntrinsicLib):
         pointer_type = self.file.type_map.get('pointer')
         Math_type = self.file.type_map.get('Math')
         System_type = self.file.type_map.get('System')
+        IOFile_type = self.file.type_map.get('IOFile')
 
         @intrinsic_op(self, '+', int_type, int_type, int_type)
         def add_ints(ctx: IntrinsicCallContext):
@@ -247,13 +248,26 @@ class builtins(IntrinsicLib):
             buf = ctx.module.global_buffer(ir.IntType(8), length.constant, ctx.module.get_unique_name('buffer'))
             return ctx.builder.first_elem(buf, ctx.name)
 
+        @intrinsic(self, IOFile_type, [ast.Param(ast.Position(), int_type, 'fd'), ast.Param(ast.Position(), pointer_type, 'mode')])
+        def _get_fd(ctx: IntrinsicCallContext):
+            fd = ctx.arg(0)
+            mode = ctx.arg(1)
+            
+            if ctx.file.target == ast.Target.WINDOWS:
+                acrt_iob_func = ctx.module.registry.get('acrt_iob_func')
+                return ctx.builder.call(acrt_iob_func, [fd], 'acrt_iob_func')
+            else:
+                fdopen = ctx.module.registry.get('fdopen')
+                return ctx.builder.call(fdopen, [fd, mode], 'fdopen')
+
         @intrinsic(self, params=[ast.Param(ast.Position(), string_type, 'msg')])
         def _error(ctx: IntrinsicCallContext):
-            acrt_iob_func = ctx.module.registry.get('acrt_iob_func')
             fprintf = ctx.module.registry.get('fprintf')
             exit = ctx.module.registry.get('exit')
-            
-            stderr = ctx.builder.call(acrt_iob_func, [llint(2)], 'stderr')
+
+            write_mode = ctx.module.try_get_global('write_mode', lambda: ctx.module.global_string('w', 'write_mode'))
+            write_mode_ptr = ctx.builder.first_elem(write_mode, 'write_mode.ptr')
+            stderr = ctx.call('get_fd', [ast.Arg(ctx.pos, int_type, llint(0)), ast.Arg(ctx.pos, pointer_type, write_mode_ptr)])
             fmt = ctx.module.try_get_global('error_fmt', lambda: ctx.module.global_string('error: %.*s\n', 'error_fmt'))
             ptr = ctx.builder.first_elem(fmt, 'error_fmt_ptr')
             msg_ptr = ctx.call('string.ptr', ctx.args)

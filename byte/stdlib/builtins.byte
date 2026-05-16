@@ -85,7 +85,7 @@ fn print<T>(T x) {
 
 fn input() -> string {
     buf = buffer(512)
-    stdin = acrt_iob_func(0)
+    stdin = get_fd(0, p"r")
     if fgets(buf, 512, stdin) == null() {
         error("input failed")
     }
@@ -112,6 +112,7 @@ fn assert(bool condition, string msg) {
 }
 
 
+// TODO: move these to python intrinsics, these do not need a function call
 class Math {
     static fn sqrt(float x) -> float { return sqrt(x) }
     static fn sqrt(int x) -> int { return sqrt(x.to_float()).to_int() }
