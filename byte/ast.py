@@ -292,11 +292,15 @@ class ReferenceType(Type):
 
 @dataclass(**NODE_KWARGS)
 class ClassType(Type):
-    fields: list[Type] = field(default_factory=list)
+    fields: list[Type] = field(default_factory=list, compare=False)
     
     @property
     def name(self):
         return self.type
+
+    def __str__(self) -> str:
+        fields_str = ', '.join(map(str, self.fields))
+        return f'{self.type}[{fields_str}]'
 
 @dataclass(**NODE_KWARGS)
 class Program(TypelessNode):
