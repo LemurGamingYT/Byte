@@ -217,6 +217,7 @@ class MemoryManager(ByteCompilerPass):
     
     def visitForRange(self, node: ast.ForRange):
         with self.file.child_scope():
+            self.scope.symbol_table.add(ast.Symbol(node.iter_name, node.start.type, node))
             body = self.visitBody(node.body)
         
         return replace(

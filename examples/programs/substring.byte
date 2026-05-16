@@ -1,0 +1,15 @@
+fn substring(string haystack, string needle) -> int {
+    for i in 0..haystack.length - needle.length + 1 {
+        if haystack.slice(i, i + needle.length) == needle {
+            return i
+        }
+    }
+
+    return -1
+}
+
+fn main() -> int {
+    s = "hello world"
+    print(substring(s, "world"))
+    return 0
+}

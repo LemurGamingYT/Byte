@@ -40,6 +40,10 @@ fn string.get(string s, mut int index) -> string {
     return new string(ptr_index, 1)
 }
 
+fn string.slice(string s, int start, int end) -> string {
+    return new string(s.ptr + start, end - start)
+}
+
 fn string.parse_int(string s) -> int {
     return strtol(s.ptr, null(), 10)
 }
