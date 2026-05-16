@@ -3,7 +3,6 @@ from typing import cast
 
 from antlr4.error.ErrorListener import ErrorListener as ANTLRErrorListener
 from antlr4 import InputStream, CommonTokenStream, TerminalNode
-from antlr4.Token import CommonToken
 
 from byte.parser.ByteVisitor import ByteVisitor
 from byte.parser.ByteParser import ByteParser
@@ -34,9 +33,22 @@ class ByteErrorListener(ANTLRErrorListener):
 class ByteASTBuilder(ByteVisitor):
     def __init__(self, file: ast.File):
         self.file = file
+        self.error_listener = ByteErrorListener(self.file)
     
     def pos(self, ctx):
         return ast.Position(ctx.start.line, ctx.start.column)
+
+    def lex(self):
+        lexer = ByteLexer(InputStream(self.file.src))
+        lexer.removeErrorListeners()
+        lexer.addErrorListener(self.error_listener)
+        return CommonTokenStream(lexer)
+
+    def parse(self, token_stream: CommonTokenStream):
+        parser = ByteParser(token_stream)
+        parser.removeErrorListeners()
+        parser.addErrorListener(self.error_listener)
+        return self.visitProgram(parser.program())
     
     def build(self):
         error_listener = ByteErrorListener(self.file)
