@@ -43,6 +43,16 @@ fn string.slice(string s, int start, int end) -> string {
     return new string(s.ptr + start, end - start)
 }
 
+fn string.index_of(string s, string substr) -> int {
+    for i in 0..s.length - substr.length + 1 {
+        if s.slice(i, i + substr.length) == substr {
+            return i
+        }
+    }
+
+    return -1
+}
+
 fn string.parse_int(string s) -> int {
     return strtol(s.ptr, null(), 10)
 }
