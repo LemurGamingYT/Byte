@@ -302,7 +302,9 @@ class TypeChecker(ByteCompilerPass):
     
     def fix_args(self, overload: ast.Function, args: list[ast.Arg]):
         for i, (arg, param) in enumerate(zip(args, overload.params)):
-            if not param.type.is_reference():
+            # TODO: fix when the arg type is a reference and the param type is not a reference
+            # (this breaks intrinsic python code because it doesn't expect a pointer type but receives one)
+            if not param.type.is_reference():# and not arg.type.is_reference():
                 continue
 
             if not isinstance(arg.value, (ast.Ref, ast.Deref, ast.Id)):
