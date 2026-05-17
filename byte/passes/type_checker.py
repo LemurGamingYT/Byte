@@ -314,9 +314,7 @@ class TypeChecker(ByteCompilerPass):
                 arg.pos.comptime_error(self.file, 'cannot reference unknown identifier')
             
             if not ref_symbol.flags.mutable and param.flags.mutable:
-                arg.pos.comptime_warning(
-                    self.file, f"""argument reference symbol is immutable but is being passed by mutable reference
-make {ref_symbol.name} mutable using the 'mut' keyword to remove this warning""")
+                arg.pos.comptime_error(self.file, 'argument reference symbol is immutable but is being passed by mutable reference')
 
             if ref_symbol.type.is_reference():
                 args[i] = ast.Deref(arg.pos, arg.type, arg.value.name).to_arg()
