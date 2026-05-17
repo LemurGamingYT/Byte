@@ -1,7 +1,6 @@
 fn is_valid(string s) -> bool {
     mut num_paren = 0
-    for i in 0..s.length {
-        char = s.get(i)
+    foreach char in s {
         if char == "(" {
             num_paren += 1
         } else if char == ")" {
@@ -13,6 +12,7 @@ fn is_valid(string s) -> bool {
 }
 
 fn main() -> int {
-    print(is_valid("(()"))
+    print(is_valid("()"))
+    print(is_valid("(())))))"))
     return 0
 }
