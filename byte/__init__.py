@@ -117,9 +117,7 @@ class ArgParser:
         print(f'Byte v{ast.VERSION}')
     
     def find_first_file(self, path: Path, name: str):
-        for file in path.iterdir():
-            if file.stem == name:
-                return file
+        return next(path.rglob(f'{name}.*'), None)
 
     def test_dirs(self, paths: list[Path]):
         num_tests = passed_count = 0

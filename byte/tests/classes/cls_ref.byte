@@ -1,20 +1,19 @@
 class Vector2 {
     float x
     float y
-}
 
+    fn length_squared(Vector2& self) -> float {
+        return self.x * self.x + self.y * self.y
+    }
 
-fn length_squared(Vector2& vec) -> float {
-    return vec.x * vec.x + vec.y * vec.y
-}
-
-fn length(Vector2& vec) -> float {
-    return Math.sqrt(length_squared(vec))
+    fn length(Vector2& self) -> float {
+        return Math.sqrt(self.length_squared())
+    }
 }
 
 
 fn main() -> int {
     vec = new Vector2(100.0, 100.0)
-    assert(length(vec) == 141.421356)
+    assert(vec.length() == 141.421356)
     return 0
 }

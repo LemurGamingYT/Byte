@@ -36,8 +36,7 @@ fn string.get(string s, mut int index) -> string {
         index = s.length + index
     }
     
-    ptr_index = s.ptr + index
-    return new string(ptr_index, 1)
+    return new string(s.ptr + index, 1)
 }
 
 fn string.slice(string s, int start, int end) -> string {
