@@ -1,5 +1,7 @@
 from typing import cast
 
+from llvmlite import ir
+
 from byte.intrinsics import intrinsic, IntrinsicCallContext
 from byte.llvm_extensions import llint, NULL
 from byte import ast
@@ -13,6 +15,10 @@ def init_field(file: ast.File, cls_type: ast.ClassType, i: int, field: ast.Prope
     )
     def getter(ctx: IntrinsicCallContext):
         struct = ctx.arg(0)
+        if isinstance(struct.type, ir.PointerType): # TODO: feels like a hacky fix
+            field_ptr = ctx.builder.extract_ptr(struct, i, f'{field.name}.ptr')
+            return ctx.builder.load(field_ptr, field.name)
+
         return ctx.builder.extract_value(struct, i, field.name)
 
     field_get = getattr(getter, 'ast_func')
