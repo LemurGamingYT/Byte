@@ -19,6 +19,11 @@ class float(IntrinsicClass):
         # def _min(_: IntrinsicCallContext):
         #     return ir.Constant(ir.FloatType(), 1.175494e-38)
 
+        @intrinsic(self, float_type, [ast.Param(ast.Position(), float_type, 'self')], flags=ast.FunctionFlags(property=True))
+        def _decimal(ctx: IntrinsicCallContext):
+            s = ctx.arg(0)
+            return ctx.builder.frem(s, ir.Constant(ir.FloatType(), 1), ctx.name)
+
         @intrinsic(self, string_type, [ast.Param(ast.Position(), float_type, 'self')], flags=ast.FunctionFlags(method=True))
         def _to_string(ctx: IntrinsicCallContext):
             snprintf = ctx.module.registry.get('snprintf')
