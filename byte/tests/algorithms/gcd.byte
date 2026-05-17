@@ -16,6 +16,6 @@ fn gcd(int a, int b) -> int {
 }
 
 fn main() -> int {
-    print(gcd(20, 28).to_string())
+    assert(gcd(20, 28) == 4)
     return 0
 }

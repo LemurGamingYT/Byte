@@ -1,4 +1,4 @@
-from typing import Any, Callable, cast, TypeAlias
+from typing import Any, Callable, Union, cast, TypeAlias
 from dataclasses import dataclass, field
 from abc import ABC, abstractmethod
 
@@ -47,6 +47,9 @@ def intrinsic(
 
     def decorator(func: IntrinsicPyFunc):
         name = override_name or func.__name__[1:]
+        if isinstance(self, IntrinsicClass):
+            name = f'{self._type}.{name}'
+
         ast_func = ast.Function(ast.Position(), cast(ast.Type, ret_type), name, params, func, flags)
         setattr(func, 'ast_func', ast_func)
 
@@ -76,10 +79,17 @@ class IntrinsicLib(ABC):
     def init(self):
         ...
 
-    def add(self, other: type['IntrinsicLib']):
+    def add(self, other: type[Union['IntrinsicLib', 'IntrinsicClass']]):
         instance = other(self.file)
         instance.init()
         self.intrinsics.update(instance.intrinsics)
 
 class IntrinsicClass(IntrinsicLib):
-    ...
+    def __init__(self, file: ast.File):
+        super().__init__(file)
+
+        self._name = self.__class__.__name__
+        if not file.type_map.has(self._name):
+            self._type = file.type_map.add(self._name)
+        else:
+            self._type = file.type_map.get(self._name)

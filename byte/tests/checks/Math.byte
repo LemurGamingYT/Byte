@@ -1,0 +1,22 @@
+fn main() -> int {
+    a = 10
+    b = 4
+    c = 0
+    d = -500
+    e = 5.7
+    f = 9.03
+    assert(Math.sqrt(b) == 2)
+    assert(Math.sqrt(a) == 3)
+    assert(Math.pow(a, b) == 10000)
+    assert(Math.pow(c, b) == 0)
+    assert(Math.abs(d) == 500)
+    assert(Math.min(d, a) == d)
+    assert(Math.min(b, c) == c)
+    assert(Math.max(b, a) == a)
+    assert(Math.max(d, c) == c)
+    assert(Math.floor(e) == 5)
+    assert(Math.floor(f) == 9)
+    assert(Math.ceil(e) == 6)
+    assert(Math.ceil(f) == 10)
+    return 0
+}

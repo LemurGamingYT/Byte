@@ -18,8 +18,7 @@ fn collatz_conjecture(mut int n) -> int {
 }
 
 fn main() -> int {
-    num = input("Enter number: ").parse_int()
-    steps = collatz_conjecture(num)
-    print(num.to_string() + " takes " + steps.to_string() + " steps to reach 1")
+    steps = collatz_conjecture(6)
+    assert(steps == 8)
     return 0
 }
