@@ -76,5 +76,10 @@ class IntrinsicLib(ABC):
     def init(self):
         ...
 
+    def add(self, other: type['IntrinsicLib']):
+        instance = other(self.file)
+        instance.init()
+        self.intrinsics.update(instance.intrinsics)
+
 class IntrinsicClass(IntrinsicLib):
     ...

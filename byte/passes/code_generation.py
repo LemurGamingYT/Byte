@@ -1,5 +1,6 @@
 from dataclasses import dataclass
 from typing import cast, Any
+from pathlib import Path
 from logging import info
 
 from llvmlite import ir, binding
@@ -239,24 +240,14 @@ class CodeGeneration(ByteCompilerPass):
             self.builder.branch(cond_block)
 
         self.builder.position_at_end(merge_block)
-    
-    def visitUse(self, node: ast.Use):
-        lib_name = node.path
-        has_py_file = (ast.STDLIB_PATH / f'{lib_name}.py').exists()
-        stdlib_path = ast.STDLIB_PATH / f'{lib_name}.byte'
-        has_byte_file = stdlib_path.exists()
-        if not has_py_file and not has_byte_file:
-            node.pos.comptime_error(self.file, f'unknown library \'{lib_name}\'')
 
-        if not has_byte_file:
-            return node
-        
+    def use_byte(self, file: ast.File, path: Path):
         from byte import Pipeline
         
-        file = ast.File(stdlib_path, options=self.file.options, target=self.file.target)
         if file.path.stem == self.file.path.stem:
-            return node
+            return
 
+        file.path = path
         pipeline = Pipeline()
         _, obj_file = pipeline.compile_to_obj(file)
         for symbol in file.scope.symbol_table.symbols.values():
@@ -273,6 +264,18 @@ class CodeGeneration(ByteCompilerPass):
         self.file.type_map.merge(file.type_map)
         self.file.dependencies.append(obj_file)
         info(f'new dependency object file {obj_file}')
+    
+    def visitUse(self, node: ast.Use):
+        stdlib_path = ast.STDLIB_PATH / node.path
+        file = ast.File(stdlib_path, options=self.file.options, target=self.file.target)
+        if stdlib_path.is_dir():
+            for byte_file in stdlib_path.rglob('*.byte'):
+                self.use_byte(file, byte_file)
+        else:
+            byte_file = ast.STDLIB_PATH / f'{node.path}.byte'
+            if byte_file.exists():
+                self.use_byte(file, byte_file)
+        
         return node
     
     def visitVariable(self, node: ast.Variable):

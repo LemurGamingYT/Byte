@@ -6,7 +6,7 @@ from byte import ast
 
 
 def test_time_comp():
-    builtins_byte = ast.STDLIB_PATH / 'builtins.byte'
+    builtins_byte = ast.STDLIB_PATH / 'builtins' / 'builtins.byte'
     file = ast.File(builtins_byte)
     pipeline = Pipeline()
 

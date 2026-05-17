@@ -2,6 +2,7 @@ from dataclasses import dataclass, field, fields
 from typing import Callable, Union, Any
 from contextlib import contextmanager
 from abc import ABC, abstractmethod
+from importlib import import_module
 from logging import error, warning
 from sys import exit as sys_exit
 from platform import system
@@ -542,6 +543,34 @@ class Continue(TypelessNode):
 @dataclass(**NODE_KWARGS)
 class Use(TypelessNode):
     path: str
+
+    def use_byte_file(self, file: File, running_file: File, path: Path, current_pass_type: type):
+        from byte.pipeline import Pipeline
+
+        if file.path.stem == running_file.path.stem:
+            return
+
+        file.path = path
+        pipeline = Pipeline()
+        pipeline.end_at_pass(current_pass_type).run_passes(file)
+
+        running_file.scope.symbol_table.merge(file.scope.symbol_table)
+        running_file.type_map.merge(file.type_map)
+
+    def use_py_file(self, file: File, running_file: File, path: Path):
+        if path.parent.name != 'stdlib':
+            module = import_module(f'byte.stdlib.{path.stem}.{path.stem}')
+        else:
+            module = import_module(f'byte.stdlib.{path.stem}')
+        
+        cls = getattr(module, path.stem)
+        instance = cls(file)
+        instance.init()
+        for k, v in instance.intrinsics.items():
+            ast_func = v.ast_func
+            file.scope.symbol_table.add(Symbol(k, file.type_map.get('function'), ast_func))
+
+        running_file.scope.symbol_table.merge(file.scope.symbol_table)
     
     def __str__(self) -> str:
         return f'use "{self.path}"'

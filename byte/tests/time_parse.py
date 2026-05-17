@@ -20,6 +20,6 @@ def time_lex_parse(path: Path):
     print(f'Time taken to parse {path.name}: {end - start}s')
 
 def test_time_parse():
-    time_lex_parse(ast.STDLIB_PATH / 'builtins.byte')
+    time_lex_parse(ast.STDLIB_PATH / 'builtins' / 'builtins.byte')
     time_lex_parse(ast.BYTE_DIR.parent / 'examples' / 'test.byte')
     return True

@@ -112,19 +112,17 @@ fn assert(bool condition, string msg) {
 
 
 // TODO: move these to python intrinsics, these do not need a function call
-class Math {
-    static fn sqrt(float x) -> float { return sqrt(x) }
-    static fn sqrt(int x) -> int { return sqrt(x.to_float()).to_int() }
-    static fn pow(float base, float exponent) -> float { return pow(base, exponent) }
-    static fn pow(float base, int exponent) -> float { return powi(base, exponent) }
-    static fn pow(int base, float exponent) -> float { return pow(base.to_float(), exponent) }
-    static fn pow(int base, int exponent) -> int { return pow(base.to_float(), exponent.to_float()).to_int() }
-    static fn abs(float x) -> float { return fabs(x) }
-    static fn abs(int x) -> int { return fabs(x.to_float()).to_int() }
-    static fn min(float a, float b) -> float { return minnum(a, b) }
-    static fn min(int a, int b) -> int { return smin(a, b) }
-    static fn max(float a, float b) -> float { return maxnum(a, b) }
-    static fn max(int a, int b) -> int { return smax(a, b) }
-    static fn floor(float x) -> int { return floor(x).to_int() }
-    static fn ceil(float x) -> int { return ceil(x).to_int() }
-}
+static fn Math.sqrt(float x) -> float { return sqrt(x) }
+static fn Math.sqrt(int x) -> int { return sqrt(x.to_float()).to_int() }
+static fn Math.pow(float base, float exponent) -> float { return pow(base, exponent) }
+static fn Math.pow(float base, int exponent) -> float { return powi(base, exponent) }
+static fn Math.pow(int base, float exponent) -> float { return pow(base.to_float(), exponent) }
+static fn Math.pow(int base, int exponent) -> int { return pow(base.to_float(), exponent.to_float()).to_int() }
+static fn Math.abs(float x) -> float { return fabs(x) }
+static fn Math.abs(int x) -> int { return fabs(x.to_float()).to_int() }
+static fn Math.min(float a, float b) -> float { return minnum(a, b) }
+static fn Math.min(int a, int b) -> int { return smin(a, b) }
+static fn Math.max(float a, float b) -> float { return maxnum(a, b) }
+static fn Math.max(int a, int b) -> int { return smax(a, b) }
+static fn Math.floor(float x) -> int { return floor(x).to_int() }
+static fn Math.ceil(float x) -> int { return ceil(x).to_int() }

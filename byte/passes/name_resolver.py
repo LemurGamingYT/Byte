@@ -1,4 +1,5 @@
 from importlib import import_module
+from pathlib import Path
 
 from byte.passes import ByteCompilerPass
 from byte import ast
@@ -50,46 +51,34 @@ class NameResolver(ByteCompilerPass):
 
         return node
 
-    def use_py(self, file: ast.File, path: str):
-        stdlib_path = ast.STDLIB_PATH / f'{path}.py'
-        if not stdlib_path.exists():
-            return False
-
-        module = import_module(f'byte.stdlib.{path}')
-        cls = getattr(module, path)
-        instance = cls(file)
-        instance.init()
-        for k, v in instance.intrinsics.items():
-            ast_func = v.ast_func
-            file.scope.symbol_table.add(ast.Symbol(k, self.file.type_map.get('function'), ast_func))
-            self.scope.symbol_table.add(ast.Symbol(k, self.file.type_map.get('function'), ast_func))
-        
-        return True
-
-    def use_byte(self, file: ast.File, path: str):
-        from byte.pipeline import Pipeline
-        
-        if self.file.path.stem == file.path.stem:
-            return True
-        
-        stdlib_path = ast.STDLIB_PATH / f'{path}.byte'
-        if not stdlib_path.exists():
-            return False
-
-        file.path = stdlib_path
-        pipeline = Pipeline()
-        pipeline.end_at_pass(NameResolver).run_passes(file)
-        
-        self.scope.symbol_table.merge(file.scope.symbol_table)
-        self.file.type_map.merge(file.type_map)
-        return True
-
     def visitUse(self, node: ast.Use):
-        file = ast.File(ast.STDLIB_PATH / node.path, options=self.file.options, target=self.file.target)
-        used_py = self.use_py(file, node.path)
-        used_byte = self.use_byte(file, node.path)
-        if not used_py and not used_byte:
-            node.pos.comptime_error(self.file, f'unknown library \'{node.path}\'')
+        stdlib_path = ast.STDLIB_PATH / node.path
+        file = ast.File(stdlib_path, options=self.file.options, target=self.file.target)
+        if stdlib_path.is_dir():
+            std_py_file = stdlib_path / f'{node.path}.byte'
+            if std_py_file.exists():
+                node.use_py_file(file, self.file, std_py_file)
+            else:
+                for py_file in stdlib_path.rglob('*.py'):
+                    node.use_py_file(file, self.file, py_file)
+
+            std_byte_file = stdlib_path / f'{node.path}.byte'
+            if std_byte_file.exists():
+                node.use_byte_file(file, self.file, std_byte_file, NameResolver)
+            else:
+                for byte_file in stdlib_path.rglob('*.byte'):
+                    node.use_byte_file(file, self.file, byte_file, NameResolver)
+        else:
+            py_file = ast.STDLIB_PATH / f'{node.path}.py'
+            if py_file.exists():
+                node.use_py_file(file, self.file, py_file)
+
+            byte_file = ast.STDLIB_PATH / f'{node.path}.byte'
+            if byte_file.exists():
+                node.use_byte_file(file, self.file, byte_file, NameResolver)
+
+            if not py_file.exists() and not byte_file.exists():
+                node.pos.comptime_error(self.file, f'unknown library \'{node.path}\'')
         
         return node
 
