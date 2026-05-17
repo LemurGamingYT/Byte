@@ -170,6 +170,11 @@ class ByteASTBuilder(ByteVisitor):
             self.pos(ctx), ctx.ID().getText(), self.visit(ctx.expr(0)), self.visit(ctx.expr(1)), self.visitBody(ctx.body()),
             self.visit(ctx.expr(2)) if len(ctx.expr()) == 3 else None
         )
+
+    def visitForeachStmt(self, ctx: ByteParser.ForeachStmtContext):
+        return ast.Foreach(
+            self.pos(ctx), ctx.ID().getText(), self.visit(ctx.expr()), self.visit(ctx.body())
+        )
     
     def visitUseStmt(self, ctx):
         return ast.Use(self.pos(ctx), ctx.STRING().getText()[1:-1])

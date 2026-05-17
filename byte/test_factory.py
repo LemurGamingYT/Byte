@@ -1,6 +1,7 @@
 from importlib import import_module
 from typing import Protocol
 from subprocess import run
+from logging import error
 from pathlib import Path
 
 from colorama import Fore, Style
@@ -67,7 +68,13 @@ class ByteTestHandler:
         
         output = res.stdout.strip()
         expected_output = expected_file.read_text().strip()
-        return output == expected_output
+        success = output == expected_output
+        if not success:
+            error(f"""test {path.stem} failed: expected output does not match output:
+Expected: {expected_output}
+Got: {output}""")
+
+        return success
     
     def test(self, path: Path):
         try:

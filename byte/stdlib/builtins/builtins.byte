@@ -27,6 +27,28 @@ fn string.destroy(string& s) {
     free(s.ptr)
 }
 
+fn +(string a, string b) -> string {
+    total_length = a.length + b.length
+    ptr = malloc(total_length)
+    if ptr == null() {
+        error("out of memory")
+    }
+    
+    memcpy(ptr, a.ptr, a.length, false)
+    memcpy(ptr + a.length, b.ptr, b.length, false)
+    return new string(ptr, total_length, true)
+}
+
+fn ==(string a, string b) -> bool {
+    if a.length != b.length { return false }
+    return !memcmp(a.ptr, b.ptr, a.length)
+}
+
+fn !=(string a, string b) -> bool {
+    if a.length != b.length { return true }
+    return memcmp(a.ptr, b.ptr, a.length)
+}
+
 fn string.get(string s, mut int index) -> string {
     if index >= s.length {
         error("string index out of bounds")
@@ -63,28 +85,6 @@ fn string.parse_float(string s) -> float {
 
 fn string.clone(string s) -> string {
     return new string(s.ptr, s.length)
-}
-
-fn +(string a, string b) -> string {
-    total_length = a.length + b.length
-    ptr = malloc(total_length)
-    if ptr == null() {
-        error("out of memory")
-    }
-    
-    memcpy(ptr, a.ptr, a.length, false)
-    memcpy(ptr + a.length, b.ptr, b.length, false)
-    return new string(ptr, total_length, true)
-}
-
-fn ==(string a, string b) -> bool {
-    if a.length != b.length { return false }
-    return !memcmp(a.ptr, b.ptr, a.length)
-}
-
-fn !=(string a, string b) -> bool {
-    if a.length != b.length { return true }
-    return memcmp(a.ptr, b.ptr, a.length)
 }
 
 

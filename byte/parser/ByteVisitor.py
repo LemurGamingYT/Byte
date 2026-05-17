@@ -74,13 +74,13 @@ class ByteVisitor(ParseTreeVisitor):
         return self.visitChildren(ctx)
 
 
-    # Visit a parse tree produced by ByteParser#deferStmt.
-    def visitDeferStmt(self, ctx:ByteParser.DeferStmtContext):
+    # Visit a parse tree produced by ByteParser#forRangeStmt.
+    def visitForRangeStmt(self, ctx:ByteParser.ForRangeStmtContext):
         return self.visitChildren(ctx)
 
 
-    # Visit a parse tree produced by ByteParser#forRangeStmt.
-    def visitForRangeStmt(self, ctx:ByteParser.ForRangeStmtContext):
+    # Visit a parse tree produced by ByteParser#foreachStmt.
+    def visitForeachStmt(self, ctx:ByteParser.ForeachStmtContext):
         return self.visitChildren(ctx)
 
 

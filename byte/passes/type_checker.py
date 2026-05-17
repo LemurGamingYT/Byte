@@ -228,10 +228,28 @@ class TypeChecker(ByteCompilerPass):
         
         with self.file.child_scope():
             self.scope.symbol_table.add(ast.Symbol(node.iter_name, start.type, step))
-            
+
             body = cast(ast.Body, self.visit(node.body))
         
         return replace(node, start=start, end=end, body=body, step=step)
+
+    def visitForeach(self, node: ast.Foreach):
+        value = cast(ast.Node, self.visit(node.value))
+        iter_at_symbol = self.scope.symbol_table.tryget(f'{value.type.basic_type}.iter.at')
+        iter_len_symbol = self.scope.symbol_table.tryget(f'{value.type.basic_type}.iter.len')
+        if iter_at_symbol is None or iter_len_symbol is None:
+            value.pos.comptime_error(self.file, f'invalid type \'{value.type}\' for foreach')
+
+        iter_at_func = cast(ast.Function, iter_at_symbol.value)
+        iter_len_func = cast(ast.Function, iter_len_symbol.value)
+        idx_name = self.file.unique_name
+        idx_var = ast.Id(value.pos, self.file.type_map.get('int'), idx_name)
+        body_nodes = [ast.Variable(node.body.pos, iter_at_func.ret_type, node.iter_name, ast.Call(
+            node.body.pos, iter_at_func.ret_type, iter_at_func.name, [value.to_arg(), idx_var.to_arg()]
+        ))] + node.body.nodes
+        start = ast.Int(node.pos, self.file.type_map.get('int'), 0)
+        end = ast.Call(value.pos, iter_len_func.ret_type, iter_len_func.name, [value.to_arg()])
+        return self.visit(ast.ForRange(node.pos, idx_name, start, end, replace(node.body, nodes=body_nodes)))
 
     def visitUse(self, node: ast.Use):
         stdlib_path = ast.STDLIB_PATH / node.path

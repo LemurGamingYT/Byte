@@ -9,7 +9,7 @@ type
 
 stmt
     : varAssign | funcAssign | classAssign
-    | whileStmt | ifStmt | useStmt | forRangeStmt// | deferStmt
+    | whileStmt | ifStmt | useStmt | forRangeStmt | foreachStmt
     | expr
     ;
 
@@ -30,8 +30,8 @@ elseifStmt: ELSE IF expr body;
 elseStmt: ELSE body;
 whileStmt: WHILE expr body;
 useStmt: USE STRING;
-deferStmt: DEFER expr;
 forRangeStmt: FOR ID IN expr DOUBLEDOT expr (DOUBLEDOT expr)? body;
+foreachStmt: FOREACH ID IN expr body;
 
 funcName
     : (extend_type=type DOT)? ID
@@ -109,9 +109,9 @@ FUNC: 'fn';
 ELSE: 'else';
 CLASS: 'class';
 MUTABLE: 'mut';
-DEFER: 'defer';
 RETURN: 'return';
 STATIC: 'static';
+FOREACH: 'foreach';
 
 // Loop keywords
 WHILE: 'while';

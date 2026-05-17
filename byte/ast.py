@@ -42,14 +42,14 @@ class Position:
             print(file.src.splitlines()[self.line - 1])
             print(' ' * self.column + '^')
         
-        print(f'{Style.BRIGHT}{Fore.RED}error: {message}{Style.RESET_ALL}')
+        print(f'{Style.BRIGHT}{Fore.RED}error (in {file.path.name}): {message}{Style.RESET_ALL}')
         error(message)
         sys_exit(1)
     
     def comptime_warning(self, file: 'File', message: str):
         print(file.src.splitlines()[self.line - 1])
         print(' ' * self.column + '^')
-        print(f'{Style.BRIGHT}{Fore.YELLOW}warning: {message}{Style.RESET_ALL}')
+        print(f'{Style.BRIGHT}{Fore.YELLOW}warning (in {file.path.name}): {message}{Style.RESET_ALL}')
         warning(message)
 
 @dataclass(kw_only=True, slots=True)
@@ -528,7 +528,20 @@ class ForRange(TypelessNode):
     
     def __str__(self) -> str:
         step = f'..{self.step}' if self.step is not None else ''
-        return f'for {self.iter_name} in {self.start}..{self.end}{step}'
+        return f"""for {self.iter_name} in {self.start}..{self.end}{step} {{
+{self.body}
+}}"""
+
+@dataclass(**NODE_KWARGS)
+class Foreach(TypelessNode):
+    iter_name: str
+    value: Node
+    body: Body
+
+    def __str__(self) -> str:
+        return f"""foreach {self.iter_name} in {self.value} {{
+{self.body}
+}}"""
 
 @dataclass(**NODE_KWARGS)
 class Break(TypelessNode):
@@ -574,13 +587,6 @@ class Use(TypelessNode):
     
     def __str__(self) -> str:
         return f'use "{self.path}"'
-
-@dataclass(**NODE_KWARGS)
-class Defer(TypelessNode):
-    expr: Node
-    
-    def __str__(self) -> str:
-        return f'defer {self.expr}'
 
 @dataclass(**NODE_KWARGS)
 class Int(Node):

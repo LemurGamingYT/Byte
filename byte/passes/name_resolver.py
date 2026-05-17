@@ -51,6 +51,17 @@ class NameResolver(ByteCompilerPass):
 
         return node
 
+    def visitForeach(self, node: ast.Foreach):
+        if self.scope.symbol_table.has(node.iter_name):
+            node.pos.comptime_error(self.file, f'name \'{node.iter_name}\' already in use')
+
+        with self.file.child_scope():
+            self.scope.symbol_table.add(ast.Symbol(node.iter_name, node.type, node))
+
+            self.visit(node.body)
+
+        return node
+
     def visitUse(self, node: ast.Use):
         stdlib_path = ast.STDLIB_PATH / node.path
         file = ast.File(stdlib_path, options=self.file.options, target=self.file.target)
