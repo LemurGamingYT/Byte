@@ -95,7 +95,10 @@ class TypeChecker(ByteCompilerPass):
             return node
         
         params = [self.visit(param) for param in node.params]
-        ret_type = self.visit(node.ret_type)
+        ret_type = cast(ast.Type, self.visit(node.ret_type))
+        if ret_type.is_reference():
+            node.pos.comptime_error(self.file, 'return type cannot be a reference')
+        
         extend_type = self.visit(node.extend_type) if node.extend_type is not None else None
         func = replace(node, type=ret_type, params=params, extend_type=extend_type)
         func = replace(func, name=self.get_mangled_name(func))
