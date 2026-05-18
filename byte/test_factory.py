@@ -51,6 +51,8 @@ class CTestHandler:
 
 class ByteTestHandler:
     def run_byte(self, path: Path):
+        expected_error = path.stem.endswith('_error')
+        
         pipeline = Pipeline()
         file = ast.File(path)
         exe_file = pipeline.compile_to_exe(file)
@@ -60,7 +62,7 @@ class ByteTestHandler:
         res = run([str(exe_file)], text=True, capture_output=True)
         exe_file.unlink()
         if res.returncode != 0:
-            return False
+            return expected_error
 
         expected_file = path.with_suffix('.out')
         if not expected_file.is_file():
@@ -73,6 +75,8 @@ class ByteTestHandler:
             error(f"""test {path.stem} failed: expected output does not match output:
 Expected: {expected_output}
 Got: {output}""")
+
+            return expected_error
 
         return success
     

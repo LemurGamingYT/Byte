@@ -73,7 +73,7 @@ class intrinsics(IntrinsicLib):
 
             write_mode = ctx.module.try_get_global('write_mode', lambda: ctx.module.global_string('w', 'write_mode'))
             write_mode_ptr = ctx.builder.first_elem(write_mode, 'write_mode.ptr')
-            stderr = ctx.call('get_fd', [ast.Arg(ctx.pos, int_type, llint(0)), ast.Arg(ctx.pos, pointer_type, write_mode_ptr)])
+            stderr = ctx.call('get_fd', [ast.Arg(ctx.pos, int_type, llint(2)), ast.Arg(ctx.pos, pointer_type, write_mode_ptr)])
             fmt = ctx.module.try_get_global('error_fmt', lambda: ctx.module.global_string('error: %.*s\n', 'error_fmt'))
             ptr = ctx.builder.first_elem(fmt, 'error_fmt_ptr')
             msg_ptr = ctx.call('string.ptr', ctx.args)
