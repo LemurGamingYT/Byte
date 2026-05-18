@@ -7,6 +7,17 @@ fn main() -> int {
     assert(world.get(2) == "r")
     assert(hello.get(-1) == "o")
     assert(world.get(-3) == "r")
+    assert(hello.slice(1, 3) == "el")
+    assert(hello.index_of("ll") == 2)
+
+    s = "Testing 1212"
+    assert(s.index_of("12") == 8)
+    assert(s.index_of("t") == 3)
+    
+    empty_string = new string(10)
+    assert(empty_string.length == 10)
+    assert(empty_string.get(0) == " ")
+    assert(empty_string.get(1) == " ")
 
     num_str = "42"
     assert(num_str.parse_int() == 42)

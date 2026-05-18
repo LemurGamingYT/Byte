@@ -1,7 +1,5 @@
-from importlib import import_module
 from dataclasses import replace
 from logging import error, info
-from pathlib import Path
 from typing import cast
 
 from byte.passes import ByteCompilerPass
@@ -118,10 +116,13 @@ class TypeChecker(ByteCompilerPass):
     
     def visitProperty(self, node: ast.Property):
         return replace(node, type=self.visit(node.type))
+
+    def visitField(self, node: ast.Field):
+        return replace(node, type=self.visit(node.type))
     
     def visitClass(self, node: ast.Class):
         new_members = []
-        fields = [cast(ast.Property, self.visit(f)) for f in node.fields]
+        fields = [cast(ast.Field, self.visit(f)) for f in node.fields]
         field_types = [field.type for field in fields]
         self.file.type_map.add(node.name, ast.ClassType(node.name, field_types))
         

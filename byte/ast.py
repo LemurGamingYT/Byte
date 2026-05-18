@@ -370,18 +370,28 @@ class Return(Node):
 @dataclass(**NODE_KWARGS)
 class Property(Node):
     name: str
+    getter_body: Body
     
+    def __str__(self) -> str:
+        return f"""{self.type} {self.name} => {{
+{self.getter_body}
+}}"""
+
+@dataclass(**NODE_KWARGS)
+class Field(Node):
+    name: str
+
     def __str__(self) -> str:
         return f'{self.type} {self.name}'
 
 @dataclass(**NODE_KWARGS)
 class Class(TypelessNode):
     name: str
-    members: list[Union['Function', 'Property']] = field(default_factory=list)
+    members: list[Union['Function', 'Property', 'Field']] = field(default_factory=list)
 
     @property
     def fields(self):
-        return [member for member in self.members if isinstance(member, Property)]
+        return [member for member in self.members if isinstance(member, Field)]
     
     def __str__(self) -> str:
         members_str = '\n'.join(map(str, self.members))
@@ -584,6 +594,7 @@ class Use(TypelessNode):
             file.scope.symbol_table.add(Symbol(k, file.type_map.get('function'), ast_func))
 
         running_file.scope.symbol_table.merge(file.scope.symbol_table)
+        running_file.type_map.merge(file.type_map)
     
     def __str__(self) -> str:
         return f'use "{self.path}"'

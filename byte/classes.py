@@ -7,7 +7,7 @@ from byte.llvm_extensions import llint, NULL
 from byte import ast
 
 
-def init_field(file: ast.File, cls_type: ast.ClassType, i: int, field: ast.Property):
+def init_field(file: ast.File, cls_type: ast.ClassType, i: int, field: ast.Field):
     self_param = ast.Param(field.pos, cls_type, 'self')
     @intrinsic(
         None, field.type, [self_param], flags=ast.FunctionFlags(property=True, returns_reference=True),
@@ -38,7 +38,7 @@ def init_field(file: ast.File, cls_type: ast.ClassType, i: int, field: ast.Prope
     field_set = getattr(setter, 'ast_func')
     return field_get, field_set
 
-def init_class(pos: ast.Position, file: ast.File, name: str, fields: list[ast.Property]):
+def init_class(pos: ast.Position, file: ast.File, name: str, fields: list[ast.Field]):
     field_types = [field.type for field in fields]
     cls_type = cast(ast.ClassType, file.type_map.add(name, ast.ClassType(name, field_types)))
 
@@ -90,8 +90,7 @@ def init_class(pos: ast.Position, file: ast.File, name: str, fields: list[ast.Pr
         field_strs = []
         for i, field in enumerate(fields):
             field_value = ctx.builder.extract_value(struct, i, field.name)
-            field_str = ctx.call(f'{field.type}.to_string', [ast.Arg(ctx.pos, field.type, field_value)])
-            field_strs.append(field_str)
+            field_strs.append(ctx.call(f'{field.type}.to_string', [ast.Arg(ctx.pos, field.type, field_value)]))
 
         buf_addr = ctx.builder.alloca(ir.PointerType(ir.IntType(8)), name='buf.addr')
         ctx.builder.store(NULL(), buf_addr)
@@ -105,8 +104,7 @@ def init_class(pos: ast.Position, file: ast.File, name: str, fields: list[ast.Pr
         for field_str in field_strs:
             length = ctx.call('string.length', [ast.Arg(ctx.pos, ctx.file.type_map.get('string'), field_str)])
             ptr = ctx.call('string.ptr', [ast.Arg(ctx.pos, ctx.file.type_map.get('string'), field_str)])
-            asprintf_args.append(length)
-            asprintf_args.append(ptr)
+            asprintf_args.extend((length, ptr))
 
         written = ctx.builder.call(asprintf, asprintf_args, 'written')
         return ctx.call('string.new', [

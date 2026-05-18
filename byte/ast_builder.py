@@ -139,7 +139,7 @@ class ByteASTBuilder(ByteVisitor):
         )
     
     def visitPropertyDecl(self, ctx):
-        return ast.Property(self.pos(ctx), self.visit(ctx.type_()), ctx.ID().getText())
+        return ast.Field(self.pos(ctx), self.visit(ctx.type_()), ctx.ID().getText())
     
     def visitClassAssign(self, ctx):
         members = []

@@ -1,0 +1,17 @@
+fn main() -> int {
+    s = "Hello world"
+    mut i2 = 0
+    for i in 0..s.length {
+        c = s.get(i)
+        assert(i == i2)
+        i2 += 1
+    }
+    
+    i2 = 0
+    foreach c in s {
+        assert(c == s.get(i2))
+        i2 += 1
+    }
+    
+    return 0
+}

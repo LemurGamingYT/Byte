@@ -1,6 +1,3 @@
-from importlib import import_module
-from pathlib import Path
-
 from byte.passes import ByteCompilerPass
 from byte import ast
 

@@ -314,7 +314,7 @@ class CodeGeneration(ByteCompilerPass):
         is_decrementing = self.builder.icmp_signed('>', start, end, 'is_decrementing')
         with self.builder.if_then(is_decrementing):
             err_msg = 'for range loop start is greater than end'
-            err_msg_global = self.module.global_string(err_msg, 'loop_error')
+            err_msg_global = self.module.try_get_global('loop_error', lambda: self.module.global_string(err_msg, 'loop_error'))
             err_msg_ptr = self.builder.first_elem(err_msg_global, 'err_msg_ptr')
             err_msg_string = self.builder.struct(self.string_type, [err_msg_ptr, llint(len(err_msg))], 'err_msg_string')
 
