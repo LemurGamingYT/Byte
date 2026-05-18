@@ -1,0 +1,16 @@
+class Box {
+    int value
+
+    fn get(Box& self) -> int {
+        return self.value
+    }
+}
+
+fn make_box(int x) -> Box {
+    return new Box(x)
+}
+
+fn main() -> int {
+    assert(make_box(10).get() == 10)
+    return 0
+}

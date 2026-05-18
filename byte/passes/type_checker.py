@@ -38,7 +38,16 @@ class TypeChecker(ByteCompilerPass):
         return replace(node, type=self.visit(node.type))
     
     def visitBody(self, node: ast.Body):
-        return replace(node, type=self.visit(node.type), nodes=[self.visit(stmt) for stmt in node.nodes])
+        nodes = []
+        for stmt in node.nodes:
+            stmt = self.visit(stmt)
+            if self.scope.data.prepend_nodes:
+                nodes.extend(self.scope.data.prepend_nodes)
+                self.scope.data.prepend_nodes.clear()
+
+            nodes.append(stmt)
+        
+        return replace(node, type=self.visit(node.type), nodes=nodes)
     
     def visitReturn(self, node: ast.Return):
         if node.value is None:
@@ -312,8 +321,13 @@ class TypeChecker(ByteCompilerPass):
                 continue
 
             if not isinstance(arg.value, (ast.Ref, ast.Deref, ast.Id)):
-                # TODO: turn argument into a temporary variable
-                arg.pos.comptime_error(self.file, 'cannot reference non-identifier')
+                temp_name = self.file.unique_name
+                self.scope.data.prepend_nodes.append(ast.Variable(
+                    arg.pos, arg.type, temp_name, arg.value
+                ))
+
+                arg.value = ast.Id(arg.pos, arg.type, temp_name)
+                self.scope.symbol_table.add(ast.Symbol(temp_name, arg.type, arg.value))
             
             ref_symbol = self.scope.symbol_table.tryget(arg.value.name)
             if ref_symbol is None:
