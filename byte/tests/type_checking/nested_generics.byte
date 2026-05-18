@@ -1,0 +1,9 @@
+fn wrap<T>(T x) -> T {
+    return x
+}
+
+fn main() -> int {
+    a = wrap(wrap(wrap(5)))
+    assert(a == 5)
+    return 0
+}
