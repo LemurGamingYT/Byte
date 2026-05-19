@@ -1,9 +1,7 @@
+#if WINDOWS_TARGET
 #include <stdlib.h>
 #include <stdarg.h>
 #include <stdio.h>
-
-
-#if _WIN32
 // asprintf is not defined on windows - only unix systems
 // https://stackoverflow.com/questions/40159892/using-asprintf-on-windows
 int vasprintf(char **strp, const char *fmt, va_list ap) {

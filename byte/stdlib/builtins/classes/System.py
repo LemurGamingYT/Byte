@@ -21,20 +21,11 @@ class System(IntrinsicClass):
 
         @intrinsic(self, int_type, flags=ast.FunctionFlags(static=True, property=True))
         def _pid(ctx: IntrinsicCallContext):
-            if self.file.target == ast.Target.WINDOWS:
-                GetCurrentProcessId = ctx.module.registry.get('GetCurrentProcessId')
-                return ctx.builder.call(GetCurrentProcessId, [], 'System.pid')
-            else:
-                getpid = ctx.module.registry.get('getpid')
-                return ctx.builder.call(getpid, [], 'System.pid')
+            getpid = ctx.module.registry.get('getpid')
+            return ctx.builder.call(getpid, [], 'System.pid')
 
         @intrinsic(self, params=[ast.Param(ast.Position(), int_type, 'duration')], flags=ast.FunctionFlags(static=True, method=True))
         def _sleep(ctx: IntrinsicCallContext):
+            sleep = ctx.module.registry.get('sleep')
             duration = ctx.arg(0)
-            if self.file.target == ast.Target.WINDOWS:
-                Sleep = ctx.module.registry.get('Sleep')
-                ctx.builder.call(Sleep, [duration])
-            else:
-                usleep = ctx.module.registry.get('usleep')
-                duration_microseconds = ctx.builder.mul(duration, llint(1000), 'duration_microseconds')
-                ctx.builder.call(usleep, [duration_microseconds])
+            return ctx.builder.call(sleep, [duration], 'sleep')
