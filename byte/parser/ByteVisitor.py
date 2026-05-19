@@ -194,6 +194,11 @@ class ByteVisitor(ParseTreeVisitor):
         return self.visitChildren(ctx)
 
 
+    # Visit a parse tree produced by ByteParser#newArray.
+    def visitNewArray(self, ctx:ByteParser.NewArrayContext):
+        return self.visitChildren(ctx)
+
+
     # Visit a parse tree produced by ByteParser#paren.
     def visitParen(self, ctx:ByteParser.ParenContext):
         return self.visitChildren(ctx)

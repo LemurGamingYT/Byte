@@ -89,6 +89,7 @@ postfix: primary (DOT ID (LPAREN args? RPAREN)?)*;
 primary
     : ID LPAREN args? RPAREN #call
     | NEW type LPAREN args? RPAREN #new
+    | NEW type LBRACK INT RBRACK #newArray
     | LPAREN expr RPAREN #paren
     | INT #int
     | FLOAT #float
@@ -150,6 +151,8 @@ LPAREN: '(';
 RPAREN: ')';
 LBRACE: '{';
 RBRACE: '}';
+LBRACK: '[';
+RBRACK: ']';
 RETURNS: '->';
 AMPERSAND: '&';
 DOUBLEDOT: '..';

@@ -114,8 +114,8 @@ class Registry:
 class ModuleExt(ir.Module):
     """An extension of `llvmlite.ir.Module`."""
     
-    def __init__(self, name='', context=ir.context.global_context):
-        super().__init__(name, context)
+    def __init__(self, name='', context=None):
+        super().__init__(name, context or ir.Context())
         
         self.registry = Registry(self)
         self.data = llvm.create_target_data(self.data_layout)

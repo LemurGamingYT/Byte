@@ -3,7 +3,7 @@ from typing import cast, Any
 from pathlib import Path
 from logging import info
 
-from llvmlite import ir, binding
+from llvmlite import ir, binding as llvm
 
 from byte.llvm_extensions import ModuleExt, IRBuilderExt, llint
 from byte.intrinsics import IntrinsicCallContext
@@ -20,7 +20,7 @@ class CodeGeneration(ByteCompilerPass):
         super().__init__(file)
         
         self.module = ModuleExt(file.path.stem, ir.Context())
-        self.module.triple = binding.get_default_triple()
+        self.module.triple = llvm.get_default_triple()
         
         self.builder = IRBuilderExt()
         
@@ -29,6 +29,11 @@ class CodeGeneration(ByteCompilerPass):
         )
         
         info('successfully created builder and module')
+
+    def define_array_struct(self, node: ast.ArrayType):
+        T = cast(ir.Type, self.visit(node.type))
+        elements = [ir.PointerType(T), ir.IntType(32)] # TODO: convert to using ir.VectorType
+        return self.module.declare_identified_type(str(node), *elements)
     
     def visitProgram(self, node: ast.Program):
         for stmt in node.nodes:
@@ -59,6 +64,9 @@ class CodeGeneration(ByteCompilerPass):
     def visitClassType(self, node: ast.ClassType):
         elements = [cast(ir.Type, self.visit(field_type)) for field_type in node.fields]
         return self.module.declare_identified_type(node.name, *elements)
+
+    def visitArrayType(self, node: ast.ArrayType):
+        return self.define_array_struct(node)
     
     def visitArg(self, node: ast.Arg):
         if isinstance(node.value, ast.Node):
@@ -397,6 +405,10 @@ class CodeGeneration(ByteCompilerPass):
     
     def visitCall(self, node: ast.Call):
         return self.call(node.pos, node.callee, node.args)
+
+    def visitNewArray(self, node: ast.NewArray):
+        self.define_array_struct(cast(ast.ArrayType, node.type))
+        return self.call(node.pos, f'{node.type}.new', [])
     
     def visitTernary(self, node: ast.Ternary):
         return self.builder.select(self.visit(node.cond), self.visit(node.true), self.visit(node.false), 'ternary')

@@ -24,13 +24,19 @@ class IntrinsicCallContext:
 
     def error_literal(self, msg: str):
         string_type = self.module.context.get_identified_type('string')
-        global_var = self.module.global_string(msg, 'oom_global')
+        global_var = self.module.try_get_global('oom_global', lambda: self.module.global_string(msg, 'oom_global'))
         err_var_ptr = self.builder.first_elem(global_var, 'oom_ptr')
         err_string = self.builder.struct(string_type, [err_var_ptr, llint(len(msg))], 'oom_string')
         return self.call('error', [ast.Arg(self.pos, self.file.type_map.get('string'), err_string)])
 
     def call(self, name: str, args: list[ast.Arg] | None = None):
         return self.codegen.call(self.pos, name, args or [])
+
+def get_ast_funcs(intrinsics: list[IntrinsicPyFunc]):
+    return [
+        getattr(intr, 'ast_func')
+        for intr in intrinsics
+    ]
 
 def intrinsic(
     self, ret_type: ast.Type | None = None, params: list[ast.Param] | None = None, flags: ast.FunctionFlags | None = None,
@@ -54,7 +60,10 @@ def intrinsic(
         setattr(func, 'ast_func', ast_func)
 
         if self is not None:
-            self.intrinsics[name] = func
+            if isinstance(self, list):
+                self.append(func)
+            elif hasattr(self, 'intrinsics'):
+                self.intrinsics[name] = func
         
         return func
 

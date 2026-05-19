@@ -276,3 +276,9 @@ class ByteASTBuilder(ByteVisitor):
             self.pos(ctx), self.file.type_map.get('any'), self.visitType(ctx.type_()),
             self.visitArgs(ctx.args())
         )
+
+    def visitNewArray(self, ctx):
+        return ast.NewArray(
+            self.pos(ctx), self.file.type_map.get('any'), self.visitType(ctx.type_()),
+            int(ctx.INT().getText())
+        )

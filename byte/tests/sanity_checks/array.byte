@@ -1,0 +1,10 @@
+fn main() -> int {
+    arr = new int[2]
+    arr.add(1)
+    arr.add(2)
+    assert(arr.get(0) == 1)
+    assert(arr.get(1) == 2)
+    assert(arr.get(-1) == 2)
+    assert(arr.length == 2)
+    return 0
+}

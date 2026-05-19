@@ -4,6 +4,7 @@ from typing import cast
 
 from byte.passes import ByteCompilerPass
 from byte.classes import init_class
+from byte.array import define_array
 from byte import ast
 
 
@@ -467,6 +468,14 @@ class TypeChecker(ByteCompilerPass):
         args = [cast(ast.Arg, self.visit(arg)) for arg in node.args]
         new_type_id = ast.Id(new_type.pos, new_type, str(new_type))
         return self.visit(ast.Attribute(node.pos, func.ret_type, new_type_id, 'new', args))
+
+    def visitNewArray(self, node: ast.NewArray):
+        T = cast(ast.Type, self.visit(node.elem_type))
+        arr_type, array_methods = define_array(self.file, T, node.size)
+        for method in array_methods:
+            self.file.global_scope.symbol_table.add(ast.Symbol(method.name, self.file.type_map.get('function'), method))
+
+        return replace(node, type=arr_type, elem_type=T)
     
     def visitTernary(self, node: ast.Ternary):
         cond = self.visit(node.cond)

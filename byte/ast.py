@@ -177,6 +177,14 @@ class File:
     @property
     def src(self):
         return self.path.read_text()
+
+    @property
+    def global_scope(self):
+        global_scope = self.scope
+        while global_scope.parent is not None:
+            global_scope = global_scope.parent
+
+        return global_scope
     
     def __post_init__(self):
         self._unique_name_idx = -1
@@ -302,6 +310,15 @@ class ClassType(Type):
     # def __str__(self) -> str:
     #     fields_str = ', '.join(map(str, self.fields))
     #     return f'{self.type}[{fields_str}]'
+
+@dataclass(**NODE_KWARGS)
+class ArrayType(Type):
+    type: Type # type: ignore
+    size: int | None = None
+
+    def __str__(self) -> str:
+        size = str(self.size) if self.size is not None else ''
+        return f'{self.type}[{size}]'
 
 @dataclass(**NODE_KWARGS)
 class Program(TypelessNode):
@@ -704,6 +721,15 @@ class New(Node):
     def __str__(self) -> str:
         args_str = ', '.join(map(str, self.args))
         return f'new {self.new_type}({args_str})'
+
+@dataclass(**NODE_KWARGS)
+class NewArray(Node):
+    elem_type: Type
+    size: int | None = None
+
+    def __str__(self) -> str:
+        size = str(self.size) if self.size is not None else ''
+        return f'new {self.elem_type}[{size}]'
 
 @dataclass(**NODE_KWARGS)
 class Ref(Node):
