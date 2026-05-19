@@ -24,9 +24,9 @@ class IntrinsicCallContext:
 
     def error_literal(self, msg: str):
         string_type = self.module.context.get_identified_type('string')
-        global_var = self.module.try_get_global('oom_global', lambda: self.module.global_string(msg, 'oom_global'))
+        global_var = self.module.global_string(msg, self.module.get_unique_name('errmsg'))
         err_var_ptr = self.builder.first_elem(global_var, 'oom_ptr')
-        err_string = self.builder.struct(string_type, [err_var_ptr, llint(len(msg))], 'oom_string')
+        err_string = self.builder.struct(string_type, [err_var_ptr, llint(len(msg))], 'err_string')
         return self.call('error', [ast.Arg(self.pos, self.file.type_map.get('string'), err_string)])
 
     def call(self, name: str, args: list[ast.Arg] | None = None):

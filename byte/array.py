@@ -3,7 +3,7 @@ from typing import cast
 from llvmlite import ir
 
 from byte.intrinsics import intrinsic, IntrinsicCallContext, get_ast_funcs
-from byte.llvm_extensions import llint
+from byte.llvm_extensions import NULL, llint
 from byte import ast
 
 
@@ -15,6 +15,7 @@ def define_array(file: ast.File, T: ast.Type, size: int | None = None):
     file.type_map.add(str(arr_type), arr_type)
     array_methods = []
 
+    int_type = file.type_map.get('int')
     nil_type = file.type_map.get('nil')
     
     @intrinsic(array_methods, arr_type, override_name=f'{arr_type}.new')
@@ -26,13 +27,15 @@ def define_array(file: ast.File, T: ast.Type, size: int | None = None):
         elem_size = ctx.module.sizeof(elem_type)
         elements_size = ctx.builder.mul(elem_size, llint(size), 'elements_size')
         elements_raw_ptr = ctx.builder.call(malloc, [elements_size], 'elements_raw_ptr')
-        # TODO: check if NULL
+        elements_raw_ptr_is_null = ctx.builder.icmp_signed('==', elements_raw_ptr, NULL(), 'elements_raw_ptr_is_null')
+        with ctx.builder.if_then(elements_raw_ptr_is_null):
+            ctx.error_literal('out of memory')
         
         elements_ptr = ctx.builder.bitcast(elements_raw_ptr, ir.PointerType(elem_type), 'elements_ptr')
         return ctx.builder.struct(code_type, [elements_ptr, llint(0)], ctx.name)
 
     @intrinsic(
-        array_methods, file.type_map.get('nil'), [ast.Param(ast.Position(), arr_type.reference(), 'self')],
+        array_methods, nil_type, [ast.Param(ast.Position(), arr_type.reference(), 'self')],
         flags=ast.FunctionFlags(method=True), override_name=f'{arr_type}.destroy'
     )
     def array_destroy(ctx: IntrinsicCallContext):
@@ -46,7 +49,7 @@ def define_array(file: ast.File, T: ast.Type, size: int | None = None):
         ctx.builder.call(free, [elements_i8_ptr])
 
     @intrinsic(
-        array_methods, file.type_map.get('int'), [ast.Param(ast.Position(), arr_type, 'self')],
+        array_methods, int_type, [ast.Param(ast.Position(), arr_type, 'self')],
         flags=ast.FunctionFlags(property=True), override_name=f'{arr_type}.length'
     )
     def array_length(ctx: IntrinsicCallContext):
@@ -116,7 +119,7 @@ def define_array(file: ast.File, T: ast.Type, size: int | None = None):
         ])
 
     @intrinsic(
-        array_methods, T, [ast.Param(ast.Position(), arr_type, 'self'), ast.Param(ast.Position(), file.type_map.get('int'), 'idx')],
+        array_methods, T, [ast.Param(ast.Position(), arr_type, 'self'), ast.Param(ast.Position(), int_type, 'idx')],
         flags=ast.FunctionFlags(method=True), override_name=f'{arr_type}.get'
     )
     def array_get(ctx: IntrinsicCallContext):
