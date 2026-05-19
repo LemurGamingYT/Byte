@@ -1,8 +1,8 @@
 from argparse import ArgumentParser, Namespace
+from dataclasses import dataclass
 from time import perf_counter
 from pathlib import Path
 from logging import info
-from typing import cast
 
 from colorama import Fore, Style
 
@@ -23,18 +23,26 @@ def test_text_colour(num_tests: int, passed_count: int):
     else:
         return Fore.RED
 
+@dataclass(slots=True)
+class BuildArgs:
+    path: Path
+    options: ast.CompileOptions
+    target: ast.Target
+
 class ArgParser:
     def __init__(self):
         self.test_factory = TestFactory()
         self.test_factory.register('.py', PythonTestHandler())
         self.test_factory.register('.c', CTestHandler())
         self.test_factory.register('.byte', ByteTestHandler())
-        
+
         self.build_optionals = ArgumentParser(prog='build', description='Build .byte', add_help=False)
         self.build_optionals.add_argument('--debug', action='store_true',
             help='Whether to enable debug mode which produces the AST after each compiler pass')
         self.build_optionals.add_argument('-opt', '--optimise', action='store_true', help='Whether to optimise the code')
         self.build_optionals.add_argument('--emit-llvm', action='store_true', help='Whether to emit the .ll (LLVM IR) file')
+        self.build_optionals.add_argument('--target', help='The target to build for',
+            choices=[target.name.lower() for target in list(ast.Target)])
 
         self.arg_parser = ArgumentParser(prog='byte', description='The Byte programming language compiler')
         self.subparsers = self.arg_parser.add_subparsers(dest='action', required=True)
@@ -74,35 +82,37 @@ class ArgParser:
 
         create_project(project_folder, project_name)
 
-    def build(self, path: Path, options: ast.CompileOptions):
+    def build(self, build_args: BuildArgs):
         start = perf_counter()
         pipeline = Pipeline()
-        file = ast.File(path, options=options)
+        file = ast.File(build_args.path, options=build_args.options, target=build_args.target)
         exe_file = pipeline.compile_to_exe(file)
         end = perf_counter()
-        info(f'Time taken to build {path}: {end - start}s')
+        info(f'Time taken to build {build_args.path}: {end - start}s')
         return exe_file
 
-    def build_dir(self, path: Path, options: ast.CompileOptions):
-        success, data = get_entry_file(path)
+    def build_dir(self, build_args: BuildArgs):
+        success, data = get_entry_file(build_args.path)
         if not success:
             self.build_parser.error(str(data))
         
-        return self.build(cast(Path, data), options)
+        return self.build(build_args)
 
     def build_command(self, args: Namespace):
         options = self.to_options(args)
+        target = ast.Target[args.target.upper()] if args.target is not None else ast.Target.current()
         if args.file is None:
-            return self.build_dir(Path.cwd(), options)
+            build_args = BuildArgs(Path.cwd(), options, target)
+            return self.build_dir(build_args)
         
         file: Path = args.file
         if not file.exists():
             self.build_parser.error('file does not exist')
 
         if file.is_dir():
-            return self.build_dir(file, options)
+            return self.build_dir(BuildArgs(file, options, target))
         
-        return self.build(file, options)
+        return self.build(BuildArgs(file, options, target))
 
     def test_command(self, args: Namespace):
         test_name = args.test_name

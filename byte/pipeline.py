@@ -94,7 +94,7 @@ class Pipeline:
         obj_files = [obj_file] + [dependency for dependency in file.dependencies if dependency.suffix == '.o']\
             + self.compile_cruntime()
         
-        exe_file = file.path.with_suffix('.exe')
+        exe_file = file.path.with_suffix(file.target.exe_extension)
         success = backend.emit_executable(obj_files, exe_file)
         if not success:
             print('unable to link files')

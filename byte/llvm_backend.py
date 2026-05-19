@@ -39,10 +39,10 @@ class LLVMBackend:
         return True
 
     def emit_executable(self, obj_files: list[Path], exe_file: Path):
-        if which('lld-link') is not None:
-            runtimes = ['kernel32.lib', 'ucrt.lib', 'vcruntime.lib', 'msvcrt.lib', 'legacy_stdio_definitions.lib']
-            res = run_cmd(['lld-link', f'/OUT:{exe_file}', *map(str, obj_files), *runtimes, '/SUBSYSTEM:CONSOLE'])
-        elif which('ld') is not None:
+        # if which('lld-link') is not None:
+        #     runtimes = ['kernel32.lib', 'ucrt.lib', 'vcruntime.lib', 'msvcrt.lib', 'legacy_stdio_definitions.lib']
+        #     res = run_cmd(['lld-link', f'/OUT:{exe_file}', *map(str, obj_files), *runtimes, '/SUBSYSTEM:CONSOLE'])
+        if which('ld') is not None:
             res = run_cmd(['ld', '-o', str(exe_file), *map(str, obj_files)])
         else:
             res = run_cmd(['clang', '-o', str(exe_file), *map(str, obj_files)])
