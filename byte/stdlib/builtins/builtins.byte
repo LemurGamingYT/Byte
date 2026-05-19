@@ -94,13 +94,13 @@ fn print<T>(T x) {
 
 fn input() -> string {
     buf = buffer(512)
-    stdin = get_fd(0, p"r")
+    stdin = openfd(0, p"r")
     if fgets(buf, 512, stdin) == null() {
         error("input failed")
     }
     
     newline_pos = strcspn(buf, p"\n")
-    return new string(buf, newline_pos - 1, false)
+    return new string(buf, newline_pos, false)
 }
 
 fn input(string prompt) -> string {
