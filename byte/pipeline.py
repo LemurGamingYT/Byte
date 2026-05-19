@@ -91,8 +91,9 @@ class Pipeline:
     
     def compile_to_exe(self, file: ast.File):
         backend, obj_file = self.compile_to_obj(file)
+        cruntime_objs = self.compile_cruntime(f'-D{file.target.name.upper()}_TARGET=1')
         obj_files = [obj_file] + [dependency for dependency in file.dependencies if dependency.suffix == '.o']\
-            + self.compile_cruntime(f'-D{file.target.name.upper()}_TARGET=1')
+            + cruntime_objs
         
         exe_file = file.path.with_suffix(file.target.exe_extension)
         success = backend.emit_executable(obj_files, exe_file)
@@ -101,6 +102,9 @@ class Pipeline:
             sys_exit(1)
         
         for obj in obj_files:
+            if obj in cruntime_objs:
+                continue
+            
             obj.unlink()
         
         return exe_file
@@ -109,6 +113,10 @@ class Pipeline:
         obj_files = []
         for cfile in CRUNTIME_DIR.rglob('*.c'):
             c_obj = cfile.with_suffix('.o')
+            if c_obj.exists():
+                obj_files.append(c_obj)
+                continue
+            
             run_cmd(['clang', '-c', str(cfile), '-o', str(c_obj), *args])
             
             obj_files.append(c_obj)
