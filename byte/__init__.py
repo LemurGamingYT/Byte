@@ -29,19 +29,22 @@ class ArgParser:
         self.test_factory.register('.py', PythonTestHandler())
         self.test_factory.register('.c', CTestHandler())
         self.test_factory.register('.byte', ByteTestHandler())
+        
+        self.build_optionals = ArgumentParser(prog='build', description='Build .byte', add_help=False)
+        self.build_optionals.add_argument('--debug', action='store_true',
+            help='Whether to enable debug mode which produces the AST after each compiler pass')
+        self.build_optionals.add_argument('-opt', '--optimise', action='store_true', help='Whether to optimise the code')
+        self.build_optionals.add_argument('--emit-llvm', action='store_true', help='Whether to emit the .ll (LLVM IR) file')
 
         self.arg_parser = ArgumentParser(prog='byte', description='The Byte programming language compiler')
         self.subparsers = self.arg_parser.add_subparsers(dest='action', required=True)
 
-        self.build_parser = self.subparsers.add_parser('build', help='Builds the given file')
+        self.build_parser = self.subparsers.add_parser('build', help='Builds the given file', parents=[self.build_optionals])
         self.build_parser.add_argument('file', type=Path, help='The target file to build', nargs='?')
-        self.build_parser.add_argument('--debug', action='store_true',
-            help='Whether to enable debug mode which produces the AST after each compiler pass')
-        self.build_parser.add_argument('-opt', '--optimise', action='store_true', help='Whether to optimise the code')
-        self.build_parser.add_argument('--emit-llvm', action='store_true', help='Whether to emit the .ll (LLVM IR) file')
         self.build_parser.set_defaults(func=self.build_command)
 
-        self.test_parser = self.subparsers.add_parser('test', help='Run language tests')
+        # TODO: use the build_optionals parser in the test subparser
+        self.test_parser = self.subparsers.add_parser('test', help='Run language tests', parents=[self.build_optionals])
         self.test_parser.add_argument('test_name', help='The name of the test to run', nargs='?')
         self.test_parser.set_defaults(func=self.test_command)
 
@@ -51,6 +54,9 @@ class ArgParser:
         self.init_parser = self.subparsers.add_parser('init', help='Creates a new Byte project folder')
         self.init_parser.add_argument('project_name', help='The name of the project')
         self.init_parser.set_defaults(func=self.init_command)
+
+    def to_options(self, args: Namespace):
+        return ast.CompileOptions(args.debug, args.optimise, args.emit_llvm)
 
     def parse(self):
         args = self.arg_parser.parse_args()
@@ -85,7 +91,7 @@ class ArgParser:
         return self.build(cast(Path, data), options)
 
     def build_command(self, args: Namespace):
-        options = ast.CompileOptions(args.debug, args.optimise, args.emit_llvm)
+        options = self.to_options(args)
         if args.file is None:
             return self.build_dir(Path.cwd(), options)
         
