@@ -85,15 +85,12 @@ class CodeGeneration(ByteCompilerPass):
         if is_generic_expansion:
             func.linkage = 'linkonce_odr dso_local'
         
-        info(f'created IR function {node.name}')
         self.scope.symbol_table.add(ast.Symbol(func.name, self.file.type_map.get('function'), func))
         if isinstance(node.body, ast.Body):
-            info(f'generating body for IR function {node.name}')
             with self.file.child_scope():
                 old_builder = self.builder
                 
                 if len(node.params) > 0:
-                    info('creating parameter allocation block')
                     param_allocation = func.append_basic_block('param_allocation')
                     self.builder = IRBuilderExt(param_allocation)
                     for i, param in enumerate(node.params):
@@ -103,11 +100,9 @@ class CodeGeneration(ByteCompilerPass):
                             param.name, param.type, ptr, ast.SymbolFlags(mutable=param.flags.mutable)
                         ))
                 
-                info('creating main entry block')
                 entry_block = func.append_basic_block('entry')
                 if len(node.params) > 0:
                     self.builder.branch(entry_block)
-                    info('branching parameter allocation to entry block')
                 
                 self.builder = IRBuilderExt(entry_block)
                 self.visit(node.body)
