@@ -2,9 +2,9 @@ from dataclasses import replace
 from logging import error, info
 from typing import cast
 
+from byte.intrinsics.classes import init_class
+from byte.intrinsics.array import define_array
 from byte.passes import ByteCompilerPass
-from byte.classes import init_class
-from byte.array import define_array
 from byte import ast
 
 
