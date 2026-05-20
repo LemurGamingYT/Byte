@@ -1,5 +1,5 @@
 from byte.intrinsics import intrinsic, IntrinsicClass, IntrinsicCallContext
-from byte.llvm_extensions import llint
+from byte.llvm_extensions import NULL, llint
 from byte import ast
 
 
@@ -20,7 +20,9 @@ class StringBuilder(IntrinsicClass):
             capacity = ctx.arg(0)
 
             buf = ctx.builder.call(malloc, [capacity], 'buf')
-            # TODO: check if NULL
+            buf_is_null = ctx.builder.icmp_signed('==', buf, NULL(), 'buf_is_null')
+            with ctx.builder.if_then(buf_is_null):
+                ctx.error_literal('out of memory')
 
             StringBuilder_type = ctx.module.context.get_identified_type('StringBuilder')
             return ctx.builder.struct(StringBuilder_type, [buf, llint(0), capacity], 'StringBuilder')
