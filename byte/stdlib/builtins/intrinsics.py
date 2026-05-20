@@ -1,7 +1,7 @@
 from llvmlite import ir
 
 from byte.intrinsics import intrinsic, IntrinsicLib, IntrinsicCallContext
-from byte.llvm_extensions import NULL, llint
+from byte.llvm_extensions import NULL
 from byte import ast
 
 
@@ -11,26 +11,6 @@ class intrinsics(IntrinsicLib):
         bool_type = self.file.type_map.get('bool')
         string_type = self.file.type_map.get('string')
         pointer_type = self.file.type_map.get('pointer')
-        
-        @intrinsic(self, params=[ast.Param(ast.Position(), string_type, 's')])
-        def _print_string(ctx: IntrinsicCallContext):
-            printf = ctx.module.registry.get('printf')
-
-            fmt = ctx.module.try_get_global('string_fmt', lambda: ctx.module.global_string('%.*s\n', 'string_fmt'))
-            ptr = ctx.builder.first_elem(fmt, 'string_fmt_ptr')
-            s_ptr = ctx.call('string.ptr', ctx.args)
-            s_length = ctx.call('string.length', ctx.args)
-            ctx.builder.call(printf, [ptr, s_length, s_ptr])
-
-        @intrinsic(self, params=[ast.Param(ast.Position(), string_type, 's')])
-        def _print_literal(ctx: IntrinsicCallContext):
-            printf = ctx.module.registry.get('printf')
-
-            fmt = ctx.module.try_get_global('string_lit_fmt', lambda: ctx.module.global_string('%.*s', 'string_lit_fmt'))
-            ptr = ctx.builder.first_elem(fmt, 'string_lit_fmt_ptr')
-            s_ptr = ctx.call('string.ptr', ctx.args)
-            s_length = ctx.call('string.length', ctx.args)
-            ctx.builder.call(printf, [ptr, s_length, s_ptr])
 
         @intrinsic(self, string_type, [
             ast.Param(ast.Position(), pointer_type, 'ptr'), ast.Param(ast.Position(), int_type, 'length'),

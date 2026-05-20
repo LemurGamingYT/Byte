@@ -89,7 +89,12 @@ fn string.clone(string s) -> string {
 
 
 fn print<T>(T x) {
-    print_string(x.to_string())
+    x_str = x.to_string()
+    printf(p"%.*s\n", x_str.length, x_str.ptr)
+}
+
+fn print_literal(string s) {
+    printf(p"%.*s", s.length, s.ptr)
 }
 
 fn error(string s) {
