@@ -117,13 +117,15 @@ class ArgParser:
     def test_command(self, args: Namespace):
         test_name = args.test_name
         if test_name is None:
-            # return self.test_dirs([TESTS_DIR, EXAMPLES_DIR])
-            return self.test_dirs([TESTS_DIR])
+            return self.test_file_list(list(TESTS_DIR.glob('**/*')))
+
+        if test_name.startswith('.') and test_name in self.test_factory.handlers:
+            return self.test_file_list(list(TESTS_DIR.rglob(f'*{test_name}')))
 
         test_file = self.find_first_file(TESTS_DIR, test_name)
         if test_file is None:
             self.test_parser.error(f'no test named {test_name}')
-
+        
         if not test_file.is_file():
             self.test_parser.error(f'invalid test file {test_name} ({test_file})')
 
@@ -135,20 +137,19 @@ class ArgParser:
     def find_first_file(self, path: Path, name: str):
         return next(path.rglob(f'{name}.*'), None)
 
-    def test_dirs(self, paths: list[Path]):
+    def test_file_list(self, paths: list[Path]):
         num_tests = passed_count = 0
         for path in paths:
-            for file in path.glob('**/*'):
-                if file.suffix not in self.test_factory.handlers:
-                    continue
-                
-                num_tests += 1
-    
-                success = self.test_single(file)
-                if not success:
-                    continue
-    
-                passed_count += 1
+            if path.suffix not in self.test_factory.handlers:
+                continue
+            
+            num_tests += 1
+
+            success = self.test_single(path)
+            if not success:
+                continue
+
+            passed_count += 1
 
         colour = test_text_colour(num_tests, passed_count)
         print(f'{colour}{Style.BRIGHT}{passed_count}/{num_tests} tests passed{Style.RESET_ALL}')
