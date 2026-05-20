@@ -476,7 +476,7 @@ class Function(Node):
 
         body = str(self.body)
         if callable(self.body):
-            signature = 'virtual ' + signature
+            signature = 'intrinsic ' + signature
             body = f'// a python interop function is called here (name = {self.body.__name__})'
         
         return f"""{signature} {{

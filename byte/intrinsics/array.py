@@ -5,11 +5,10 @@ from byte.llvm_extensions import NULL, llint
 from byte import ast
 
 
-def define_array(file: ast.File, T: ast.Type, size: int | None = None):
-    if size is None:
-        raise NotImplementedError('dynamic arrays')
-    
-    arr_type = ast.ArrayType(T, size)
+DEFAULT_CAPACITY = 10
+
+def define_array(file: ast.File, T: ast.Type):
+    arr_type = ast.ArrayType(T)
     file.type_map.add(str(arr_type), arr_type)
     array_methods = []
 
@@ -27,14 +26,14 @@ def define_array(file: ast.File, T: ast.Type, size: int | None = None):
         code_type = ctx.module.context.get_identified_type(str(arr_type))
         elem_type = ctx.codegen.visit(T)
         elem_size = ctx.module.sizeof(elem_type)
-        elements_size = ctx.builder.mul(elem_size, llint(size), 'elements_size')
+        elements_size = ctx.builder.mul(elem_size, llint(DEFAULT_CAPACITY), 'elements_size')
         elements_raw_ptr = ctx.builder.call(malloc, [elements_size], 'elements_raw_ptr')
         elements_raw_ptr_is_null = ctx.builder.icmp_signed('==', elements_raw_ptr, NULL(), 'elements_raw_ptr_is_null')
         with ctx.builder.if_then(elements_raw_ptr_is_null):
             ctx.error_literal('out of memory')
         
         elements_ptr = ctx.builder.bitcast(elements_raw_ptr, ir.PointerType(elem_type), 'elements_ptr')
-        return ctx.builder.struct(code_type, [elements_ptr, llint(0)], ctx.name)
+        return ctx.builder.struct(code_type, [elements_ptr, llint(0), llint(DEFAULT_CAPACITY)], ctx.name)
 
     @intrinsic(
         array_methods, nil_type, [ast.Param(ast.Position(), arr_type.reference(), 'self')],
@@ -151,18 +150,31 @@ def define_array(file: ast.File, T: ast.Type, size: int | None = None):
         flags=ast.FunctionFlags(method=True), override_name=f'{arr_type}.add'
     )
     def array_add(ctx: IntrinsicCallContext):
+        realloc = ctx.module.registry.get('realloc')
+        
         struct = ctx.arg(0)
         x = ctx.arg(1)
 
         elements_ptr = ctx.builder.extract_ptr(struct, 0, 'elements')
         length_ptr = ctx.builder.extract_ptr(struct, 1, 'length')
+        capacity_ptr = ctx.builder.extract_ptr(struct, 2, 'capacity')
+
+        length = ctx.builder.load(length_ptr, 'length')
+        capacity = ctx.builder.load(capacity_ptr, 'capacity')
+        capacity_reached = ctx.builder.icmp_signed('>=', length, capacity, 'capacity_reached')
+        with ctx.builder.if_then(capacity_reached):
+            new_capacity = ctx.builder.mul(capacity, llint(2), 'new_capacity')
+            elements_T_ptr = ctx.builder.load(elements_ptr, 'elements_T_ptr')
+            elements_i8_ptr = ctx.builder.bitcast(elements_T_ptr, ir.PointerType(ir.IntType(8)), 'elements_i8_ptr')
+            new_elements = ctx.builder.call(realloc, [elements_i8_ptr, new_capacity], 'new_elements')
+            # TODO: check if NULL
+
+            T_type = ctx.codegen.visit(T)
+            new_elements_T_ptr = ctx.builder.bitcast(new_elements, ir.PointerType(T_type), 'new_elements_T_ptr')
+            ctx.builder.store(new_elements_T_ptr, elements_ptr)
+            ctx.builder.store(new_capacity, capacity_ptr)
 
         elements = ctx.builder.load(elements_ptr, 'elements')
-        length = ctx.builder.load(length_ptr, 'length')
-        capacity_reached = ctx.builder.icmp_signed('>=', length, llint(size), 'capacity_reached')
-        with ctx.builder.if_then(capacity_reached):
-            ctx.error_literal('array capacity reached')
-        
         last_element_ptr = ctx.builder.gep(elements, [length], True, 'last_element_ptr')
         ctx.builder.store(x, last_element_ptr)
 

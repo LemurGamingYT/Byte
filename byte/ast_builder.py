@@ -70,6 +70,8 @@ class ByteASTBuilder(ByteVisitor):
     def visitType(self, ctx):
         if ctx.AMPERSAND():
             return ast.ReferenceType(self.visit(ctx.type_()))
+        elif ctx.LBRACK():
+            return ast.ArrayType(self.visit(ctx.type_()))
         
         return ast.Type(ctx.getText())
     
@@ -279,6 +281,5 @@ class ByteASTBuilder(ByteVisitor):
 
     def visitNewArray(self, ctx):
         return ast.NewArray(
-            self.pos(ctx), self.file.type_map.get('any'), self.visitType(ctx.type_()),
-            int(ctx.INT().getText())
+            self.pos(ctx), self.file.type_map.get('any'), self.visitType(ctx.type_())
         )

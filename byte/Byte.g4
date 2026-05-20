@@ -5,6 +5,7 @@ program: stmt* EOF;
 type
     : ID
     | type AMPERSAND
+    | type LBRACK RBRACK
     ;
 
 stmt
@@ -89,7 +90,7 @@ postfix: primary (DOT ID (LPAREN args? RPAREN)?)*;
 primary
     : ID LPAREN args? RPAREN #call
     | NEW type LPAREN args? RPAREN #new
-    | NEW type LBRACK INT RBRACK #newArray
+    | NEW type LBRACK RBRACK #newArray
     | LPAREN expr RPAREN #paren
     | INT #int
     | FLOAT #float

@@ -36,7 +36,7 @@ class CodeGeneration(ByteCompilerPass):
 
     def define_array_struct(self, node: ast.ArrayType):
         T = cast(ir.Type, self.visit(node.type))
-        elements = [ir.PointerType(T), ir.IntType(32)] # TODO: convert to using ir.VectorType
+        elements = [ir.PointerType(T), ir.IntType(32), ir.IntType(32)]
         return self.module.declare_identified_type(str(node), *elements)
     
     def visitProgram(self, node: ast.Program):

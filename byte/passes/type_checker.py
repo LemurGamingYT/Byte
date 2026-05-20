@@ -30,6 +30,13 @@ class TypeChecker(ByteCompilerPass):
 
     def visitReferenceType(self, node: ast.ReferenceType):
         return replace(node, type=self.visit(node.type))
+
+    def visitArrayType(self, node: ast.ArrayType):
+        T = cast(ast.Type, self.visit(node.type))
+        arr_type, array_methods = define_array(self.file, T)
+        for method in array_methods:
+            self.file.global_scope.symbol_table.add(ast.Symbol(method.name, self.file.type_map.get('function'), method))
+        return arr_type
     
     def visitArg(self, node: ast.Arg):
         value = self.visit(node.value)
@@ -471,7 +478,7 @@ class TypeChecker(ByteCompilerPass):
 
     def visitNewArray(self, node: ast.NewArray):
         T = cast(ast.Type, self.visit(node.elem_type))
-        arr_type, array_methods = define_array(self.file, T, node.size)
+        arr_type, array_methods = define_array(self.file, T)
         for method in array_methods:
             self.file.global_scope.symbol_table.add(ast.Symbol(method.name, self.file.type_map.get('function'), method))
 
