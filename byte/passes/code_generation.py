@@ -27,6 +27,10 @@ class CodeGeneration(ByteCompilerPass):
         self.string_type = self.module.declare_identified_type(
             'string', ir.PointerType(ir.IntType(8)), ir.IntType(32), ir.IntType(1)
         )
+
+        self.StringBuilder_type = self.module.declare_identified_type(
+            'StringBuilder', ir.PointerType(ir.IntType(8)), ir.IntType(32), ir.IntType(32)
+        )
         
         info('successfully created builder and module')
 
@@ -55,6 +59,8 @@ class CodeGeneration(ByteCompilerPass):
                 return ir.VoidType()
             case 'any' | 'pointer' | 'function':
                 return ir.PointerType(ir.IntType(8))
+            case 'StringBuilder':
+                return self.StringBuilder_type
             case _:
                 raise NotImplementedError(node.type)
     

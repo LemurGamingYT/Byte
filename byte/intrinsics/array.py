@@ -69,19 +69,16 @@ def define_array(file: ast.File, T: ast.Type, size: int | None = None):
         length = ctx.builder.extract_value(struct, 1, 'length')
 
         static_size = 2 # '[' and ']'
-        length_is_zero = ctx.builder.icmp_signed('==', length, llint(0), 'length_is_zero')
-        string_buf_size_ptr = ctx.builder.alloca(ir.IntType(32), name='string_buf_size_ptr')
-        with ctx.builder.if_else(length_is_zero) as (then, else_):
-            with then:
-                ctx.builder.store(llint(static_size), string_buf_size_ptr)
-
-            with else_:
-                length_size = ctx.builder.mul(length, llint(2), 'length_size') # each element has '%s'
-                # each element has a comma after it, except for the last one
-                num_commas = ctx.builder.sub(length, llint(1), 'num_commas')
-                comma_size = ctx.builder.mul(num_commas, llint(2), 'comma_size') # commas have spaces after them
-                elements_size = ctx.builder.add(length_size, comma_size, 'elements_size')
-                ctx.builder.store(ctx.builder.add(llint(static_size), elements_size, 'string_buf_size'), string_buf_size_ptr)
+        length_is_not_zero = ctx.builder.icmp_signed('!=', length, llint(0), 'length_is_zero')
+        string_buf_size_ptr = ctx.builder.allocate_value(llint(static_size), 'string_buf_size.ptr')
+        with ctx.builder.if_then(length_is_not_zero):
+            length_size = ctx.builder.mul(length, llint(2), 'length_size') # each element has '%s'
+            # each element has a comma after it, except for the last one
+            num_commas = ctx.builder.sub(length, llint(1), 'num_commas')
+            comma_size = ctx.builder.mul(num_commas, llint(2), 'comma_size') # commas have spaces after them
+            elements_size = ctx.builder.add(length_size, comma_size, 'elements_size')
+            string_buf_size = ctx.builder.load(string_buf_size_ptr, 'string_buf_size')
+            ctx.builder.store(ctx.builder.add(string_buf_size, elements_size, 'total_size'), string_buf_size_ptr)
         
         string_buf_size = ctx.builder.load(string_buf_size_ptr, 'string_buf_size')
         
@@ -90,8 +87,19 @@ def define_array(file: ast.File, T: ast.Type, size: int | None = None):
         with ctx.builder.if_then(string_buf_ptr_is_null):
             ctx.error_literal('out of memory')
 
-        open_bracket = ctx.module.global_string('[')
-        ctx.builder.call(memcpy, [string_buf_ptr, ctx.builder.first_elem(open_bracket), llint(1), llint(0, 1)])
+        ctx.builder.call(printf, [ctx.builder.first_elem(ctx.module.global_string('%d\n')), string_buf_size])
+
+        buf_idx_ptr = ctx.builder.allocate_value(llint(0), 'buf_idx.ptr')
+        def memcpy_literal(text: str):
+            s = ctx.module.global_string(text)
+            buf_idx = ctx.builder.load(buf_idx_ptr, 'buf_idx')
+            offset_ptr = ctx.builder.gep(string_buf_ptr, [buf_idx], True, 'offset_ptr')
+            ctx.builder.call(memcpy, [offset_ptr, ctx.builder.first_elem(s, 'text.ptr'), llint(len(text)), llint(0, 1)])
+
+            buf_idx_inc = ctx.builder.add(buf_idx, llint(len(text)))
+            ctx.builder.store(buf_idx_inc, buf_idx_ptr)
+
+        memcpy_literal('[')
         i_ptr = ctx.builder.allocate_value(llint(0), 'i.ptr')
         with ctx.builder.while_() as (test, body):
             with test as (_, block1, block2):
@@ -102,12 +110,10 @@ def define_array(file: ast.File, T: ast.Type, size: int | None = None):
             with body:
                 i = ctx.builder.load(i_ptr, 'i')
 
-                element_ptr = ctx.builder.gep(elements, [i], True, 'element.ptr')
-                element = ctx.builder.load(element_ptr, 'element')
+                memcpy_literal('%s')
 
                 i_inc = ctx.builder.add(i, llint(1), 'i.inc')
                 ctx.builder.store(i_inc, i_ptr)
-                ctx.builder.call(printf, [ctx.builder.first_elem(ctx.module.global_string('%d\n')), string_buf_size])
 
         close_bracket = ctx.module.global_string(']')
         offset_ptr = ctx.builder.gep(string_buf_ptr, [llint(1)], True, 'offset.ptr')

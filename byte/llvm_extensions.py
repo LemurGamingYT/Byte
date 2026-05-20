@@ -53,6 +53,7 @@ class Registry:
         return [
             RegistryDefinition('printf', ir.FunctionType(ir.VoidType(), [pointer_type], True)),
             RegistryDefinition('malloc', ir.FunctionType(pointer_type, [ir.IntType(32)])),
+            RegistryDefinition('realloc', ir.FunctionType(pointer_type, [pointer_type, ir.IntType(32)])),
             RegistryDefinition('free', ir.FunctionType(ir.VoidType(), [pointer_type])),
             RegistryDefinition('llvm.memcpy.p0.p0.i32', ir.FunctionType(ir.VoidType(), [
                 pointer_type, pointer_type, ir.IntType(32), ir.IntType(1)
