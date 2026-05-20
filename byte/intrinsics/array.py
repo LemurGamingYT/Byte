@@ -14,7 +14,11 @@ def define_array(file: ast.File, T: ast.Type, size: int | None = None):
     array_methods = []
 
     int_type = file.type_map.get('int')
+    string_type = file.type_map.get('string')
+    bool_type = file.type_map.get('bool')
     nil_type = file.type_map.get('nil')
+    pointer_type = file.type_map.get('pointer')
+    StringBuilder_type = file.type_map.get('StringBuilder')
     
     @intrinsic(array_methods, arr_type, override_name=f'{arr_type}.new')
     def array_new(ctx: IntrinsicCallContext):
@@ -55,51 +59,30 @@ def define_array(file: ast.File, T: ast.Type, size: int | None = None):
         return ctx.builder.extract_value(struct, 1, 'length')
 
     @intrinsic(
-        None, file.type_map.get('string'), [ast.Param(ast.Position(), arr_type, 'self')],
+        array_methods, string_type, [ast.Param(ast.Position(), arr_type, 'self')],
         flags=ast.FunctionFlags(method=True), override_name=f'{arr_type}.to_string'
     )
     def array_to_string(ctx: IntrinsicCallContext):
-        malloc = ctx.module.registry.get('malloc')
-        memcpy = ctx.module.registry.get('memcpy')
-        printf = ctx.module.registry.get('printf')
-
         struct = ctx.arg(0)
 
         elements = ctx.builder.extract_value(struct, 0, 'elements')
         length = ctx.builder.extract_value(struct, 1, 'length')
 
-        static_size = 2 # '[' and ']'
-        length_is_not_zero = ctx.builder.icmp_signed('!=', length, llint(0), 'length_is_zero')
-        string_buf_size_ptr = ctx.builder.allocate_value(llint(static_size), 'string_buf_size.ptr')
-        with ctx.builder.if_then(length_is_not_zero):
-            length_size = ctx.builder.mul(length, llint(2), 'length_size') # each element has '%s'
-            # each element has a comma after it, except for the last one
-            num_commas = ctx.builder.sub(length, llint(1), 'num_commas')
-            comma_size = ctx.builder.mul(num_commas, llint(2), 'comma_size') # commas have spaces after them
-            elements_size = ctx.builder.add(length_size, comma_size, 'elements_size')
-            string_buf_size = ctx.builder.load(string_buf_size_ptr, 'string_buf_size')
-            ctx.builder.store(ctx.builder.add(string_buf_size, elements_size, 'total_size'), string_buf_size_ptr)
-        
-        string_buf_size = ctx.builder.load(string_buf_size_ptr, 'string_buf_size')
-        
-        string_buf_ptr = ctx.builder.call(malloc, [string_buf_size], 'string_buf.ptr')
-        string_buf_ptr_is_null = ctx.builder.icmp_signed('==', string_buf_ptr, NULL(), 'string_buf.ptr_is_null')
-        with ctx.builder.if_then(string_buf_ptr_is_null):
-            ctx.error_literal('out of memory')
+        def str_lit(text: str):
+            text_global = ctx.module.global_string(text)
+            return ctx.call('string.new', [
+                ast.Arg(ctx.pos, pointer_type, ctx.builder.first_elem(text_global, 'ptr')),
+                ast.Arg(ctx.pos, int_type, llint(len(text))),
+                ast.Arg(ctx.pos, bool_type, llint(0, 1))
+            ])
 
-        ctx.builder.call(printf, [ctx.builder.first_elem(ctx.module.global_string('%d\n')), string_buf_size])
+        sb = ctx.call('StringBuilder.new', [ast.Arg(ctx.pos, int_type, llint(25))])
+        sb_ptr = ctx.builder.allocate_value(sb, 'sb.ptr')
+        ctx.call('StringBuilder.add', [
+            ast.Arg(ctx.pos, StringBuilder_type.reference(), sb_ptr),
+            ast.Arg(ctx.pos, string_type, str_lit('['))
+        ])
 
-        buf_idx_ptr = ctx.builder.allocate_value(llint(0), 'buf_idx.ptr')
-        def memcpy_literal(text: str):
-            s = ctx.module.global_string(text)
-            buf_idx = ctx.builder.load(buf_idx_ptr, 'buf_idx')
-            offset_ptr = ctx.builder.gep(string_buf_ptr, [buf_idx], True, 'offset_ptr')
-            ctx.builder.call(memcpy, [offset_ptr, ctx.builder.first_elem(s, 'text.ptr'), llint(len(text)), llint(0, 1)])
-
-            buf_idx_inc = ctx.builder.add(buf_idx, llint(len(text)))
-            ctx.builder.store(buf_idx_inc, buf_idx_ptr)
-
-        memcpy_literal('[')
         i_ptr = ctx.builder.allocate_value(llint(0), 'i.ptr')
         with ctx.builder.while_() as (test, body):
             with test as (_, block1, block2):
@@ -109,21 +92,37 @@ def define_array(file: ast.File, T: ast.Type, size: int | None = None):
 
             with body:
                 i = ctx.builder.load(i_ptr, 'i')
+                element = ctx.call(f'{arr_type}.get', [
+                    ast.Arg(ctx.pos, arr_type, struct),
+                    ast.Arg(ctx.pos, int_type, i)
+                ])
 
-                memcpy_literal('%s')
+                element_str = ctx.call(f'{T}.to_string', [ast.Arg(ctx.pos, T, element)])
+                ctx.call('StringBuilder.add', [
+                    ast.Arg(ctx.pos, StringBuilder_type.reference(), sb_ptr),
+                    ast.Arg(ctx.pos, string_type, element_str)
+                ])
+
+                num_commas = ctx.builder.sub(length, llint(1), 'num_commas')
+                needs_comma = ctx.builder.icmp_signed('<', i, num_commas, 'needs_comma')
+                with ctx.builder.if_then(needs_comma):
+                    ctx.call('StringBuilder.add', [
+                        ast.Arg(ctx.pos, StringBuilder_type.reference(), sb_ptr),
+                        ast.Arg(ctx.pos, string_type, str_lit(', '))
+                    ])
 
                 i_inc = ctx.builder.add(i, llint(1), 'i.inc')
                 ctx.builder.store(i_inc, i_ptr)
 
-        close_bracket = ctx.module.global_string(']')
-        offset_ptr = ctx.builder.gep(string_buf_ptr, [llint(1)], True, 'offset.ptr')
-        ctx.builder.call(memcpy, [offset_ptr, ctx.builder.first_elem(close_bracket), llint(1), llint(0, 1)])
-
-        return ctx.call('string.new', [
-            ast.Arg(ctx.pos, ctx.file.type_map.get('pointer'), string_buf_ptr),
-            ast.Arg(ctx.pos, ctx.file.type_map.get('int'), string_buf_size),
-            ast.Arg(ctx.pos, ctx.file.type_map.get('bool'), llint(1, 1))
+        ctx.call('StringBuilder.add', [
+            ast.Arg(ctx.pos, StringBuilder_type.reference(), sb_ptr),
+            ast.Arg(ctx.pos, string_type, str_lit(']'))
         ])
+
+        sb = ctx.builder.load(sb_ptr, 'sb')
+        buf = ctx.call('StringBuilder.to_string', [ast.Arg(ctx.pos, StringBuilder_type, sb)])
+        ctx.call('StringBuilder.destroy', [ast.Arg(ctx.pos, StringBuilder_type.reference(), sb_ptr)])
+        return buf
 
     @intrinsic(
         array_methods, T, [ast.Param(ast.Position(), arr_type, 'self'), ast.Param(ast.Position(), int_type, 'idx')],
