@@ -1,7 +1,9 @@
 from typing import Any, Callable, cast
+from contextlib import contextmanager
 from dataclasses import dataclass
 
 from llvmlite import ir, binding as llvm
+from llvmlite.ir.builder import _label_suffix
 
 
 def max_int(width: int = 32):
@@ -26,6 +28,21 @@ def NULL(type: ir.Type | None = None):
         type = ir.IntType(8)
     
     return ir.Constant(ir.PointerType(type), None)
+
+def label_suffix(label, suffix):
+    """Returns (label + suffix) or a truncated version if it's too long.
+    Parameters
+    ----------
+    label : str
+        Label name
+    suffix : str
+        Label suffix
+    """
+    if len(label) > 50:
+        nhead = 25
+        return ''.join([label[:nhead], '..', suffix])
+    else:
+        return label + suffix
 
 # TODO: support external variable definitions as well as external functions
 @dataclass(slots=True)
@@ -233,3 +250,24 @@ class IRBuilderExt(ir.IRBuilder):
         
         length_ptr = self.gep(ptr, [length], inbounds, name)
         self.store(llint(0, ptr_width), length_ptr)
+
+    @contextmanager
+    def _cbranch_helper(self, bbenter, block1, block2):
+        self.position_at_end(bbenter)
+        yield (bbenter, block1, block2)
+        # if not cast(ir.Block, self.basic_block).is_terminated:
+        #     self.branch(bbexit)
+
+    @contextmanager
+    def while_(self):
+        bb = cast(ir.Block, self.basic_block)
+        bbtest = self.append_basic_block(_label_suffix(bb.name, '.whiletest'))
+        bbbody = self.append_basic_block(_label_suffix(bb.name, '.whilebody'))
+        bbend = self.append_basic_block(_label_suffix(bb.name, '.endwhile'))
+        self.branch(bbtest)
+
+        test = self._cbranch_helper(bbtest, bbbody, bbend)
+        body = self._branch_helper(bbbody, bbtest)
+
+        yield (test, body)
+        self.position_at_end(bbend)
