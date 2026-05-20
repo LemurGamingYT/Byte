@@ -467,9 +467,8 @@ class Function(Node):
     @property
     def signature(self):
         params_str = ', '.join(map(str, self.params))
-        extend_type = f'{self.extend_type}.' if self.extend_type is not None else ''
         generic_params = ('<' + ', '.join(self.generic_params) + '>') if self.is_generic else ''
-        return f'{self.flags}fn {extend_type}{self.name}{generic_params}({params_str}) -> {self.ret_type}'
+        return f'{self.flags}fn {self.symbol_name}{generic_params}({params_str}) -> {self.ret_type}'
 
     @property
     def symbol_name(self):
