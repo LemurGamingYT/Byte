@@ -18,3 +18,4 @@ What needs to be done soon/next
 - [ ] clean up AST
   - [x] type extensions have the type extension + the type and then the name in the `.byteast files` (e.g. `string.string.new`)
 - [ ] `float.min` and `float.max`
+- [ ] pattern matching
