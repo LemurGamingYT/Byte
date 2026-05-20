@@ -1,5 +1,5 @@
 fn main() -> int {
-    arr = new int[2]
+    arr = new int[]
     arr.add(1)
     arr.add(2)
     assert(arr.get(0) == 1)

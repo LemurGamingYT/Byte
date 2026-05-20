@@ -230,7 +230,9 @@ class CodeGeneration(ByteCompilerPass):
     
     def visitWhile(self, node: ast.While):
         with self.builder.while_() as (cond, body):
-            with cond as (_, block1, block2):
+            with cond as (test_block, block1, block2):
+                self.file.scope.data.codegen_while_merge_block = block2
+                self.file.scope.data.codegen_while_test_block = test_block
                 cmp = self.visit(node.cond)
                 self.builder.cbranch(cmp, block1, block2)
 
