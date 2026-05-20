@@ -118,7 +118,7 @@ class TypeChecker(ByteCompilerPass):
         
         extend_type = self.visit(node.extend_type) if node.extend_type is not None else None
         func = replace(node, type=ret_type, params=params, extend_type=extend_type)
-        func = replace(func, name=self.get_mangled_name(func))
+        func = replace(func, name=self.get_mangled_name(func), extend_type=None)
         symbol = self.scope.symbol_table.tryget(func.name)
         if symbol is not None and not symbol.flags.forward_decl:
             base = cast(ast.Function, symbol.value)

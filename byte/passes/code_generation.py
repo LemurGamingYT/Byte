@@ -88,15 +88,11 @@ class CodeGeneration(ByteCompilerPass):
         
         info(f'generating IR for function {node.name}')
         
-        is_generic_expansion = node.name.endswith('>')
         param_types = [self.visit(param.type) for param in node.params]
         ret_type = self.visit(node.ret_type)
         func = ir.Function(self.module, ir.FunctionType(ret_type, param_types), node.name)
         for arg, param in zip(func.args, node.params):
             arg.name = f'param.{param.name}'
-        
-        if is_generic_expansion:
-            func.linkage = 'linkonce_odr dso_local'
         
         self.scope.symbol_table.add(ast.Symbol(func.name, self.file.type_map.get('function'), func))
         if isinstance(node.body, ast.Body):
@@ -107,7 +103,6 @@ class CodeGeneration(ByteCompilerPass):
                     param_allocation = func.append_basic_block('param_allocation')
                     self.builder = IRBuilderExt(param_allocation)
                     for i, param in enumerate(node.params):
-                        info(f'allocating {param.name}')
                         ptr = self.builder.allocate_value(func.args[i], f'{param.name}.addr')
                         self.scope.symbol_table.add(ast.Symbol(
                             param.name, param.type, ptr, ast.SymbolFlags(mutable=param.flags.mutable)
