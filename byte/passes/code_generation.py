@@ -223,26 +223,13 @@ class CodeGeneration(ByteCompilerPass):
             return phi
     
     def visitWhile(self, node: ast.While):
-        func = cast(ir.Function, self.builder.function)
+        with self.builder.while_() as (cond, body):
+            with cond as (_, block1, block2):
+                cmp = self.visit(node.cond)
+                self.builder.cbranch(cmp, block1, block2)
 
-        cond_block = func.append_basic_block('while_cond')
-        body_block = func.append_basic_block('while_body')
-        merge_block = func.append_basic_block('while_merge')
-
-        self.builder.branch(cond_block)
-
-        self.builder.position_at_end(cond_block)
-        cond = self.visit(node.cond)
-        self.builder.cbranch(cond, body_block, merge_block)
-
-        self.builder.position_at_end(body_block)
-        self.scope.data.codegen_while_merge_block = merge_block
-        self.scope.data.codegen_while_test_block = cond_block
-        self.visit(node.body)
-        if not cast(ir.Block, self.builder.block).is_terminated:
-            self.builder.branch(cond_block)
-
-        self.builder.position_at_end(merge_block)
+            with body:
+                self.visit(node.body)
 
     def use_byte(self, file: ast.File, path: Path):
         from byte import Pipeline
