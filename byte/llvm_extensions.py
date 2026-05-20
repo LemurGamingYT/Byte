@@ -2,8 +2,8 @@ from typing import Any, Callable, cast
 from contextlib import contextmanager
 from dataclasses import dataclass
 
-from llvmlite import ir, binding as llvm
 from llvmlite.ir.builder import _label_suffix
+from llvmlite import ir, binding as llvm
 
 
 def max_int(width: int = 32):
@@ -28,21 +28,6 @@ def NULL(type: ir.Type | None = None):
         type = ir.IntType(8)
     
     return ir.Constant(ir.PointerType(type), None)
-
-def label_suffix(label, suffix):
-    """Returns (label + suffix) or a truncated version if it's too long.
-    Parameters
-    ----------
-    label : str
-        Label name
-    suffix : str
-        Label suffix
-    """
-    if len(label) > 50:
-        nhead = 25
-        return ''.join([label[:nhead], '..', suffix])
-    else:
-        return label + suffix
 
 # TODO: support external variable definitions as well as external functions
 @dataclass(slots=True)
