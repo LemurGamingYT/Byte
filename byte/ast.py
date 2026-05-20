@@ -422,11 +422,15 @@ class FunctionFlags:
     property: bool = False
     method: bool = False
     returns_reference: bool = False
+    variadic: bool = False
     
     def __str__(self):
         code = ''
         if self.static:
             code += 'static '
+
+        if self.variadic:
+            code += 'variadic '
         
         if self.property:
             code += 'property '

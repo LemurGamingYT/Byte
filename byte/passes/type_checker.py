@@ -310,7 +310,7 @@ class TypeChecker(ByteCompilerPass):
     
     def check_args(self, args: list[ast.Arg], func: ast.Function):
         params = func.params
-        if len(args) != len(params):
+        if len(args) != len(params) and not func.flags.variadic:
             return False
         
         for arg, param in zip(args, params):

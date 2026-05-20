@@ -10,8 +10,9 @@ class registry(IntrinsicLib):
             param_types = [ast.Type.from_llvm(self.file, ir_type) for ir_type in definition.type.args]
             params = [ast.Param(ast.Position(), type, str(i)) for i, type in enumerate(param_types)]
             ret_type = ast.Type.from_llvm(self.file, definition.type.return_type)
+            flags = ast.FunctionFlags(variadic=definition.type.var_arg)
 
-            @intrinsic(self, ret_type, params, override_name=name)
+            @intrinsic(self, ret_type, params, flags=flags, override_name=name)
             def _(_: IntrinsicCallContext):
                 # never called
                 raise NotImplementedError('This should never run')
