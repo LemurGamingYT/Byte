@@ -65,7 +65,6 @@ def define_array(file: ast.File, T: ast.Type, size: int | None = None):
     def array_to_string(ctx: IntrinsicCallContext):
         struct = ctx.arg(0)
 
-        elements = ctx.builder.extract_value(struct, 0, 'elements')
         length = ctx.builder.extract_value(struct, 1, 'length')
 
         def str_lit(text: str):
