@@ -92,6 +92,12 @@ fn print<T>(T x) {
     print_string(x.to_string())
 }
 
+fn error(string s) {
+    stderr = openfd(2, p"w")
+    fprintf(stderr, p"error: %.*s", s.length, s.ptr)
+    exit(1)
+}
+
 fn input() -> string {
     buf = buffer(512)
     stdin = openfd(0, p"r")

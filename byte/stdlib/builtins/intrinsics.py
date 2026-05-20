@@ -53,21 +53,21 @@ class intrinsics(IntrinsicLib):
             buf = ctx.module.global_buffer(ir.IntType(8), length.constant, ctx.module.get_unique_name('buffer'))
             return ctx.builder.first_elem(buf, ctx.name)
 
-        @intrinsic(self, params=[ast.Param(ast.Position(), string_type, 'msg')])
-        def _error(ctx: IntrinsicCallContext):
-            fprintf = ctx.module.registry.get('fprintf')
-            exit = ctx.module.registry.get('exit')
+        # @intrinsic(self, params=[ast.Param(ast.Position(), string_type, 'msg')])
+        # def _error(ctx: IntrinsicCallContext):
+        #     fprintf = ctx.module.registry.get('fprintf')
+        #     exit = ctx.module.registry.get('exit')
 
-            write_mode = ctx.module.try_get_global('write_mode', lambda: ctx.module.global_string('w', 'write_mode'))
-            write_mode_ptr = ctx.builder.first_elem(write_mode, 'write_mode.ptr')
-            stderr = ctx.call('openfd', [ast.Arg(ctx.pos, int_type, llint(2)), ast.Arg(ctx.pos, pointer_type, write_mode_ptr)])
-            fmt = ctx.module.try_get_global('error_fmt', lambda: ctx.module.global_string('error: %.*s\n', 'error_fmt'))
-            ptr = ctx.builder.first_elem(fmt, 'error_fmt_ptr')
-            msg_ptr = ctx.call('string.ptr', ctx.args)
-            msg_length = ctx.call('string.length', ctx.args)
-            ctx.builder.call(fprintf, [stderr, ptr, msg_length, msg_ptr])
-            ctx.builder.call(exit, [llint(1)])
-            ctx.builder.unreachable()
+        #     write_mode = ctx.module.try_get_global('write_mode', lambda: ctx.module.global_string('w', 'write_mode'))
+        #     write_mode_ptr = ctx.builder.first_elem(write_mode, 'write_mode.ptr')
+        #     stderr = ctx.call('openfd', [ast.Arg(ctx.pos, int_type, llint(2)), ast.Arg(ctx.pos, pointer_type, write_mode_ptr)])
+        #     fmt = ctx.module.try_get_global('error_fmt', lambda: ctx.module.global_string('error: %.*s\n', 'error_fmt'))
+        #     ptr = ctx.builder.first_elem(fmt, 'error_fmt_ptr')
+        #     msg_ptr = ctx.call('string.ptr', ctx.args)
+        #     msg_length = ctx.call('string.length', ctx.args)
+        #     ctx.builder.call(fprintf, [stderr, ptr, msg_length, msg_ptr])
+        #     ctx.builder.call(exit, [llint(1)])
+        #     ctx.builder.unreachable()
         
         @intrinsic(self, pointer_type)
         def _null(_: IntrinsicCallContext):

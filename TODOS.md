@@ -4,10 +4,11 @@ What needs to be done soon/next
 - [ ] including local files
 - [ ] first-class functions
 - [ ] mutable and public class fields
-- [ ] move `error` to `builtins.byte`
-- [ ] mangle function and class names based on the file name they come from (e.g. `builtins::string.new`)
+- [x] move `error` to `builtins.byte`
+- [ ] mangle function and class names based on the file name they come from in code generation (e.g. `builtins::string.new`)
 - [ ] static classes (and use them on `Math` and `System`)
 - [ ] `Random` class
+- [ ] move `Math` static functions from `builtins.byte` to intrinsics (`Math.py`)
 - [ ] generics inside classes
 - [ ] static arrays
 - [ ] immutable arrays

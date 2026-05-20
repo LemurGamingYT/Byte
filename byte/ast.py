@@ -70,13 +70,13 @@ class SymbolTable:
     parent: Union['SymbolTable', None] = None
     symbols: dict[str, Symbol] = field(default_factory=dict)
     
-    def get(self, name: str):
+    def get(self, name: str) -> Symbol:
         if self.parent is not None and self.parent.has(name):
             return self.parent.get(name)
         
         return self.symbols[name]
 
-    def tryget(self, name: str):
+    def tryget(self, name: str) -> Symbol | None:
         if self.parent is not None and self.parent.has(name):
             return self.parent.tryget(name)
         
@@ -91,7 +91,7 @@ class SymbolTable:
         
         return name in self.symbols
                  
-    def remove(self, name: str):
+    def remove(self, name: str) -> bool:
         if self.parent is not None and self.parent.has(name):
             return self.parent.remove(name)
         elif name in self.symbols:
@@ -127,6 +127,9 @@ class TypeMap:
     def remove(self, name: str):
         if self.has(name):
             del self.types[name]
+            return True
+
+        return False
     
     def clone(self):
         return TypeMap(self.types.copy())
