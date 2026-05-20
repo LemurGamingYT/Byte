@@ -3,7 +3,7 @@ from typing import cast, Any
 from pathlib import Path
 from logging import info
 
-from llvmlite import ir, binding as llvm
+from llvmlite import ir
 
 from byte.llvm_extensions import ModuleExt, IRBuilderExt, llint
 from byte.intrinsics import IntrinsicCallContext
@@ -11,17 +11,16 @@ from byte.passes import ByteCompilerPass
 from byte import ast
 
 
-@dataclass
+@dataclass(slots=True)
 class CompileResult:
     module: ModuleExt
 
 class CodeGeneration(ByteCompilerPass):
-    def __init__(self, file: ast.File):
+    def __init__(self, file: ast.File, pipeline: Any):
         super().__init__(file)
-        
-        self.module = ModuleExt(file.path.stem, ir.Context())
-        self.module.triple = llvm.get_default_triple()
-        
+
+        self.pipeline = pipeline
+        self.module = pipeline.module
         self.builder = IRBuilderExt()
         
         self.string_type = self.module.declare_identified_type(
@@ -240,28 +239,14 @@ class CodeGeneration(ByteCompilerPass):
                 self.visit(node.body)
 
     def use_byte(self, file: ast.File, path: Path):
-        from byte import Pipeline
-        
         if file.path.stem == self.file.path.stem:
             return
 
         file.path = path
-        pipeline = Pipeline()
-        _, obj_file = pipeline.compile_to_obj(file)
-        for symbol in file.scope.symbol_table.symbols.values():
-            func = symbol.value
-            if not isinstance(func, ir.Function) or func.name in self.module.globals:
-                continue
-            
-            extern_func = ir.Function(self.module, func.function_type, func.name)
-            extern_func.linkage = 'external'
-            
-            info(f'found external function {func.name}')
+        self.pipeline.compile_file(file)
         
         self.scope.symbol_table.merge(file.scope.symbol_table)
         self.file.type_map.merge(file.type_map)
-        self.file.dependencies.append(obj_file)
-        info(f'new dependency object file {obj_file}')
     
     def visitUse(self, node: ast.Use):
         stdlib_path = ast.STDLIB_PATH / node.path

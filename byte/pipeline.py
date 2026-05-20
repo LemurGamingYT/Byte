@@ -3,6 +3,8 @@ from logging import info
 from pathlib import Path
 from typing import cast
 
+from llvmlite import binding as llvm, ir
+
 from byte.passes.code_generation import CodeGeneration, CompileResult
 from byte.passes.forward_decl import ForwardDeclaration
 # from byte.passes.return_checker import ReturnChecker
@@ -13,6 +15,7 @@ from byte.llvm_backend import LLVMBackend, run_cmd
 from byte.passes.preprocessor import Preprocessor
 from byte.passes.type_checker import TypeChecker
 from byte.ast_builder import ByteASTBuilder
+from byte.llvm_extensions import ModuleExt
 from byte.passes import ByteCompilerPass
 from byte import ast
 
@@ -24,6 +27,8 @@ AST_CACHE = {}
 class Pipeline:
     def __init__(self, passes: list[type[ByteCompilerPass]] | None = None):
         self.passes = passes or DEFAULT_PASSES.copy()
+        self.module = ModuleExt('main', ir.Context())
+        self.module.triple = llvm.get_default_triple()
 
     def pass_index(self, pass_type: type[ByteCompilerPass]):
         return self.passes.index(pass_type)
@@ -72,7 +77,7 @@ class Pipeline:
             ast_file.unlink(missing_ok=True)
     
         program = self.run(file, program)
-        return cast(CompileResult, CodeGeneration.run(file, program))
+        return cast(CompileResult, CodeGeneration.run(file, program, self))
     
     def compile_to_obj(self, file: ast.File):
         res = self.compile_file(file)

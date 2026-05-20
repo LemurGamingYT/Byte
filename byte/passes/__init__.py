@@ -17,8 +17,8 @@ class ByteCompilerPass(ABC):
         self.file.scope = scope
     
     @classmethod
-    def run(cls, file: ast.File, node: ast.Node):
-        return cls(file).visit(node)
+    def run(cls, file: ast.File, node: ast.Node, *args, **kwargs):
+        return cls(file, *args, **kwargs).visit(node)
     
     def visit(self, node: ast.Node):
         node_type = type(node).__name__
